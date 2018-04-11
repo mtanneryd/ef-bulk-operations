@@ -31,6 +31,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public TableName TableName { get; set; }
         public string[] ComplexPropertyNames { get; set; }
         public Dictionary<string, TableColumnMapping> ColumnMappingByPropertyName { get; set; }
+        public Dictionary<string, TableColumnMapping> ColumnMappingByColumnName { get; set; }
         public ForeignKeyMapping[] ToForeignKeyMappings { get; set; }
         public ForeignKeyMapping[] FromForeignKeyMappings { get; set; }
     }

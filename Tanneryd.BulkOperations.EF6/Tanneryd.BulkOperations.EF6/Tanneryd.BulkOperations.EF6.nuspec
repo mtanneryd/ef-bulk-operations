@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>Tanneryd.BulkInsert</id>
+    <id>Tanneryd.BulkOperations.EF6</id>
     <version>$version$</version>
     <title>$title$</title>
     <authors>Måns Tånneryd</authors>

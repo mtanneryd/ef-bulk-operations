@@ -41,7 +41,7 @@ namespace Tanneryd.BulkOperations.EF6
         /// All columns of the entities' corresponding table rows 
         /// will be updated using the table primary key. If a 
         /// transaction object is provided the update will be made
-        /// within that transaction. Tables witn no primary key will
+        /// within that transaction. Tables with no primary key will
         /// be left untouched.
         /// </summary>
         /// <param name="ctx"></param>
@@ -279,16 +279,17 @@ namespace Tanneryd.BulkOperations.EF6
         {
             if (entities.Count == 0) return;
 
+            Type t = entities[0].GetType();
+            var mappings = GetMappings(ctx, t);
+
             var s0 = new Stopwatch();
             s0.Start();
-            Type t = entities[0].GetType();
             var tableName = GetTableName(ctx, t);
             var clusteredIndexColumns = GetClusteredIndexColumns(ctx, tableName.Name, transaction);
-            entities = Sort(entities, clusteredIndexColumns);
+            var clusteredIndexProperties = clusteredIndexColumns.Select(c => mappings.ColumnMappingByColumnName[c].EntityProperty.Name).ToArray();
+            entities = Sort(entities, clusteredIndexProperties);
             s0.Stop();
             Trace.TraceInformation($@"Sorted {entities.Count} entities in {s0.Elapsed.TotalSeconds} seconds.");
-
-            var mappings = GetMappings(ctx, t);
 
             if (recursive)
             {
@@ -1108,6 +1109,7 @@ namespace Tanneryd.BulkOperations.EF6
             }
 
             var columnMappingByPropertyName = columnMappings.ToDictionary(m => m.EntityProperty.Name, m => m);
+            var columnMappingByColumnName = columnMappings.ToDictionary(m => m.TableColumn.Name, m => m);
 
             //
             // Add mappings for all navigation properties.
@@ -1199,6 +1201,7 @@ namespace Tanneryd.BulkOperations.EF6
                 TableName = tableName,
                 ComplexPropertyNames = complexPropertyMappings.Select(m=>m.Property.Name).ToArray(),
                 ColumnMappingByPropertyName = columnMappingByPropertyName,
+                ColumnMappingByColumnName = columnMappingByColumnName,
                 ToForeignKeyMappings = foreignKeyMappings.Where(m => m.ToType == entityName).ToArray(),
                 FromForeignKeyMappings = foreignKeyMappings.Where(m => m.FromType == entityName).ToArray()
             };
