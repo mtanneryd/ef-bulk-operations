@@ -112,9 +112,9 @@ namespace Tanneryd.BulkOperations.EF6
         /// <param name="entities"></param>
         /// <param name="transaction"></param>
         /// <param name="recursive">True if the entire entity graph should be inserted, false otherwise.</param>
-        public static BulkOperationResponse BulkInsertAll(
+        public static BulkOperationResponse BulkInsertAll<T>(
             this DbContext ctx,
-            IList entities,
+            IList<T> entities,
             SqlTransaction transaction = null,
             bool recursive = false)
         {
@@ -134,7 +134,7 @@ namespace Tanneryd.BulkOperations.EF6
                     {
                         DoBulkInsertAll(
                             ctx, 
-                            entities, 
+                            entities.Cast<dynamic>().ToList(), 
                             transaction, 
                             recursive,
                             new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
@@ -271,7 +271,7 @@ namespace Tanneryd.BulkOperations.EF6
 
         private static void DoBulkInsertAll(
             this DbContext ctx, 
-            IList entities, 
+            IList<dynamic> entities, 
             SqlTransaction transaction, 
             bool recursive, 
             Dictionary<object, object> savedEntities,
@@ -279,7 +279,15 @@ namespace Tanneryd.BulkOperations.EF6
         {
             if (entities.Count == 0) return;
 
+            var s0 = new Stopwatch();
+            s0.Start();
             Type t = entities[0].GetType();
+            var tableName = GetTableName(ctx, t);
+            var clusteredIndexColumns = GetClusteredIndexColumns(ctx, tableName.Name, transaction);
+            entities = Sort(entities, clusteredIndexColumns);
+            s0.Stop();
+            Trace.TraceInformation($@"Sorted {entities.Count} entities in {s0.Elapsed.TotalSeconds} seconds.");
+
             var mappings = GetMappings(ctx, t);
 
             if (recursive)
@@ -791,6 +799,46 @@ namespace Tanneryd.BulkOperations.EF6
             var globalId = $@"Global\{ds}_{dbname}";
 
             return globalId;
+        }
+
+        private static string[] GetClusteredIndexColumns(DbContext ctx, string tableName, SqlTransaction sqlTransaction)
+        {
+            var connection = GetSqlConnection(ctx);
+
+            string query = $@"
+                    SELECT  col.name
+                    FROM sys.indexes ind
+                    INNER JOIN sys.index_columns ic ON ind.object_id = ic.object_id and ind.index_id = ic.index_id
+                    INNER JOIN sys.columns col ON ic.object_id = col.object_id and ic.column_id = col.column_id
+                    INNER JOIN sys.tables t ON ind.object_id = t.object_id
+                    WHERE t.name = '{tableName}' AND ind.type_desc = 'CLUSTERED'
+                    ORDER BY ic.index_column_id;";
+            var cmd = new SqlCommand(query, connection, sqlTransaction);
+
+            var reader = cmd.ExecuteReader();
+            var clusteredColumns = (
+                    from IDataRecord r in reader
+                    select (string)r[0])
+                .ToArray();
+
+            return clusteredColumns;
+        }
+
+        private static IList<dynamic> Sort(IList<dynamic> entities, string[] sortColumns)
+        {
+            if (sortColumns.Any())
+            {
+                var t = entities[0].GetType();
+                var sortedEntities = entities.OrderBy(u => t.GetProperty(sortColumns[0]).GetValue(u));
+                foreach (var col in sortColumns.Skip(1))
+                {
+                    sortedEntities = sortedEntities.ThenBy(u => t.GetProperty(col).GetValue(u));
+                }
+
+                return sortedEntities.ToList();
+            }
+
+            return entities;
         }
 
         private static string FillTempTable(
