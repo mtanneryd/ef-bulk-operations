@@ -3,3 +3,9 @@
 ################################################################################
 
 /.vs
+/Tanneryd.BulkOperations.EF6/.vs
+/Tanneryd.BulkOperations.EF6/packages
+/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/bin/Debug
+/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/obj/Debug
+/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.Tests/bin/Debug
+/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.Tests/obj/Debug

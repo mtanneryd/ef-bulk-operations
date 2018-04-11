@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Tanneryd.BulkInsert</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>Måns Tånneryd</authors>
+    <owners>Tånneryd IT AB</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>An extension class for DbContext providing bulk insert functionality.</description>
+    <releaseNotes>Primary keys can now have different column and property names.</releaseNotes>
+    <copyright>Copyright 2017-2018</copyright>
+    <tags>EntityFramework BulkInsert BulkUpdate SQL Bulk Insert Update EF</tags>
+  </metadata>
+</package>
