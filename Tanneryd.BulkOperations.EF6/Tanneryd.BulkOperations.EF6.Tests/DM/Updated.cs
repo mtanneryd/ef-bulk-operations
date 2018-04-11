@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Tanneryd.BulkInsert.Tests.DM
+namespace Tanneryd.DM
 {
     public class Updated
     {

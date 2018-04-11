@@ -13,21 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
-namespace Tanneryd.BulkInsert.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
-    internal class IdentityEqualityComparer<T> : IEqualityComparer<T> where T : class
+    internal class Mappings
     {
-        public int GetHashCode(T value)
+        public Mappings()
         {
-            return RuntimeHelpers.GetHashCode(value);
+            ComplexPropertyNames = new String [0];
+            ToForeignKeyMappings = new ForeignKeyMapping[0];
+            FromForeignKeyMappings = new ForeignKeyMapping[0];
         }
 
-        public bool Equals(T left, T right)
-        {
-            return left == right; // Reference identity comparison
-        }
+        public TableName TableName { get; set; }
+        public string[] ComplexPropertyNames { get; set; }
+        public Dictionary<string, TableColumnMapping> ColumnMappingByPropertyName { get; set; }
+        public ForeignKeyMapping[] ToForeignKeyMappings { get; set; }
+        public ForeignKeyMapping[] FromForeignKeyMappings { get; set; }
     }
 }

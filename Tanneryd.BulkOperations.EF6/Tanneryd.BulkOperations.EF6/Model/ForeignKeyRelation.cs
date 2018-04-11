@@ -13,12 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace Tanneryd.BulkInsert.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
-    internal class TableName
+    internal class ForeignKeyRelation
     {
-        public string Schema { get; set; }
-        public string Name { get; set; }
-        public string Fullname => $"[{Schema}].[{Name}]";
+        /// <summary>
+        /// This is the primary key property
+        /// </summary>
+        public string FromProperty { get; set; }
+        /// <summary>
+        /// This is the foreign key property
+        /// </summary>
+        public string ToProperty { get; set; }
     }
 }

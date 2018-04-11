@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 
-namespace Tanneryd.BulkInsert.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
     public class BulkOperationResponse
     {

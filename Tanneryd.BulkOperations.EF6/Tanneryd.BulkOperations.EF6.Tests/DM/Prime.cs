@@ -18,7 +18,7 @@
 
 using System.Collections.Generic;
 
-namespace Tanneryd.BulkInsert.Tests.DM
+namespace Tanneryd.DM
 {
     public class Prime
     {

@@ -13,13 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-
-namespace Tanneryd.BulkInsert.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
-    internal class PropInfo
+    internal class SelfReference
     {
-        public Type Type { get; set; }
-        public string Name { get; set; }
+        public dynamic Entity { get; set; }
+        public string[] ForeignKeyProperties { get; set; }
     }
 }

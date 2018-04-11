@@ -7,8 +7,8 @@
     <ProjectGuid>{9F0C6DFB-0831-4DC2-B1C6-F3FE5B554BFA}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Tanneryd</RootNamespace>
-    <AssemblyName>Tanneryd.BulkInsert</AssemblyName>
+    <RootNamespace>Tanneryd.BulkOperations</RootNamespace>
+    <AssemblyName>Tanneryd.BulkOperations.EF6</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -47,18 +47,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BulkOperations\Model\BulkUpdateRequest.cs" />
-    <Compile Include="BulkOperations\Model\AssociationMapping.cs" />
-    <Compile Include="BulkOperations\DbContextExtensions.cs" />
-    <Compile Include="BulkOperations\Model\ForeignKeyMapping.cs" />
-    <Compile Include="BulkOperations\Model\ForeignKeyRelation.cs" />
-    <Compile Include="BulkOperations\Model\IdentityEqualityComparer.cs" />
-    <Compile Include="BulkOperations\Model\Mappings.cs" />
-    <Compile Include="BulkOperations\Model\SelfReference.cs" />
+    <Compile Include="Model\BulkUpdateRequest.cs" />
+    <Compile Include="Model\AssociationMapping.cs" />
+    <Compile Include="DbContextExtensions.cs" />
+    <Compile Include="Model\ForeignKeyMapping.cs" />
+    <Compile Include="Model\ForeignKeyRelation.cs" />
+    <Compile Include="Model\IdentityEqualityComparer.cs" />
+    <Compile Include="Model\Mappings.cs" />
+    <Compile Include="Model\SelfReference.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="BulkOperations\Model\PropInfo.cs" />
-    <Compile Include="BulkOperations\Model\TableColumnMapping.cs" />
-    <Compile Include="BulkOperations\Model\TableName.cs" />
+    <Compile Include="Model\PropInfo.cs" />
+    <Compile Include="Model\TableColumnMapping.cs" />
+    <Compile Include="Model\TableName.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

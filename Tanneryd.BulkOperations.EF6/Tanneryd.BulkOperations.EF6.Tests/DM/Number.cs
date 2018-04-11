@@ -16,7 +16,7 @@
 * limitations under the License.
 */
 
-namespace Tanneryd.BulkInsert.Tests.DM
+namespace Tanneryd.DM
 {
     public class Number
     {

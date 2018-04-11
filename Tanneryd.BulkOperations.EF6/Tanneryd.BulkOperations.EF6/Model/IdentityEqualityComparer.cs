@@ -13,12 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-namespace Tanneryd.BulkInsert.Model
+
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+
+namespace Tanneryd.BulkOperations.EF6.Model
 {
-    internal class AssociationMapping
+    internal class IdentityEqualityComparer<T> : IEqualityComparer<T> where T : class
     {
-        public TableName TableName { get; set; }
-        public TableColumnMapping Source { get; set; }
-        public TableColumnMapping Target { get; set; }
+        public int GetHashCode(T value)
+        {
+            return RuntimeHelpers.GetHashCode(value);
+        }
+
+        public bool Equals(T left, T right)
+        {
+            return left == right; // Reference identity comparison
+        }
     }
 }

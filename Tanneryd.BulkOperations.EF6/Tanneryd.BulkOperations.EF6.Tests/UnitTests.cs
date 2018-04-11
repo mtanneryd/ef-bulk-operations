@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Tanneryd.BulkInsert.Tests.DM;
-using Tanneryd.BulkInsert.Tests.EF;
+using Tanneryd.BulkOperations;
+using Tanneryd.BulkOperations.EF6;
+using Tanneryd.DM;
+using Tanneryd.EF;
 
 namespace Tanneryd.BulkInsert.Tests
 {

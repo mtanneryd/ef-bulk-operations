@@ -18,9 +18,9 @@
 
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
-using Tanneryd.BulkInsert.Tests.DM;
+using Tanneryd.DM;
 
-namespace Tanneryd.BulkInsert.Tests.EF
+namespace Tanneryd.EF
 {
     public class NumberContext : DbContext
     {

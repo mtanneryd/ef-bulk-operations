@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Data.Entity.Core.Metadata.Edm;
 
-namespace Tanneryd.BulkInsert.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
     /// <summary>
     /// This class is used to map an entity property

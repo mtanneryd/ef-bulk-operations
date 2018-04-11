@@ -13,24 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
-
-namespace Tanneryd.BulkInsert.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
-    internal class Mappings
+    internal class AssociationMapping
     {
-        public Mappings()
-        {
-            ComplexPropertyNames = new String [0];
-            ToForeignKeyMappings = new ForeignKeyMapping[0];
-            FromForeignKeyMappings = new ForeignKeyMapping[0];
-        }
-
         public TableName TableName { get; set; }
-        public string[] ComplexPropertyNames { get; set; }
-        public Dictionary<string, TableColumnMapping> ColumnMappingByPropertyName { get; set; }
-        public ForeignKeyMapping[] ToForeignKeyMappings { get; set; }
-        public ForeignKeyMapping[] FromForeignKeyMappings { get; set; }
+        public TableColumnMapping Source { get; set; }
+        public TableColumnMapping Target { get; set; }
     }
 }

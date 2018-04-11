@@ -13,14 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
 using System.Data.Entity.Core.Mapping;
-using System.Data.Entity.Infrastructure;
 using System.Data.Entity.Core.Metadata.Edm;
+using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Dynamic;
@@ -28,9 +29,9 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
-using Tanneryd.BulkInsert.Model;
+using Tanneryd.BulkOperations.EF6.Model;
 
-namespace Tanneryd.BulkInsert
+namespace Tanneryd.BulkOperations.EF6
 {
     public static class DbContextExtensions
     {
