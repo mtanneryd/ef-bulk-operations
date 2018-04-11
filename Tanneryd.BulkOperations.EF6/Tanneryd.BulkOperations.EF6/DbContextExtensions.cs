@@ -27,6 +27,7 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Tanneryd.BulkOperations.EF6.Model;
@@ -118,8 +119,37 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction = null,
             bool recursive = false)
         {
+            var request = new BulkInsertRequest<T>
+            {
+                Entities = entities,
+                Transaction = transaction,
+                Recursive = recursive
+            };
+            return BulkInsertAll(ctx, request);
+        }
+
+        /// <summary>
+        /// 
+        /// The request object properties have the following function:
+        /// 
+        ///  Entities - The entities are mapped to rows in a table and these table rows will 
+        ///             be updated.
+        ///  Transaction - If a transaction object is provided the update will be made within that transaction.
+        ///  Recursive - If true any new entities added to navigation properties will also be inserted. Foreign 
+        ///              key relationships will be honored for both new and existing entities in the entire 
+        ///              entity graph.
+        /// 
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        public static BulkOperationResponse BulkInsertAll<T>(
+            this DbContext ctx,
+            BulkInsertRequest<T> request)
+        {
             var response = new BulkOperationResponse();
-            if (entities.Count == 0) return response;
+
+            if (request.Entities.Count == 0) return response;
 
             var s = new Stopwatch();
             s.Start();
@@ -133,10 +163,10 @@ namespace Tanneryd.BulkOperations.EF6
                     try
                     {
                         DoBulkInsertAll(
-                            ctx, 
-                            entities.Cast<dynamic>().ToList(), 
-                            transaction, 
-                            recursive,
+                            ctx,
+                            request.Entities.Cast<dynamic>().ToList(),
+                            request.Transaction, 
+                            request.Recursive,
                             new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
                             response);
                     }
@@ -282,14 +312,10 @@ namespace Tanneryd.BulkOperations.EF6
             Type t = entities[0].GetType();
             var mappings = GetMappings(ctx, t);
 
-            var s0 = new Stopwatch();
-            s0.Start();
             var tableName = GetTableName(ctx, t);
             var clusteredIndexColumns = GetClusteredIndexColumns(ctx, tableName.Name, transaction);
             var clusteredIndexProperties = clusteredIndexColumns.Select(c => mappings.ColumnMappingByColumnName[c].EntityProperty.Name).ToArray();
             entities = Sort(entities, clusteredIndexProperties);
-            s0.Stop();
-            Trace.TraceInformation($@"Sorted {entities.Count} entities in {s0.Elapsed.TotalSeconds} seconds.");
 
             if (recursive)
             {

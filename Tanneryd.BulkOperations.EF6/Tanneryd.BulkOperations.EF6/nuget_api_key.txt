@@ -1,4 +1,4 @@
 key: abf2f28a-2894-4320-a376-7c85ad60a82a
 
-pack cmd: nuget pack .\Tanneryd.BulkInsert.csproj -Symbols
-push cmd:  nuget push .\Tanneryd.BulkInsert.1.0.26-beta.nupkg -apiKey abf2f28a-2894-4320-a376-7c85ad60a82a -Source https://www.nuget.org/api/v2/package
+pack cmd: nuget pack .\Tanneryd.BulkOperations.EF6.csproj -Symbols
+push cmd:  nuget push .\Tanneryd.BulkOperations.EF6.1.1.0.nupkg -apiKey abf2f28a-2894-4320-a376-7c85ad60a82a -Source https://www.nuget.org/api/v2/package
