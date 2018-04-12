@@ -341,7 +341,10 @@ namespace Tanneryd.BulkOperations.EF6
                                     }
                                     else
                                     {
-                                        if (navProperty != entity)
+                                        var same = navProperty.GetType() == entity.GetType() &&
+                                                   navProperty == entity;
+                                        if (!same)
+
                                         {
                                             navProperties.Add(navProperty);
                                             modifiedEntities.Add(new object[] { entity, navProperty });
@@ -429,7 +432,9 @@ namespace Tanneryd.BulkOperations.EF6
                                     SetProperty(foreignKeyRelation.ToProperty, navProperty, GetProperty(foreignKeyRelation.FromProperty, entity));
                                 }
 
-                                if (navProperty != entity)
+                                var same = navProperty.GetType() == entity.GetType() &&
+                                           navProperty == entity;
+                                if (!same)
                                     navPropertyEntities.Add(navProperty);
                                 else
                                     navPropertySelfReferences.Add(new SelfReference
