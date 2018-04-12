@@ -67,7 +67,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Authors
 
-* **Måns Tånneryd** 
+* **M&#229;ns T&#229;nneryd** 
 
 ## License
 
