@@ -4,13 +4,17 @@
     <id>Tanneryd.BulkOperations.EF6</id>
     <version>$version$</version>
     <title>$title$</title>
+    <summary>An extension class for the EF6 DbContext providing bulk insert and update functionality.</summary>
+    <description>Inserts are made using SqlBulkCopy. Complete entity hierarchies can be bulk inserted together, maintaining foreign key relationsships. Updates are made using temp tables and SqlBulkCopy.</description>
     <authors>Måns Tånneryd</authors>
     <owners>Tånneryd IT AB</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>https://github.com/mtanneryd/ef6-bulk-operations</projectUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <description>An extension class for DbContext providing bulk insert functionality.</description>
-    <releaseNotes>Primary keys can now have different column and property names.</releaseNotes>
     <copyright>Copyright 2017-2018</copyright>
-    <tags>EntityFramework BulkInsert BulkUpdate SQL Bulk Insert Update EF</tags>
+    <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
+
+    <releaseNotes>The clustered index solution did not resolve the identity issue. Now using a temp table and insert into select with an order by.</releaseNotes>
+
   </metadata>
 </package>

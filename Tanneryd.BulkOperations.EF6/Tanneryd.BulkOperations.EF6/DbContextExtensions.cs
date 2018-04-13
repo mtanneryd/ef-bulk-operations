@@ -27,7 +27,6 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Text.RegularExpressions;
 using System.Threading;
 using Tanneryd.BulkOperations.EF6.Model;
