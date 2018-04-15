@@ -5,12 +5,11 @@
 /.vs
 /Tanneryd.BulkOperations.EF6/.vs
 /Tanneryd.BulkOperations.EF6/packages
-/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/*.csproj.user
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/bin
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/obj
-/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/Tests/*.csproj.user
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.Tests/bin
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.Tests/obj
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/nuget_api.txt
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.nuspec
 *.nupkg
+*.user
