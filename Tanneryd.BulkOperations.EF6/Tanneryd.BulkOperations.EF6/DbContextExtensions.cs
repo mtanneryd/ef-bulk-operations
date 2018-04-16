@@ -695,6 +695,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                     var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => p.TableColumn.Name));
                     query = $@"   
+                                ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL
                                 INSERT INTO {tableName.Fullname} ({columnNames})
                                 SELECT {columnNames}
                                 FROM   #{tableName.Name}
