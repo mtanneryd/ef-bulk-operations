@@ -4,7 +4,7 @@ A nuget package that extends the DbContext in EF6 with bulk operations for both 
 
 ## Getting Started
 
-Read the CodeProject article [Bulk operations using Entity Framework](https://www.codeproject.com/Articles/1226978/Bulk-operations-using-Entity-Framework) if you are interested in some background.
+Read the CodeProject article [Bulk operations using Entity Framework](https://www.codeproject.com/Articles/1226978/Bulk-operations-using-Entity-Framework) if you are interested in some background. Currently this extension requires that the database user has enough privileges to execute ALTER TABLE <table_name> NOCHECK CONSTRAINT ALL. The reason for this has to do with tables having self referencing foreign keys set to be NOT NULL. The current release (1.1.0-beta7) resolves this in a rather brutish way. In 1.1.0-beta8 I will make support for these self referencing things optional and thus. The privilege requirements will go back to normal for all other uses.
 
 ### Prerequisites
 
