@@ -34,7 +34,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
     {
         public BuiltInTypeKind BuiltInTypeKind { get; set; }
         public string NavigationPropertyName { get; set; }
-        public string Name { get; set; }
+        //public string Name { get; set; }
         public string FromType { get; set; }
         public string ToType { get; set; }
 

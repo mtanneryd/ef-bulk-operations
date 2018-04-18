@@ -18,9 +18,9 @@
 
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
-using Tanneryd.DM;
+using Tanneryd.BulkOperations.EF6.Tests.DM;
 
-namespace Tanneryd.EF
+namespace Tanneryd.BulkOperations.EF6.Tests.EF
 {
     public class NumberContext : DbContext
     {
@@ -65,6 +65,12 @@ namespace Tanneryd.EF
                 .Property(u => u.Name)
                 .IsRequired();
             modelBuilder.Entity<Parity>()
+                .Property(p => p.UpdatedAt)
+                .HasColumnName("UpdatedAt");
+            modelBuilder.Entity<Parity>()
+                .Property(p => p.UpdatedBy)
+                .HasColumnName("UpdatedBy");
+            modelBuilder.Entity<Parity>()
                 .HasMany(p => p.Numbers)
                 .WithRequired(n => n.Parity)
                 .HasForeignKey(n => n.ParityId)
@@ -78,17 +84,35 @@ namespace Tanneryd.EF
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
             modelBuilder.Entity<Number>()
                 .Property(u => u.Value);
-            
+            modelBuilder.Entity<Number>()
+                .Property(p => p.UpdatedAt)
+                .HasColumnName("UpdatedAt");
+            modelBuilder.Entity<Number>()
+                .Property(p => p.UpdatedBy)
+                .HasColumnName("UpdatedBy");
+
             modelBuilder.Entity<Prime>()
                 .ToTable("Prime")
                 .HasKey(u => u.NumberId);
             modelBuilder.Entity<Prime>()
                 .HasRequired(t => t.Number)
                 .WithOptional(t => t.Prime);
+            modelBuilder.Entity<Prime>()
+                .Property(p => p.UpdatedAt)
+                .HasColumnName("UpdatedAt");
+            modelBuilder.Entity<Prime>()
+                .Property(p => p.UpdatedBy)
+                .HasColumnName("UpdatedBy");
 
             modelBuilder.Entity<Composite>()
                 .ToTable("Composite")
                 .HasKey(u => u.NumberId);
+            modelBuilder.Entity<Composite>()
+                .Property(p => p.UpdatedAt)
+                .HasColumnName("UpdatedAt");
+            modelBuilder.Entity<Composite>()
+                .Property(p => p.UpdatedBy)
+                .HasColumnName("UpdatedBy");
             modelBuilder.Entity<Composite>()
                 .HasRequired(t => t.Number)
                 .WithOptional(t => t.Composite);

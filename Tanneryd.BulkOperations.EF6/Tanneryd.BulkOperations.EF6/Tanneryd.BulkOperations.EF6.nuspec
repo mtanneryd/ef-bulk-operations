@@ -14,7 +14,7 @@
     <copyright>Copyright 2017-2018</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>The clustered index solution did not resolve the identity issue. Now using a temp table and insert into select with an order by.</releaseNotes>
+    <releaseNotes>Fix for self-referencing tables with identity columns.</releaseNotes>
 
   </metadata>
 </package>

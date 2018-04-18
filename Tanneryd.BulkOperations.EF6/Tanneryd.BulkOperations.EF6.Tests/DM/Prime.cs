@@ -16,9 +16,10 @@
 * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 
-namespace Tanneryd.DM
+namespace Tanneryd.BulkOperations.EF6.Tests.DM
 {
     public class Prime
     {
@@ -28,7 +29,8 @@ namespace Tanneryd.DM
         }
         public long NumberId { get; set; }
         public Number Number { get; set; }
-        public Updated Updated { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string UpdatedBy { get; set; }
 
         public ICollection<Composite> Composites { get; set; }
     }

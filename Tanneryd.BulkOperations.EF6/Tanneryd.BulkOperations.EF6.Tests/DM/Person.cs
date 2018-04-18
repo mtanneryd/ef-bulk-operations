@@ -16,24 +16,26 @@
 * limitations under the License.
 */
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Tanneryd.BulkOperations.EF6.Tests.DM
 {
-    public class Level1
+    public class Person
     {
-        public int Id { get; set; }
-        public Level2 Level2 { get; set; }
-    }
+        public Person()
+        {
+            Children = new HashSet<Person>();
+        }
 
-    public class Level2
-    {
-        public string Level2Name { get; set; }
-        public Level3 Level3 { get; set; }
-    }
+        public long Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public DateTime BirthDate { get; set; }
 
-    public class Level3
-    {
-        public string Level3Name { get; set; }
-        public DateTime Updated { get; set; }
+        public long? MotherId { get; set; }
+        public Person Mother { get; set; }
+
+        public ICollection<Person> Children { get; set; }
     }
 }

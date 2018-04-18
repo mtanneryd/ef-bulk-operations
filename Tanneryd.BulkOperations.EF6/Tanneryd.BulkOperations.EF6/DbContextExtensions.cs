@@ -310,27 +310,40 @@ namespace Tanneryd.BulkOperations.EF6
             Type t = entities[0].GetType();
             var mappings = GetMappings(ctx, t);
 
-            //var tableName = GetTableName(ctx, t);
-            //var clusteredIndexColumns = GetClusteredIndexColumns(ctx, tableName.Name, transaction);
-            //var clusteredIndexProperties = clusteredIndexColumns.Select(c => mappings.ColumnMappingByColumnName[c].EntityProperty.Name).ToArray();
-            //entities = Sort(entities, clusteredIndexProperties);
-
+            // 
+            // Find any 'one-or-zero to many' related entities. If found, those
+            // entities should be persisted and their primary key values copied
+            // to the foreign keys in these entities.
+            //
             if (recursive)
             {
                 foreach (var fkMapping in mappings.ToForeignKeyMappings)
                 {
+                    // ToForeignKeyMappings means that the entity is connected TO
+                    // another entity via a foreign key relationship. So, these mappings
+                    // must always be one-to-one. At least I can't come up with a
+                    // situation whee we would be interestedin a collection type
+                    // mapping here. when we have self references collections appear
+                    // here but we ignore them and take care of them in the from mapping.
+                    var isCollection = fkMapping.BuiltInTypeKind == BuiltInTypeKind.CollectionType ||
+                                       fkMapping.BuiltInTypeKind == BuiltInTypeKind.CollectionKind;
+                    if (isCollection) continue;
+
+                    var navigationPropertyName = fkMapping.NavigationPropertyName;
+
                     var navProperties = new HashSet<object>();
                     var modifiedEntities = new List<object[]>();
                     foreach (var entity in entities)
                     {
-                        var navProperty = GetProperty(fkMapping.NavigationPropertyName, entity);
+                        var navProperty = GetProperty(navigationPropertyName, entity);
+                        
                         if (navProperty != null)
                         {
                             foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
                             {
                                 var navPropertyKey = GetProperty(foreignKeyRelation.ToProperty, entity);
 
-                                if (navPropertyKey == 0)
+                                if (navPropertyKey == null || navPropertyKey == 0)
                                 {
                                     var currentValue = GetProperty(foreignKeyRelation.FromProperty, navProperty);
                                     if (currentValue > 0)
@@ -367,36 +380,45 @@ namespace Tanneryd.BulkOperations.EF6
                 }
             }
 
+            //
+            // Some entities might appear in many places and there 
+            // is no point in saving them more than once. We use a
+            // custom comparer checking for reference identity.
+            //
             var validEntities = new ArrayList();
-            var ignoredEntities = new ArrayList();
             foreach (dynamic entity in entities)
             {
-                if (savedEntities.ContainsKey(entity))
-                {
-                    ignoredEntities.Add(entity);
-                    continue;
-                }
+                if (savedEntities.ContainsKey(entity)) continue;
+
                 validEntities.Add(entity);
                 savedEntities.Add(entity, entity);
             }
             DoBulkCopy(ctx, validEntities, t, mappings, transaction, response);
 
+            //
+            // Any many-to-one (parent-child) foreign key related entities are found here. 
+            // We collect all the children, save the parents, update the foreign key in
+            // the children and then save the children. When we have self references we need
+            // to handle that with care.
+            //
             if (recursive)
             {
                 foreach (var fkMapping in mappings.FromForeignKeyMappings)
                 {
+                    var isCollection = fkMapping.BuiltInTypeKind == BuiltInTypeKind.CollectionType ||
+                                       fkMapping.BuiltInTypeKind == BuiltInTypeKind.CollectionKind;
+
                     var navigationPropertyName = fkMapping.NavigationPropertyName;
 
                     var navPropertyEntities = new List<dynamic>();
                     var navPropertySelfReferences = new List<SelfReference>();
                     foreach (var entity in entities)
                     {
-                        if (fkMapping.BuiltInTypeKind == BuiltInTypeKind.CollectionType ||
-                            fkMapping.BuiltInTypeKind == BuiltInTypeKind.CollectionKind)
+                        if (isCollection)
                         {
                             var navProperties = GetProperty(navigationPropertyName, entity);
 
-                            if (fkMapping.ForeignKeyRelations != null)
+                            if (navProperties != null && fkMapping.ForeignKeyRelations != null)
                             {
                                 foreach (var navProperty in navProperties)
                                 {
@@ -1191,13 +1213,13 @@ namespace Tanneryd.BulkOperations.EF6
                 var relType = (AssociationType)navigationProperty.RelationshipType;
 
                 // Only bother with unknown relationships
-                if (foreignKeyMappings.All(m => m.Name != relType.Name))
+                if (foreignKeyMappings.All(m => m.NavigationPropertyName != navigationProperty.Name))
                 {
                     var fkMapping = new ForeignKeyMapping
                     {
                         NavigationPropertyName = navigationProperty.Name,
                         BuiltInTypeKind = navigationProperty.TypeUsage.EdmType.BuiltInTypeKind,
-                        Name = relType.Name,
+                        //Name = relType.Name,
                     };
 
                     //

@@ -15,25 +15,28 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-using System;
+
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Tanneryd.BulkOperations.EF6.Tests.DM
 {
-    public class Level1
+    public class Company
     {
-        public int Id { get; set; }
-        public Level2 Level2 { get; set; }
+        public Company()
+        {
+            Employees = new HashSet<Employee>();
+        }
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public ICollection<Employee> Employees { get; set; }
     }
 
-    public class Level2
+    public class Employee
     {
-        public string Level2Name { get; set; }
-        public Level3 Level3 { get; set; }
-    }
-
-    public class Level3
-    {
-        public string Level3Name { get; set; }
-        public DateTime Updated { get; set; }
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public long EmployerId { get; set; }
+        public Company Employer { get; set; }
     }
 }

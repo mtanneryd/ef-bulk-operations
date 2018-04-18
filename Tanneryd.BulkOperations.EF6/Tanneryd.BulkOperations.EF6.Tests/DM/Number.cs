@@ -16,7 +16,9 @@
 * limitations under the License.
 */
 
-namespace Tanneryd.DM
+using System;
+
+namespace Tanneryd.BulkOperations.EF6.Tests.DM
 {
     public class Number
     {
@@ -31,7 +33,8 @@ namespace Tanneryd.DM
 
         public int? CompositeId { get; set; }
         public Composite Composite { get; set; }
-        public Updated Updated { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string UpdatedBy { get; set; }
 
     }
 }
