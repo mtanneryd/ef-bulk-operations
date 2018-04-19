@@ -54,6 +54,20 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 var actual = db.Employees.Include(e => e.Employer).Single();
                 Assert.AreEqual("John", actual.Name);
                 Assert.AreEqual("World Inc", actual.Employer.Name);
+
+                db.Employees.RemoveRange(db.Employees.ToArray());
+                db.Companies.RemoveRange(db.Companies.ToArray());
+                db.SaveChanges();
+
+                request.AllowNotNullSelfReferences = true;
+                employee.Id = 0;
+                employee.EmployerId = 0;
+                employer.Id = 0;
+                db.BulkInsertAll(request);
+
+                actual = db.Employees.Include(e => e.Employer).Single();
+                Assert.AreEqual("John", actual.Name);
+                Assert.AreEqual("World Inc", actual.Employer.Name);
             }
         }
 
@@ -84,6 +98,19 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 db.BulkInsertAll(request);
 
                 var actual = db.Companies.Include(e => e.Employees).Single();
+                Assert.AreEqual("World Inc", actual.Name);
+                Assert.AreEqual("John", actual.Employees.Single().Name);
+
+                db.Employees.RemoveRange(db.Employees.ToArray());
+                db.Companies.RemoveRange(db.Companies.ToArray());
+                db.SaveChanges();
+
+                request.AllowNotNullSelfReferences = true;
+                employee.Id = 0;
+                employee.EmployerId = 0;
+                employer.Id = 0;
+                db.BulkInsertAll(request);
+                actual = db.Companies.Include(e => e.Employees).Single();
                 Assert.AreEqual("World Inc", actual.Name);
                 Assert.AreEqual("John", actual.Employees.Single().Name);
             }

@@ -121,7 +121,8 @@ namespace Tanneryd.BulkOperations.EF6
             {
                 Entities = entities,
                 Transaction = transaction,
-                Recursive = recursive
+                Recursive = recursive,
+                AllowNotNullSelfReferences = false
             };
             return BulkInsertAll(ctx, request);
         }
@@ -165,6 +166,7 @@ namespace Tanneryd.BulkOperations.EF6
                             request.Entities.Cast<dynamic>().ToList(),
                             request.Transaction, 
                             request.Recursive,
+                            request.AllowNotNullSelfReferences,
                             new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
                             response);
                     }
@@ -302,6 +304,7 @@ namespace Tanneryd.BulkOperations.EF6
             IList<dynamic> entities, 
             SqlTransaction transaction, 
             bool recursive, 
+            bool allowNotNullSelfReferences,
             Dictionary<object, object> savedEntities,
             BulkOperationResponse response)
         {
@@ -367,7 +370,7 @@ namespace Tanneryd.BulkOperations.EF6
                     }
                     if (!navProperties.Any()) continue;
 
-                    DoBulkInsertAll(ctx, navProperties.ToArray(), transaction, true, savedEntities, response);
+                    DoBulkInsertAll(ctx, navProperties.ToArray(), transaction, recursive, allowNotNullSelfReferences, savedEntities, response);
                     foreach (var modifiedEntity in modifiedEntities)
                     {
                         var e = modifiedEntity[0];
@@ -393,7 +396,7 @@ namespace Tanneryd.BulkOperations.EF6
                 validEntities.Add(entity);
                 savedEntities.Add(entity, entity);
             }
-            DoBulkCopy(ctx, validEntities, t, mappings, transaction, response);
+            DoBulkCopy(ctx, validEntities, t, mappings, transaction, allowNotNullSelfReferences, response);
 
             //
             // Any many-to-one (parent-child) foreign key related entities are found here. 
@@ -505,10 +508,10 @@ namespace Tanneryd.BulkOperations.EF6
                                     EntityProperty = fkMapping.AssociationMapping.Target.TableColumn,
                                     TableColumn = fkMapping.AssociationMapping.Target.TableColumn
                                 });
-                            DoBulkCopy(ctx, navPropertyEntities.ToArray(), typeof(ExpandoObject), expandoMappings, transaction, response);
+                            DoBulkCopy(ctx, navPropertyEntities.ToArray(), typeof(ExpandoObject), expandoMappings, transaction, allowNotNullSelfReferences, response);
                         }
                         else
-                            DoBulkInsertAll(ctx, navPropertyEntities.ToArray(), transaction, true, savedEntities, response);
+                            DoBulkInsertAll(ctx, navPropertyEntities.ToArray(), transaction, recursive, allowNotNullSelfReferences, savedEntities, response);
                     }
                 }
             }
@@ -520,6 +523,7 @@ namespace Tanneryd.BulkOperations.EF6
             Type t, 
             Mappings mappings, 
             SqlTransaction transaction,
+            bool allowNotNullSelfReferences,
             BulkOperationResponse response)
         {
             // If we for some reason are called with an empty list we return immediately.
@@ -715,9 +719,15 @@ namespace Tanneryd.BulkOperations.EF6
                         .Where(m => !keyMembers.Contains(m.TableColumn.Name))
                         .ToArray();
 
+                    if (allowNotNullSelfReferences)
+                    {
+                        query = $"ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL";
+                        cmd = new SqlCommand(query, conn, transaction);
+                        cmd.ExecuteNonQuery();
+                    }
+
                     var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => p.TableColumn.Name));
-                    query = $@"   
-                                ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL
+                    query = $@"                                  
                                 INSERT INTO {tableName.Fullname} ({columnNames})
                                 SELECT {columnNames}
                                 FROM   #{tableName.Name}
@@ -725,6 +735,13 @@ namespace Tanneryd.BulkOperations.EF6
                              ";
                     cmd = new SqlCommand(query, conn, transaction);
                     rowsAffected += cmd.ExecuteNonQuery();
+
+                    if (allowNotNullSelfReferences)
+                    {
+                        query = $"ALTER TABLE {tableName.Fullname} CHECK CONSTRAINT ALL";
+                        cmd = new SqlCommand(query, conn, transaction);
+                        cmd.ExecuteNonQuery();
+                    }
 
                     cmd.CommandText = $"SELECT SCOPE_IDENTITY()";
                     result = cmd.ExecuteScalar();
