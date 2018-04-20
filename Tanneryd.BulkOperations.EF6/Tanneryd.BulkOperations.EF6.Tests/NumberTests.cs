@@ -156,7 +156,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         }
 
         [TestMethod]
-        public void XXX()
+        public void EntityHierarchyShouldBeInserted()
         {
             using (var db = new NumberContext())
             {
@@ -169,7 +169,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 };
 
                 var numbers = GenerateNumbers(100, parities[0], parities[1], now).ToArray();
-                var primes = GeneratePrimeNumbers(1, numbers, now);
+                var primes = GeneratePrimeNumbers(100, numbers, now);
 
                 var request = new BulkInsertRequest<Prime>
                 {
