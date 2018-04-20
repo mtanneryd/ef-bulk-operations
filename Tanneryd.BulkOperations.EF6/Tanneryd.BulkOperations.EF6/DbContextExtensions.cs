@@ -161,6 +161,16 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     try
                     {
+                        if (request.SortUsingClusteredIndex)
+                        {
+                            var tableName = GetTableName(ctx, typeof(T));
+                            var clusteredIndexColumns =
+                                GetClusteredIndexColumns(ctx, tableName.Fullname, request.Transaction);
+                            request.Entities = clusteredIndexColumns.Any()
+                                ? Sort(request.Entities, clusteredIndexColumns)
+                                : request.Entities;
+                        }
+
                         DoBulkInsertAll(
                             ctx,
                             request.Entities.Cast<dynamic>().ToList(),
@@ -928,7 +938,7 @@ namespace Tanneryd.BulkOperations.EF6
             return clusteredColumns;
         }
 
-        private static IList<dynamic> Sort(IList<dynamic> entities, string[] sortColumns)
+        private static IList<T> Sort<T>(IList<T> entities, string[] sortColumns)
         {
             if (sortColumns.Any())
             {

@@ -9,5 +9,6 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public SqlTransaction Transaction { get; set; }
         public bool Recursive { get; set; }
         public bool AllowNotNullSelfReferences { get; set; }
+        public bool SortUsingClusteredIndex { get; set; }
     }
 }

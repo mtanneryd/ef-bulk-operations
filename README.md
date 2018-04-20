@@ -24,11 +24,13 @@ public class BulkInsertRequest<T>
     public SqlTransaction Transaction { get; set; }
     public bool Recursive { get; set; }
     public bool AllowNotNullSelfReferences { get; set; }
+    public bool SortUsingClusteredIndex { get; set; }
 }
 ```
 
 * When Recursive is set to true the entire entity hierarchy will be inserted. 
 * When AllowNotNullSelfReferences is set to true, entities with self referencing foreign keys declared as NOT NULL will be properly inserted. But, this will only work if the database user has the required privileges to execute **ALTER TABLE \<table name\> NOCHECK CONSTRAINT ALL** and **ALTER TABLE \<table name\> CHECK CONSTRAINT ALL**.
+* When SortUsingClusteredIndex is set to true the entities will be sorted according to the clustered index of the target table.
 
 ```csharp
  public static BulkOperationResponse BulkInsertAll<T>(
