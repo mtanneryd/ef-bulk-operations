@@ -9,4 +9,14 @@ namespace Tanneryd.BulkOperations.EF6.Model
 
         public List<Tuple<Type, long>> AffectedRows { get; set; } = new List<Tuple<Type, long>>();
     }
+
+    public class BulkInsertResponse : BulkOperationResponse
+    {
+        public List<Tuple<Type, BulkInsertStatistics>> BulkInsertStatistics { get; set; } = new List<Tuple<Type, BulkInsertStatistics>>();
+    }
+
+    public struct BulkInsertStatistics {
+        public TimeSpan TimeElapsedDuringBulkCopy { get; set; }
+        public TimeSpan TimeElapsedDuringInsertInto { get; set; }
+    }
 }

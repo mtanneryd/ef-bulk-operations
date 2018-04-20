@@ -111,7 +111,7 @@ namespace Tanneryd.BulkOperations.EF6
         /// <param name="entities"></param>
         /// <param name="transaction"></param>
         /// <param name="recursive">True if the entire entity graph should be inserted, false otherwise.</param>
-        public static BulkOperationResponse BulkInsertAll<T>(
+        public static BulkInsertResponse BulkInsertAll<T>(
             this DbContext ctx,
             IList<T> entities,
             SqlTransaction transaction = null,
@@ -122,7 +122,8 @@ namespace Tanneryd.BulkOperations.EF6
                 Entities = entities,
                 Transaction = transaction,
                 Recursive = recursive,
-                AllowNotNullSelfReferences = false
+                AllowNotNullSelfReferences = false,
+                SortUsingClusteredIndex = false
             };
             return BulkInsertAll(ctx, request);
         }
@@ -142,11 +143,11 @@ namespace Tanneryd.BulkOperations.EF6
         /// <param name="ctx"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        public static BulkOperationResponse BulkInsertAll<T>(
+        public static BulkInsertResponse BulkInsertAll<T>(
             this DbContext ctx,
             BulkInsertRequest<T> request)
         {
-            var response = new BulkOperationResponse();
+            var response = new BulkInsertResponse();
 
             if (request.Entities.Count == 0) return response;
 
@@ -316,7 +317,7 @@ namespace Tanneryd.BulkOperations.EF6
             bool recursive, 
             bool allowNotNullSelfReferences,
             Dictionary<object, object> savedEntities,
-            BulkOperationResponse response)
+            BulkInsertResponse response)
         {
             if (entities.Count == 0) return;
 
@@ -534,7 +535,7 @@ namespace Tanneryd.BulkOperations.EF6
             Mappings mappings, 
             SqlTransaction transaction,
             bool allowNotNullSelfReferences,
-            BulkOperationResponse response)
+            BulkInsertResponse response)
         {
             // If we for some reason are called with an empty list we return immediately.
             if (entities.Count == 0) return;
@@ -621,8 +622,16 @@ namespace Tanneryd.BulkOperations.EF6
                     }
                 }
 
+                var s = new Stopwatch();
+                s.Start();
                 bulkCopy.BulkCopyTimeout = 5 * 60;
                 bulkCopy.WriteToServer(table);
+                s.Stop();
+                var stats = new BulkInsertStatistics
+                {
+                    TimeElapsedDuringBulkCopy = s.Elapsed
+                };
+                response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t,stats));
                 rowsAffected += table.Rows.Count;
             }
             // We have a non composite primary key that is either computed or an identity key
@@ -700,9 +709,16 @@ namespace Tanneryd.BulkOperations.EF6
                         }
                     }
 
+                    var s = new Stopwatch();
+                    s.Start();
                     bulkCopy.BulkCopyTimeout = 5 * 60;
                     bulkCopy.WriteToServer(table);
-                    
+                    s.Stop();
+                    var stats = new BulkInsertStatistics
+                    {
+                        TimeElapsedDuringBulkCopy = s.Elapsed
+                    };
+
                     var pkColumnType = Type.GetType(pkColumn.PrimitiveType.ClrEquivalentType.FullName);
                     cmd = conn.CreateCommand();
                     cmd.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
@@ -744,7 +760,11 @@ namespace Tanneryd.BulkOperations.EF6
                                 ORDER BY rowno
                              ";
                     cmd = new SqlCommand(query, conn, transaction);
+                    s.Restart();
                     rowsAffected += cmd.ExecuteNonQuery();
+                    s.Stop();
+                    stats.TimeElapsedDuringInsertInto = s.Elapsed;
+                    response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
 
                     if (allowNotNullSelfReferences)
                     {
