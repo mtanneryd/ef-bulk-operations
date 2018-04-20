@@ -23,7 +23,9 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         public void Cleanup()
         {
             var db = new CompanyContext();
-            db.Database.Delete();
+            db.Employees.RemoveRange(db.Employees.ToArray());
+            db.Companies.RemoveRange(db.Companies.ToArray());
+            db.SaveChanges();
         }
 
         [TestMethod]
@@ -40,10 +42,6 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             };
             using (var db = new CompanyContext())
             {
-                db.Employees.RemoveRange(db.Employees.ToArray());
-                db.Companies.RemoveRange(db.Companies.ToArray());
-                db.SaveChanges();
-
                 var request = new BulkInsertRequest<Employee>
                 {
                     Entities = new List<Employee> {employee},
@@ -55,9 +53,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 Assert.AreEqual("John", actual.Name);
                 Assert.AreEqual("World Inc", actual.Employer.Name);
 
-                db.Employees.RemoveRange(db.Employees.ToArray());
-                db.Companies.RemoveRange(db.Companies.ToArray());
-                db.SaveChanges();
+                Cleanup();
 
                 request.AllowNotNullSelfReferences = true;
                 employee.Id = 0;
@@ -86,10 +82,6 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
             using (var db = new CompanyContext())
             {
-                db.Employees.RemoveRange(db.Employees.ToArray());
-                db.Companies.RemoveRange(db.Companies.ToArray());
-                db.SaveChanges();
-
                 var request = new BulkInsertRequest<Company>
                 {
                     Entities = new List<Company> { employer },
@@ -101,9 +93,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 Assert.AreEqual("World Inc", actual.Name);
                 Assert.AreEqual("John", actual.Employees.Single().Name);
 
-                db.Employees.RemoveRange(db.Employees.ToArray());
-                db.Companies.RemoveRange(db.Companies.ToArray());
-                db.SaveChanges();
+                Cleanup();
 
                 request.AllowNotNullSelfReferences = true;
                 employee.Id = 0;

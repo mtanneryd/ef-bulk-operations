@@ -22,7 +22,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         public void Cleanup()
         {
             var db = new PeopleContext();
-            db.Database.Delete();
+            db.People.RemoveRange(db.People.ToArray());
+            db.SaveChanges();
         }
 
         [TestMethod]
@@ -43,9 +44,6 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             };
             using (var db = new PeopleContext())
             {
-                db.People.RemoveRange(db.People.ToArray());
-                db.SaveChanges();
-
                 var request = new BulkInsertRequest<Person>
                 {
                     Entities = new List<Person> {child},
@@ -77,9 +75,6 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
             using (var db = new PeopleContext())
             {
-                db.People.RemoveRange(db.People.ToArray());
-                db.SaveChanges();
-
                 var request = new BulkInsertRequest<Person>
                 {
                     Entities = new List<Person> { mother },

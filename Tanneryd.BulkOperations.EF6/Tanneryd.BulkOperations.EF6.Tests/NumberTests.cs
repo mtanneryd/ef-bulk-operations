@@ -16,13 +16,53 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         public void Initialize()
         {
             Database.SetInitializer(new CreateDatabaseIfNotExists<NumberContext>());
+            Cleanup();
         }
 
         [TestCleanup]
         public void Cleanup()
         {
             var db = new NumberContext();
-            db.Database.Delete();
+            db.Composites.RemoveRange(db.Composites.ToArray());
+            db.Primes.RemoveRange(db.Primes.ToArray());
+            db.Numbers.RemoveRange(db.Numbers.ToArray());
+            db.Parities.RemoveRange(db.Parities.ToArray());
+            db.Levels.RemoveRange(db.Levels.ToArray());
+            db.SaveChanges();
+        }
+
+        [TestMethod]
+        public void ExistingEntitiesShouldBeSelected()
+        {
+            using (var db = new NumberContext())
+            {
+                var now = DateTime.Now;
+
+                var parities = new[]
+                {
+                    new Parity {Name = "Even", UpdatedAt = now, UpdatedBy = "Måns"},
+                    new Parity {Name = "Odd", UpdatedAt = now, UpdatedBy = "Måns"},
+                };
+                var numbers = GenerateNumbers(100, parities[0], parities[1], now).ToArray();
+                db.BulkInsertAll(new BulkInsertRequest<Number>
+                {
+                    Entities = numbers,
+                    Recursive = true
+                });
+
+
+                var moreNumbers = GenerateNumbers(200, parities[0], parities[1], now).ToArray();
+                var existingNumbers = db.BulkSelectExisting(new BulkSelectExistingRequest<Number>
+                {
+                    Entities = moreNumbers,
+                    KeyMemberNames = new [] {"Value"}
+                });
+
+                for(int i=0;i<100;i++)
+                {
+                    Assert.AreSame(moreNumbers[i], existingNumbers[i]);
+                }
+            }
         }
 
         [TestMethod]
