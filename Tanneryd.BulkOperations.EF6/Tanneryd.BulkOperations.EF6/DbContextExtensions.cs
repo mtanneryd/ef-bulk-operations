@@ -83,7 +83,6 @@ namespace Tanneryd.BulkOperations.EF6
         /// <typeparam name="T"></typeparam>
         /// <param name="ctx"></param>
         /// <param name="request"></param>
-        /// <returns></returns>
         public static IList<T> BulkSelectExisting<T>(
             this DbContext ctx,
             BulkSelectExistingRequest<T> request)
@@ -507,9 +506,7 @@ namespace Tanneryd.BulkOperations.EF6
                 //
                 // Clean up. Delete the temp table.
                 //
-                var cmdFooter = $@"DROP TABLE {tempTableName}";
-                cmd = new SqlCommand(cmdFooter, conn, transaction);
-                cmd.ExecuteNonQuery();
+                DropTempTable(conn, transaction, tempTableName);
             }
 
             response.AffectedRows.Add(new Tuple<Type, long>(t, rowsAffected));
@@ -1009,7 +1006,6 @@ namespace Tanneryd.BulkOperations.EF6
                         }
                     }
                 }
-
             }
             // We have a composite primary key.
             else
@@ -1067,9 +1063,7 @@ namespace Tanneryd.BulkOperations.EF6
                 //
                 // Clean up. Delete the temp table.
                 //
-                var cmdFooter = $@"DROP TABLE {tempTableName}";
-                cmd = new SqlCommand(cmdFooter, conn, transaction);
-                cmd.ExecuteNonQuery();
+                DropTempTable(conn, transaction, tempTableName);
             }
 
             response.AffectedRows.Add(new Tuple<Type, long>(t, rowsAffected));
@@ -1189,28 +1183,19 @@ namespace Tanneryd.BulkOperations.EF6
             TableColumnMapping[] nonKeyColumnMappings,
             SqlTransaction sqlTransaction)
         {
-            var tempTableName = $@"#{tableName.Name}";
-
-            var columns = keyColumnMappings.Select(m => m.TableColumn.Name)
+            var columnNames = keyColumnMappings.Select(m => m.TableColumn.Name)
                 .Concat(nonKeyColumnMappings.Select(m => m.TableColumn.Name)).ToArray();
-            var columnNames = string.Join(",", columns.Select(c => c));
-            var cmdHeader = $@"   
-                                    IF OBJECT_ID('tempdb..#{tableName.Name}') IS NOT NULL DROP TABLE #{tableName.Name}
 
-                                    SELECT {columnNames}
-                                    INTO #{tableName.Name}
-                                    FROM {tableName.Fullname}
-                                    WHERE 1=0
-                                ";
+            var tempTableName = CreateTempTable(conn, sqlTransaction, tableName, columnNames);
+
             if (keyColumnMappings.Length == 1 &&
                 (keyColumnMappings[0].TableColumn.IsStoreGeneratedIdentity ||
                  keyColumnMappings[0].TableColumn.IsStoreGeneratedComputed))
             {
-                cmdHeader += $@"SET IDENTITY_INSERT #{tableName.Name} ON";
+                var query = $@"SET IDENTITY_INSERT #{tableName.Name} ON";
+                var cmd = new SqlCommand(query, conn, sqlTransaction);
+                cmd.ExecuteNonQuery();
             }
-
-            var cmd = new SqlCommand(cmdHeader, conn, sqlTransaction);
-            cmd.ExecuteNonQuery();
 
             //
             // Setup a bulk copy instance to populate the temp table.
@@ -1220,7 +1205,6 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     DestinationTableName = tempTableName,
                     BulkCopyTimeout = 5 * 60,
-
                 };
 
             var allProperties = GetProperties(entities[0]);
