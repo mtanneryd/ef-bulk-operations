@@ -335,16 +335,12 @@ namespace Tanneryd.BulkOperations.EF6
             var entities = request.Entities;
             var conn = GetSqlConnection(ctx);
 
-            //
-            // Check to see if the table has a primary key. If so,
-            // get a clr property name to table column name mapping.
-            //
-            dynamic declaringType = columnMappings
-                .Values
-                .First().TableColumn.DeclaringType;
-
             if (!selectedKeyMemberNames.Any())
             {
+                dynamic declaringType = columnMappings
+                    .Values
+                    .First().TableColumn.DeclaringType;
+
                 var primaryKeyMembers = new List<string>();
                 foreach (var keyMember in declaringType.KeyMembers)
                     primaryKeyMembers.Add(keyMember.ToString());
@@ -391,10 +387,13 @@ namespace Tanneryd.BulkOperations.EF6
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT * FROM {tableName.Fullname} AS [t0]
                                INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}";
-                var existingEntitiesFromDb = ctx.Database.SqlQuery<T>(query).ToList();
 
                 var comparer = new PropertyEqualityComparer<T>(selectedKeyMappings.Keys.ToArray());
-                var existingEntities = entities.Where(e => existingEntitiesFromDb.Contains(e, comparer)).ToList();
+
+                var existingEntitiesFromDb = ctx.Database.SqlQuery<T>(query)
+                    .ToDictionary(e => e, e => e, comparer);
+
+                var existingEntities = entities.Where(e => existingEntitiesFromDb.ContainsKey(e)).ToList();
 
                 DropTempTable(conn, request.Transaction, tempTableName);
 

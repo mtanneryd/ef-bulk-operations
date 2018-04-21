@@ -114,8 +114,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 };
                 db.BulkInsertAll(parities);
 
-                Assert.AreEqual(1, parities[0].Id);
-                Assert.AreEqual(2, parities[1].Id);
+                Assert.IsTrue(parities[0].Id>0);
+                Assert.IsTrue(parities[1].Id>0);
             }
         }
 
