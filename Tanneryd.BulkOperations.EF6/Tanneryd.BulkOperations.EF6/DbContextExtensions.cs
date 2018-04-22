@@ -32,44 +32,6 @@ using Tanneryd.BulkOperations.EF6.Model;
 
 namespace Tanneryd.BulkOperations.EF6
 {
-    public class PropertyEqualityComparer<T> : EqualityComparer<T>
-    {
-        private readonly string[] _propertyNames;
-
-        public PropertyEqualityComparer(string[] propertyNames)
-        {
-            _propertyNames = propertyNames;
-        }
-
-        public override bool Equals(T x, T y)
-        {
-            if (x == null && y == null)
-                return true;
-            else if (x == null || y == null)
-                return false;
-            var t = typeof(T);
-
-            foreach (var propertyName in _propertyNames)
-            {
-                var property = t.GetProperty(propertyName);
-                if (property == null) return false;
-                if (!property.GetValue(x).Equals(property.GetValue(y)))
-                    return false;
-            }
-
-            return true;
-        }
-
-        public override int GetHashCode(T obj)
-        {
-            var t = typeof(T);
-            var properties = t.GetProperties().Where(p => _propertyNames.Any(n => n == p.Name));
-            return properties
-                .Select(item => item.GetHashCode())
-                .Aggregate((total, nextCode) => total ^ nextCode);
-        }
-    }
-
     public static class DbContextExtensions
     {
         #region Public API
@@ -77,17 +39,31 @@ namespace Tanneryd.BulkOperations.EF6
         /// <summary>
         /// Given a set of entities we return the subset of these entities
         /// that already exist in the database, according to the key selector
-        /// used. If no specific key selector is provided we use the primary
-        /// key.
+        /// used.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="ctx"></param>
         /// <param name="request"></param>
         public static IList<T> BulkSelectExisting<T>(
             this DbContext ctx,
-            BulkSelectExistingRequest<T> request)
+            BulkSelectRequest<T> request)
         {
             return DoBulkSelectExisting(ctx, request);
+        }
+
+        /// <summary>
+        /// Given a set of entities we return the subset of these entities
+        /// that do not exist in the database, according to the key selector
+        /// used.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ctx"></param>
+        /// <param name="request"></param>
+        public static IList<T> BulkSelectNotExisting<T>(
+            this DbContext ctx,
+            BulkSelectRequest<T> request)
+        {
+            return DoBulkSelectNotExisting(ctx, request);
         }
 
         /// <summary>
@@ -296,7 +272,7 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction,
             string tableName,
             Dictionary<string, TableColumnMapping> columnMappings,
-            bool includeRowNumber=false)
+            bool includeRowNumber = false)
         {
             var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction)
             {
@@ -338,44 +314,38 @@ namespace Tanneryd.BulkOperations.EF6
         /// <param name="ctx"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        private static IList<T> DoBulkSelectExisting<T>(DbContext ctx, BulkSelectExistingRequest<T> request)
+        private static IList<T> DoBulkSelectNotExisting<T>(DbContext ctx, BulkSelectRequest<T> request)
         {
             Type t = typeof(T);
             var mappings = GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
-            var selectedKeyMemberNames = request.KeyMemberNames;
+            var keyPropertyNames = request.KeyPropertyNames;
             var entities = request.Entities;
             var conn = GetSqlConnection(ctx);
 
-            if (!selectedKeyMemberNames.Any())
+            if (!keyPropertyNames.Any())
             {
-                dynamic declaringType = columnMappings
-                    .Values
-                    .First().TableColumn.DeclaringType;
-
-                var primaryKeyMembers = new List<string>();
-                foreach (var keyMember in declaringType.KeyMembers)
-                    primaryKeyMembers.Add(keyMember.ToString());
-                selectedKeyMemberNames = primaryKeyMembers.ToArray();
+                throw new ArgumentException("The KeyPropertyNames request property must be set and contain at least one name.");
             }
 
-            var selectedKeyMappings = columnMappings.Values
-                .Where(m => selectedKeyMemberNames.Contains(m.TableColumn.Name))
+            var keyMappings = columnMappings.Values
+                .Where(m => keyPropertyNames.Contains(m.TableColumn.Name))
                 .ToDictionary(m => m.EntityProperty.Name, m => m);
 
-            if (selectedKeyMappings.Any())
+            if (keyMappings.Any())
             {
                 var tempTableName = CreateTempTable(
                     conn,
                     request.Transaction,
                     tableName,
-                    selectedKeyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
+                    keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
                     true);
 
-                // We only need columns for our selected keys.
+                // We only need the key columns and the 
+                // rowno column in our temp table.
                 var properties = GetProperties(entities[0])
-                    .Where(p => selectedKeyMappings.ContainsKey(p.Name)).ToArray();
+                    .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
                 var table = new DataTable();
                 var bulkCopy = CreateBulkCopy(
@@ -384,7 +354,7 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tempTableName,
-                    selectedKeyMappings,
+                    keyMappings,
                     true);
 
                 int i = 0;
@@ -400,10 +370,101 @@ namespace Tanneryd.BulkOperations.EF6
                 bulkCopy.BulkCopyTimeout = 5 * 60;
                 bulkCopy.WriteToServer(table);
 
-                var conditionStatements = selectedKeyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
+                var conditionStatements = keyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                var query = $@"SELECT rowno FROM {tableName.Fullname} AS [t0]
-                               INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}";
+                var query = $@"SELECT [t0].[rowno] 
+                               FROM {tempTableName}
+                               EXCEPT
+                               SELECT [t0].[rowno] 
+                               FROM {tempTableName} AS [t0]
+                               LEFT JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
+
+                var cmd = new SqlCommand(query, conn, request.Transaction);
+                var sqlDataReader = cmd.ExecuteReader();
+
+                var nonExistingEntities = new List<T>();
+                while (sqlDataReader.Read())
+                {
+                    var rowNo = (int)sqlDataReader[0];
+                    nonExistingEntities.Add(entities[rowNo]);
+                }
+
+                DropTempTable(conn, request.Transaction, tempTableName);
+
+                return nonExistingEntities;
+            }
+
+            return new List<T>();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ctx"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private static IList<T> DoBulkSelectExisting<T>(DbContext ctx, BulkSelectRequest<T> request)
+        {
+            Type t = typeof(T);
+            var mappings = GetMappings(ctx, t);
+            var tableName = mappings.TableName;
+            var columnMappings = mappings.ColumnMappingByPropertyName;
+            var keyPropertyNames = request.KeyPropertyNames;
+            var entities = request.Entities;
+            var conn = GetSqlConnection(ctx);
+
+            if (!keyPropertyNames.Any())
+            {
+                throw new ArgumentException("The KeyPropertyNames request property must be set and contain at least one name.");
+            }
+
+            var keyMappings = columnMappings.Values
+                .Where(m => keyPropertyNames.Contains(m.TableColumn.Name))
+                .ToDictionary(m => m.EntityProperty.Name, m => m);
+
+            if (keyMappings.Any())
+            {
+                var tempTableName = CreateTempTable(
+                    conn,
+                    request.Transaction,
+                    tableName,
+                    keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
+                    true);
+
+                // We only need the key columns and the 
+                // rowno column in our temp table.
+                var properties = GetProperties(entities[0])
+                    .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
+
+                var table = new DataTable();
+                var bulkCopy = CreateBulkCopy(
+                    table,
+                    properties,
+                    conn,
+                    request.Transaction,
+                    tempTableName,
+                    keyMappings,
+                    true);
+
+                int i = 0;
+                foreach (var entity in entities)
+                {
+                    var e = entity;
+                    var columnValues = new List<dynamic>();
+                    columnValues.AddRange(properties.Select(p => GetProperty(p.Name, e, DBNull.Value)));
+                    columnValues.Add(i++);
+                    table.Rows.Add(columnValues.ToArray());
+                }
+
+                bulkCopy.BulkCopyTimeout = 5 * 60;
+                bulkCopy.WriteToServer(table);
+
+                var conditionStatements = keyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
+                var conditionStatementsSql = string.Join(" AND ", conditionStatements);
+                var query = $@"SELECT [t0].[rowno]
+                               FROM {tempTableName} AS [t0]
+                               INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
 
                 var cmd = new SqlCommand(query, conn, request.Transaction);
                 var sqlDataReader = cmd.ExecuteReader();
@@ -414,8 +475,6 @@ namespace Tanneryd.BulkOperations.EF6
                     var rowNo = (int)sqlDataReader[0];
                     existingEntities.Add(entities[rowNo]);
                 }
-
-
 
                 DropTempTable(conn, request.Transaction, tempTableName);
 
@@ -435,7 +494,7 @@ namespace Tanneryd.BulkOperations.EF6
         {
             var rowsAffected = 0;
 
-            var keyMemberNames = request.KeyMemberNames;
+            var keyMemberNames = request.KeyPropertyNames;
             var updatedColumnNames = request.UpdatedColumnNames;
             var entities = request.Entities;
             var transaction = request.Transaction;

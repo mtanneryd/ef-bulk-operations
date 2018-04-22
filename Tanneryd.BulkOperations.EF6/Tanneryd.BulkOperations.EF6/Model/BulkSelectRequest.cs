@@ -3,16 +3,16 @@ using System.Data.SqlClient;
 
 namespace Tanneryd.BulkOperations.EF6.Model
 {
-    public class BulkSelectExistingRequest<T>
+    public class BulkSelectRequest<T>
     {
         public IList<T> Entities { get; set; }
-        public string[] KeyMemberNames { get; set; }
+        public string[] KeyPropertyNames { get; set; }
         public SqlTransaction Transaction { get; set; }
 
 
-        public BulkSelectExistingRequest()
+        public BulkSelectRequest()
         {
-            KeyMemberNames = new string[0];
+            KeyPropertyNames = new string[0];
             Entities = new T[0];
         }
     }

@@ -43,7 +43,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                     new Parity {Name = "Even", UpdatedAt = now, UpdatedBy = "Måns"},
                     new Parity {Name = "Odd", UpdatedAt = now, UpdatedBy = "Måns"},
                 };
-                var numbers = GenerateNumbers(100, parities[0], parities[1], now).ToArray();
+                var numbers = GenerateNumbers(1, 200, parities[0], parities[1], now).ToArray();
                 db.BulkInsertAll(new BulkInsertRequest<Number>
                 {
                     Entities = numbers,
@@ -51,16 +51,16 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 });
 
 
-                var moreNumbers = GenerateNumbers(200, parities[0], parities[1], now).ToArray();
-                var existingNumbers = db.BulkSelectExisting(new BulkSelectExistingRequest<Number>
+                numbers = GenerateNumbers(50, 100, parities[0], parities[1], now).ToArray();
+                var existingNumbers = db.BulkSelectExisting(new BulkSelectRequest<Number>
                 {
-                    Entities = moreNumbers,
-                    KeyMemberNames = new [] {"Value"}
+                    Entities = numbers,
+                    KeyPropertyNames = new [] {"Value"}
                 });
 
                 for(int i=0;i<100;i++)
                 {
-                    Assert.AreSame(moreNumbers[i], existingNumbers[i]);
+                    Assert.AreSame(numbers[i], existingNumbers[i]);
                 }
             }
         }
@@ -137,7 +137,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 };
                 db.BulkInsertAll(parities);
 
-                var numbers = GenerateNumbers(100, parities[0], parities[1], now).ToArray();
+                var numbers = GenerateNumbers(1, 100, parities[0], parities[1], now).ToArray();
                 db.BulkInsertAll(numbers);
 
                 Assert.AreEqual(100, db.Numbers.Count());
@@ -170,7 +170,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                     new Parity {Name = "Odd", UpdatedAt = now, UpdatedBy = "Måns"},
                 };
 
-                var numbers = GenerateNumbers(100, parities[0], parities[1], now).ToArray();
+                var numbers = GenerateNumbers(1, 100, parities[0], parities[1], now).ToArray();
                 var request = new BulkInsertRequest<Number>
                 {
                     Entities = numbers,
@@ -208,7 +208,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                     new Parity {Name = "Odd", UpdatedAt = now, UpdatedBy = "Måns"},
                 };
 
-                var numbers = GenerateNumbers(100, parities[0], parities[1], now).ToArray();
+                var numbers = GenerateNumbers(1, 100, parities[0], parities[1], now).ToArray();
                 var primes = GeneratePrimeNumbers(100, numbers, now);
 
                 var request = new BulkInsertRequest<Prime>
@@ -220,9 +220,9 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             }
         }
 
-        private static IEnumerable<Number> GenerateNumbers(int count, Parity even, Parity odd, DateTime now)
+        private static IEnumerable<Number> GenerateNumbers(int start, int count, Parity even, Parity odd, DateTime now)
                 {
-                    for (int i = 1; i <= count; i++)
+                    for (int i = start; i < count+start; i++)
                     {
                         var parity = i % 2 == 0 ? even : odd;
                         var n = new Number

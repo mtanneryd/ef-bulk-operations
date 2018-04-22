@@ -49,7 +49,7 @@
   <ItemGroup>
     <Compile Include="Model\BulkInsertRequest.cs" />
     <Compile Include="Model\BulkOperationResponse.cs" />
-    <Compile Include="Model\BulkSelectExistingRequest.cs" />
+    <Compile Include="Model\BulkSelectRequest.cs" />
     <Compile Include="Model\BulkUpdateRequest.cs" />
     <Compile Include="Model\AssociationMapping.cs" />
     <Compile Include="DbContextExtensions.cs" />
