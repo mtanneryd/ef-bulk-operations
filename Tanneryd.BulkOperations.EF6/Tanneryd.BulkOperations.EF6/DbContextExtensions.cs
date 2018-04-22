@@ -258,12 +258,18 @@ namespace Tanneryd.BulkOperations.EF6
             SqlConnection connection,
             SqlTransaction transaction,
             TableName tableName,
-            string[] columnNames)
+            string[] columnNames,
+            bool includeRowNumber = false)
         {
+            var selectClause = string.Join(",", columnNames);
+            if (includeRowNumber)
+            {
+                selectClause = "1 as rowno," + selectClause;
+            }
             var query = $@"   
                         IF OBJECT_ID('tempdb..#{tableName.Name}') IS NOT NULL DROP TABLE #{tableName.Name}
 
-                        SELECT {string.Join(",", columnNames)}
+                        SELECT {selectClause}
                         INTO #{tableName.Name}
                         FROM {tableName.Fullname}
                         WHERE 1=0";
@@ -289,7 +295,8 @@ namespace Tanneryd.BulkOperations.EF6
             SqlConnection connection,
             SqlTransaction transaction,
             string tableName,
-            Dictionary<string, TableColumnMapping> columnMappings)
+            Dictionary<string, TableColumnMapping> columnMappings,
+            bool includeRowNumber=false)
         {
             var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction)
             {
@@ -313,6 +320,12 @@ namespace Tanneryd.BulkOperations.EF6
                 var clrPropertyName = property.Name;
                 var tableColumnName = columnMappings[property.Name].TableColumn.Name;
                 bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(clrPropertyName, tableColumnName));
+            }
+
+            if (includeRowNumber)
+            {
+                table.Columns.Add(new DataColumn("rowno", typeof(int)));
+                bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("rowno", "rowno"));
             }
 
             return bulkCopy;
@@ -357,7 +370,8 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tableName,
-                    selectedKeyMappings.Select(m => m.Value.TableColumn.Name).ToArray());
+                    selectedKeyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
+                    true);
 
                 // We only need columns for our selected keys.
                 var properties = GetProperties(entities[0])
@@ -370,13 +384,16 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tempTableName,
-                    selectedKeyMappings);
+                    selectedKeyMappings,
+                    true);
 
+                int i = 0;
                 foreach (var entity in entities)
                 {
                     var e = entity;
                     var columnValues = new List<dynamic>();
                     columnValues.AddRange(properties.Select(p => GetProperty(p.Name, e, DBNull.Value)));
+                    columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
 
@@ -385,15 +402,20 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var conditionStatements = selectedKeyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                var query = $@"SELECT * FROM {tableName.Fullname} AS [t0]
+                var query = $@"SELECT rowno FROM {tableName.Fullname} AS [t0]
                                INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}";
 
-                var comparer = new PropertyEqualityComparer<T>(selectedKeyMappings.Keys.ToArray());
+                var cmd = new SqlCommand(query, conn, request.Transaction);
+                var sqlDataReader = cmd.ExecuteReader();
 
-                var existingEntitiesFromDb = ctx.Database.SqlQuery<T>(query)
-                    .ToDictionary(e => e, e => e, comparer);
+                var existingEntities = new List<T>();
+                while (sqlDataReader.Read())
+                {
+                    var rowNo = (int)sqlDataReader[0];
+                    existingEntities.Add(entities[rowNo]);
+                }
 
-                var existingEntities = entities.Where(e => existingEntitiesFromDb.ContainsKey(e)).ToList();
+
 
                 DropTempTable(conn, request.Transaction, tempTableName);
 
@@ -871,7 +893,7 @@ namespace Tanneryd.BulkOperations.EF6
                 if (newEntities.Count > 0)
                 {
                     bulkCopy.DestinationTableName = $"#{tableName.Name}";
-                    table.Columns.Add(new DataColumn("rowno", typeof(long)));
+                    table.Columns.Add(new DataColumn("rowno", typeof(int)));
                     bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("rowno", "rowno"));
 
                     var query = $@"   
