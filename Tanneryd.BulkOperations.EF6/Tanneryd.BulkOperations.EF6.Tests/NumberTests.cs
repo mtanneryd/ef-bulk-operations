@@ -32,6 +32,50 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         }
 
         [TestMethod]
+        public void ItemsMatchingExistingEntitiesShouldBeSelected()
+        {
+            using (var db = new NumberContext())
+            {
+                var now = DateTime.Now;
+
+                var parities = new[]
+                {
+                    new Parity {Name = "Even", UpdatedAt = now, UpdatedBy = "Måns"},
+                    new Parity {Name = "Odd", UpdatedAt = now, UpdatedBy = "Måns"},
+                };
+                var numbers = GenerateNumbers(1, 200, parities[0], parities[1], now).ToArray();
+                db.BulkInsertAll(new BulkInsertRequest<Number>
+                {
+                    Entities = numbers,
+                    Recursive = true
+                });
+
+
+                var nums = GenerateNumbers(50, 100, parities[0], parities[1], now)
+                    .Select(n => new Num { Val = n.Value })
+                    .ToList();
+                var existingNumbers = db.BulkSelectExisting<Num, Number>(new BulkSelectRequest<Num>
+                {
+                    Items = nums,
+                    KeyPropertyMappings = new[]
+                    {
+                        new KeyPropertyMapping
+                        {
+                            ItemPropertyName = "Val",
+                            EntityPropertyName = "Value"
+                        },
+                    }
+                });
+
+                for (int i = 0; i < 100; i++)
+                {
+                    Assert.AreSame(nums[i], existingNumbers[i]);
+                }
+            }
+        }
+
+
+        [TestMethod]
         public void ExistingEntitiesShouldBeSelected()
         {
             using (var db = new NumberContext())
@@ -52,13 +96,20 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
 
                 numbers = GenerateNumbers(50, 100, parities[0], parities[1], now).ToArray();
-                var existingNumbers = db.BulkSelectExisting(new BulkSelectRequest<Number>
+                var existingNumbers = db.BulkSelectExisting<Number, Number>(new BulkSelectRequest<Number>
                 {
-                    Entities = numbers,
-                    KeyPropertyNames = new [] {"Value"}
+                    Items = numbers,
+                    KeyPropertyMappings = new[]
+                    {
+                        new KeyPropertyMapping
+                        {
+                            ItemPropertyName = "Value",
+                            EntityPropertyName = "Value"
+                        },
+                    }
                 });
 
-                for(int i=0;i<100;i++)
+                for (int i = 0; i < 100; i++)
                 {
                     Assert.AreSame(numbers[i], existingNumbers[i]);
                 }
@@ -114,8 +165,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 };
                 db.BulkInsertAll(parities);
 
-                Assert.IsTrue(parities[0].Id>0);
-                Assert.IsTrue(parities[1].Id>0);
+                Assert.IsTrue(parities[0].Id > 0);
+                Assert.IsTrue(parities[1].Id > 0);
             }
         }
 
@@ -221,22 +272,22 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         }
 
         private static IEnumerable<Number> GenerateNumbers(int start, int count, Parity even, Parity odd, DateTime now)
+        {
+            for (int i = start; i < count + start; i++)
+            {
+                var parity = i % 2 == 0 ? even : odd;
+                var n = new Number
                 {
-                    for (int i = start; i < count+start; i++)
-                    {
-                        var parity = i % 2 == 0 ? even : odd;
-                        var n = new Number
-                        {
-                            Value = i,
-                            ParityId = parity.Id,
-                            Parity = parity,
-                            UpdatedAt = now,
-                            UpdatedBy = "Måns"
-                        };
+                    Value = i,
+                    ParityId = parity.Id,
+                    Parity = parity,
+                    UpdatedAt = now,
+                    UpdatedBy = "Måns"
+                };
 
-                        yield return n;
-                    }
-                }
+                yield return n;
+            }
+        }
 
         private static Prime[] GeneratePrimeNumbers(int count, Number[] numbers, DateTime now)
         {
@@ -271,5 +322,10 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             }
             yield return composite;
         }
+    }
+
+    class Num
+    {
+        public long Val { get; set; }
     }
 }
