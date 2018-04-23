@@ -36,20 +36,21 @@ namespace Tanneryd.BulkOperations.EF6
     {
         #region Public API
 
-        /// <summary>
-        /// Given a set of entities we return the subset of these entities
-        /// that already exist in the database, according to the key selector
-        /// used.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="ctx"></param>
-        /// <param name="request"></param>
-        public static IList<T1> BulkSelectExisting<T1,T2>(
-            this DbContext ctx,
-            BulkSelectRequest<T1> request)
-        {
-            return DoBulkSelectExisting<T1, T2>(ctx, request);
-        }
+/// <summary>
+/// Given a set of entities we return the subset of these entities
+/// that already exist in the database, according to the key selector
+/// used.
+/// </summary>
+/// <typeparam name="T1">The item collection type</typeparam>
+/// <typeparam name="T2">The EF entity type</typeparam>
+/// <param name="ctx"></param>
+/// <param name="request"></param>
+public static IList<T1> BulkSelectExisting<T1,T2>(
+    this DbContext ctx,
+    BulkSelectRequest<T1> request)
+{
+    return DoBulkSelectExisting<T1, T2>(ctx, request);
+}
 
         /// <summary>
         /// Given a set of entities we return the subset of these entities

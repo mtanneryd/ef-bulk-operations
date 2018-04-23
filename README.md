@@ -59,6 +59,67 @@ public class BulkUpdateRequest
      BulkUpdateRequest request)
 ```
 
+#### SelectExisting
+The select-existing feature provides a way to identify the subset of existing or non-existing items in a collection where an item is considered as existing if it is equal to an entity saved in the database according to a set of defined key properties. This provides a very efficient way of figuring out which items in a collection needs to be inserted and which to be updated. The item collection can be of the same type as the EF entity but it does not have to be.
+```csharp
+public class KeyPropertyMapping
+{
+    public string ItemPropertyName { get; set; }
+    public string EntityPropertyName { get; set; }
+
+    public static KeyPropertyMapping[] IdentityMappings(string[] names)
+    {
+        return names.Select(n => new KeyPropertyMapping
+        {
+            ItemPropertyName = n,
+            EntityPropertyName = n
+        }).ToArray();
+    }
+}
+
+public class BulkSelectRequest<T>
+{
+    public BulkSelectRequest(string[] keyPropertyNames)
+    {
+        KeyPropertyMappings = keyPropertyNames.Select(n => new KeyPropertyMapping
+            {
+                ItemPropertyName = n,
+                EntityPropertyName = n
+            })
+            .ToArray();
+    }
+    public IList<T> Items { get; set; }
+    public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
+    public SqlTransaction Transaction { get; set; }
+
+
+    public BulkSelectRequest()
+    {
+        KeyPropertyMappings = new KeyPropertyMapping[0];
+        Items = new T[0];
+    }
+}
+```
+
+
+```csharp
+/// <summary>
+/// Given a set of entities we return the subset of these entities
+/// that already exist in the database, according to the key selector
+/// used.
+/// </summary>
+/// <typeparam name="T1">The item collection type</typeparam>
+/// <typeparam name="T2">The EF entity type</typeparam>
+/// <param name="ctx"></param>
+/// <param name="request"></param>
+public static IList<T1> BulkSelectExisting<T1,T2>(
+    this DbContext ctx,
+    BulkSelectRequest<T1> request)
+{
+    return DoBulkSelectExisting<T1, T2>(ctx, request);
+}
+```
+
 ## Built With
 
 * Visual Studio 2017
