@@ -15,12 +15,31 @@
  */
 
 using System;
+using System.Reflection;
 
 namespace Tanneryd.BulkOperations.EF6.Model
 {
-    internal class PropInfo
+    internal class BulkPropertyInfo
     {
-        public Type Type { get; set; }
-        public string Name { get; set; }
+        public virtual Type Type { get; set; }
+        public virtual string Name { get; set; }
+        public PropertyInfo PropertyInfo { get; set; }
     }
+
+    internal class RegularBulkPropertyInfo : BulkPropertyInfo
+    {
+        public override Type Type => PropertyInfo.PropertyType;
+        public override string Name => PropertyInfo.Name;
+    }
+
+    internal class ExpandoBulkPropertyInfo : BulkPropertyInfo
+    {
+
+    }
+
+    //internal class PropInfo
+    //{
+    //    public Type Type { get; set; }
+    //    public string Name { get; set; }
+    //}
 }

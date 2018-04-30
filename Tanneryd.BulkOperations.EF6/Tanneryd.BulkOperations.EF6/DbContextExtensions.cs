@@ -278,7 +278,7 @@ namespace Tanneryd.BulkOperations.EF6
 
         private static SqlBulkCopy CreateBulkCopy(
             DataTable table,
-            PropInfo[] properties,
+            BulkPropertyInfo[] properties,
             Dictionary<string, TableColumnMapping> columnMappings,
             SqlConnection connection,
             SqlTransaction transaction,
@@ -389,7 +389,7 @@ namespace Tanneryd.BulkOperations.EF6
                                EXCEPT
                                SELECT [t1].[rowno] 
                                FROM {tempTableName} AS [t1]
-                               LEFT JOIN {tableName.Fullname} AS [t2] ON {conditionStatementsSql}";
+                               INNER JOIN {tableName.Fullname} AS [t2] ON {conditionStatementsSql}";
 
                 var cmd = new SqlCommand(query, conn, request.Transaction);
                 var sqlDataReader = cmd.ExecuteReader();
@@ -484,7 +484,7 @@ namespace Tanneryd.BulkOperations.EF6
                         if (!columnMappings.ContainsKey(property.Name)) continue;
                         var mapping = columnMappings[property.Name];
                         var val = sqlDataReader[mapping.TableColumn.Name];
-                        SetProperty(property.Name, t2, val);
+                        SetProperty(property, t2, val);
                     }
                 }
 
@@ -1460,20 +1460,21 @@ namespace Tanneryd.BulkOperations.EF6
             return tempTableName;
         }
 
-        private static PropInfo[] GetProperties(Type t)
+        private static BulkPropertyInfo[] GetProperties(Type t)
         {
-            return t.GetProperties().Select(p => new PropInfo
+            var bulkProperties = t.GetProperties().Select(p => new RegularBulkPropertyInfo
             {
-                Type = p.PropertyType,
-                Name = p.Name,
+                PropertyInfo = p
             }).ToArray();
+
+            return bulkProperties.Cast<BulkPropertyInfo>().ToArray();
         }
 
-        private static PropInfo[] GetProperties(object o)
+        private static BulkPropertyInfo[] GetProperties(object o)
         {
             if (o is ExpandoObject)
             {
-                var props = new List<PropInfo>();
+                var props = new List<ExpandoBulkPropertyInfo>();
                 var dict = (IDictionary<string, object>)o;
 
                 // Since we cannot get the type for expando properties
@@ -1486,22 +1487,23 @@ namespace Tanneryd.BulkOperations.EF6
                 // it here.
                 foreach (var kvp in dict.Where(kvp => kvp.Value != null))
                 {
-                    props.Add(new PropInfo
+                    props.Add(new ExpandoBulkPropertyInfo
                     {
                         Name = kvp.Key,
                         Type = kvp.Value.GetType()
                     });
                 }
 
-                return props.ToArray();
+                return props.Cast<BulkPropertyInfo>().ToArray();
             }
 
             Type t = o.GetType();
-            return t.GetProperties().Select(p => new PropInfo
+            var bulkProperties = t.GetProperties().Select(p => new RegularBulkPropertyInfo
             {
-                Type = p.PropertyType,
-                Name = p.Name,
+                PropertyInfo = p
             }).ToArray();
+
+            return bulkProperties.Cast<BulkPropertyInfo>().ToArray();
         }
 
         private static void AddProperty(ExpandoObject expando, string propertyName, object propertyValue)
@@ -1766,6 +1768,18 @@ namespace Tanneryd.BulkOperations.EF6
                 var type = instance.GetType();
                 var property = type.GetProperty(propertyName);
                 property.SetValue(instance, value);
+            }
+        }
+
+        private static void SetProperty(BulkPropertyInfo property, object instance, object value)
+        {
+            if (value == DBNull.Value) return;
+
+            if (property is RegularBulkPropertyInfo) property.PropertyInfo.SetValue(instance, value);
+            else
+            {
+                var dict = (IDictionary<string, object>)instance;
+                dict[property.Name] = value;
             }
         }
 
