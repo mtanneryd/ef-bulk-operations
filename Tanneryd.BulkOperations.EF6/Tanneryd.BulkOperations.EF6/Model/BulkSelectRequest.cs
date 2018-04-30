@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Linq.Expressions;
 
 namespace Tanneryd.BulkOperations.EF6.Model
 {
@@ -33,7 +35,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public IList<T> Items { get; set; }
         public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
         public SqlTransaction Transaction { get; set; }
-
+   
 
         public BulkSelectRequest()
         {

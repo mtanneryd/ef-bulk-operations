@@ -5,6 +5,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.Tests.DM;
+using Tanneryd.BulkOperations.EF6.Tests.DM.People;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
 namespace Tanneryd.BulkOperations.EF6.Tests

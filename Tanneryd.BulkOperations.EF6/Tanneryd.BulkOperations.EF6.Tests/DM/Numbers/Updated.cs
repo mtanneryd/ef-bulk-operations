@@ -15,21 +15,14 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-using System;
-using System.Collections.Generic;
 
-namespace Tanneryd.BulkOperations.EF6.Tests.DM
+using System;
+
+namespace Tanneryd.BulkOperations.EF6.Tests.DM.Numbers
 {
-    public class Parity
+    public class Updated
     {
-        public Parity()
-        {
-            Numbers = new HashSet<Number>();   
-        }
-        public int Id { get; set; }
-        public string Name { get; set; }
         public DateTime UpdatedAt { get; set; }
         public string UpdatedBy { get; set; }
-        public ICollection<Number> Numbers { get; set; }
     }
 }

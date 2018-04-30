@@ -36,21 +36,28 @@ namespace Tanneryd.BulkOperations.EF6
     {
         #region Public API
 
-/// <summary>
-/// Given a set of entities we return the subset of these entities
-/// that already exist in the database, according to the key selector
-/// used.
-/// </summary>
-/// <typeparam name="T1">The item collection type</typeparam>
-/// <typeparam name="T2">The EF entity type</typeparam>
-/// <param name="ctx"></param>
-/// <param name="request"></param>
-public static IList<T1> BulkSelectExisting<T1,T2>(
-    this DbContext ctx,
-    BulkSelectRequest<T1> request)
-{
-    return DoBulkSelectExisting<T1, T2>(ctx, request);
-}
+        public static IList<T2> BulkSelect<T1, T2>(
+            this DbContext ctx,
+            BulkSelectRequest<T1> request) where T2 : new()
+        {
+            return DoBulkSelect<T1, T2>(ctx, request);
+        }
+
+        /// <summary>
+        /// Given a set of entities we return the subset of these entities
+        /// that already exist in the database, according to the key selector
+        /// used.
+        /// </summary>
+        /// <typeparam name="T1">The item collection type</typeparam>
+        /// <typeparam name="T2">The EF entity type</typeparam>
+        /// <param name="ctx"></param>
+        /// <param name="request"></param>
+        public static IList<T1> BulkSelectExisting<T1, T2>(
+            this DbContext ctx,
+            BulkSelectRequest<T1> request)
+        {
+            return DoBulkSelectExisting<T1, T2>(ctx, request);
+        }
 
         /// <summary>
         /// Given a set of entities we return the subset of these entities
@@ -60,11 +67,11 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
         /// <typeparam name="T"></typeparam>
         /// <param name="ctx"></param>
         /// <param name="request"></param>
-        public static IList<T1> BulkSelectNotExisting<T1,T2>(
+        public static IList<T1> BulkSelectNotExisting<T1, T2>(
             this DbContext ctx,
             BulkSelectRequest<T1> request)
         {
-            return DoBulkSelectNotExisting<T1,T2>(ctx, request);
+            return DoBulkSelectNotExisting<T1, T2>(ctx, request);
         }
 
         /// <summary>
@@ -269,10 +276,10 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
         private static SqlBulkCopy CreateBulkCopy(
             DataTable table,
             PropInfo[] properties,
+            Dictionary<string, TableColumnMapping> columnMappings,
             SqlConnection connection,
             SqlTransaction transaction,
             string tableName,
-            Dictionary<string, TableColumnMapping> columnMappings,
             bool includeRowNumber = false)
         {
             var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction)
@@ -316,7 +323,7 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
         /// <param name="ctx"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        private static IList<T1> DoBulkSelectNotExisting<T1,T2>(DbContext ctx, BulkSelectRequest<T1> request)
+        private static IList<T1> DoBulkSelectNotExisting<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request)
         {
             Type t = typeof(T2);
             var mappings = GetMappings(ctx, t);
@@ -346,17 +353,17 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
 
                 // We only need the key columns and the 
                 // rowno column in our temp table.
-                var properties = GetProperties(t)
+                var keyProperties = GetProperties(t)
                     .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
                 var table = new DataTable();
                 var bulkCopy = CreateBulkCopy(
                     table,
-                    properties,
+                    keyProperties,
+                    keyMappings,
                     conn,
                     request.Transaction,
                     tempTableName,
-                    keyMappings,
                     true);
 
                 int i = 0;
@@ -364,7 +371,7 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
                 {
                     var e = entity;
                     var columnValues = new List<dynamic>();
-                    columnValues.AddRange(properties.Select(p => GetProperty(entityPropertByItemProperty[p.Name], e, DBNull.Value)));
+                    columnValues.AddRange(keyProperties.Select(p => GetProperty(entityPropertByItemProperty[p.Name], e, DBNull.Value)));
                     columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
@@ -400,20 +407,13 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
 
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="ctx"></param>
-        /// <param name="request"></param>
-        /// <returns></returns>
-        private static IList<T1> DoBulkSelectExisting<T1,T2>(DbContext ctx, BulkSelectRequest<T1> request)
+        private static IList<T2> DoBulkSelect<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request) where T2 : new()
         {
             Type t = typeof(T2);
             var mappings = GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
-            var itemPropertByEntityProperty = request.KeyPropertyMappings.ToDictionary(p=>p.EntityPropertyName, p=>p.ItemPropertyName);
+            var itemPropertByEntityProperty = request.KeyPropertyMappings.ToDictionary(p => p.EntityPropertyName, p => p.ItemPropertyName);
             var items = request.Items;
             var conn = GetSqlConnection(ctx);
 
@@ -423,11 +423,106 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
             }
 
             var keyMappings = columnMappings.Values
-                .Where(m => request.KeyPropertyMappings.Any(kpm=>kpm.EntityPropertyName == m.TableColumn.Name))
+                .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.EntityProperty.Name))
                 .ToDictionary(m => m.EntityProperty.Name, m => m);
 
             if (keyMappings.Any())
             {
+                // Create a temporary table with the supplied keys 
+                // as columns.
+                var tempTableName = CreateTempTable(
+                    conn,
+                    request.Transaction,
+                    tableName,
+                    keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
+                    false);
+
+                var properties = GetProperties(t);
+                var keyProperties = properties
+                    .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
+
+                var table = new DataTable();
+                var bulkCopy = CreateBulkCopy(
+                    table,
+                    keyProperties,
+                    keyMappings,
+                    conn,
+                    request.Transaction,
+                    tempTableName,
+                    false);
+
+                foreach (var entity in items)
+                {
+                    var e = entity;
+                    var columnValues = new List<dynamic>();
+                    columnValues.AddRange(keyProperties.Select(p => GetProperty(itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
+                    table.Rows.Add(columnValues.ToArray());
+                }
+
+                bulkCopy.BulkCopyTimeout = 5 * 60;
+                bulkCopy.WriteToServer(table);
+
+                var conditionStatements = keyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
+                var conditionStatementsSql = string.Join(" AND ", conditionStatements);
+                var query = $@"SELECT [t0].*
+                               FROM {tableName.Fullname} AS [t0]
+                               INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}";
+
+                var cmd = new SqlCommand(query, conn, request.Transaction);
+                var sqlDataReader = cmd.ExecuteReader();
+
+                var selectedEntities = new List<T2>();
+                while (sqlDataReader.Read())
+                {
+                    var t2 = new T2();
+                    selectedEntities.Add(t2);
+                    foreach (var property in properties)
+                    {
+                        if (!columnMappings.ContainsKey(property.Name)) continue;
+                        var mapping = columnMappings[property.Name];
+                        var val = sqlDataReader[mapping.TableColumn.Name];
+                        SetProperty(property.Name, t2, val);
+                    }
+                }
+
+                DropTempTable(conn, request.Transaction, tempTableName);
+
+                return selectedEntities;
+            }
+
+            return new List<T2>();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="ctx"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
+        private static IList<T1> DoBulkSelectExisting<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request)
+        {
+            Type t = typeof(T2);
+            var mappings = GetMappings(ctx, t);
+            var tableName = mappings.TableName;
+            var columnMappings = mappings.ColumnMappingByPropertyName;
+            var itemPropertByEntityProperty = request.KeyPropertyMappings.ToDictionary(p => p.EntityPropertyName, p => p.ItemPropertyName);
+            var items = request.Items;
+            var conn = GetSqlConnection(ctx);
+
+            if (!itemPropertByEntityProperty.Any())
+            {
+                throw new ArgumentException("The KeyPropertyMappings request property must be set and contain at least one name.");
+            }
+
+            var keyMappings = columnMappings.Values
+                .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.EntityProperty.Name))
+                .ToDictionary(m => m.EntityProperty.Name, m => m);
+
+            if (keyMappings.Any())
+            {
+                // Create a temporary table with the supplied keys 
+                // as columns, plus a rowno column.
                 var tempTableName = CreateTempTable(
                     conn,
                     request.Transaction,
@@ -435,19 +530,17 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
                     keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
                     true);
 
-                // We only need the key columns and the 
-                // rowno column in our temp table.
-                var properties = GetProperties(t)
+                var keyProperties = GetProperties(t)
                     .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
                 var table = new DataTable();
                 var bulkCopy = CreateBulkCopy(
                     table,
-                    properties,
+                    keyProperties,
+                    keyMappings,
                     conn,
                     request.Transaction,
                     tempTableName,
-                    keyMappings,
                     true);
 
                 int i = 0;
@@ -455,7 +548,7 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
                 {
                     var e = entity;
                     var columnValues = new List<dynamic>();
-                    columnValues.AddRange(properties.Select(p => GetProperty(itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
+                    columnValues.AddRange(keyProperties.Select(p => GetProperty(itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
                     columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
@@ -1657,6 +1750,8 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
         /// <param name="value"></param>
         private static void SetProperty(string propertyName, object instance, object value)
         {
+            if (value == DBNull.Value) return;
+
             if (instance is ExpandoObject)
             {
                 var dict = (IDictionary<string, object>)instance;

@@ -15,31 +15,26 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-using System;
-using System.Collections.Generic;
 
-namespace Tanneryd.BulkOperations.EF6.Tests.DM
+using System;
+
+namespace Tanneryd.BulkOperations.EF6.Tests.DM.Numbers
 {
-    public class CompositePrime
+    public class Level1
     {
-        public long CompositeId { get; set; }
-        public long PrimeId { get; set; }
+        public int Id { get; set; }
+        public Level2 Level2 { get; set; }
     }
 
-    public class Composite
+    public class Level2
     {
-        public Composite()
-        {
-            Primes = new HashSet<Prime>();
-        }
+        public string Level2Name { get; set; }
+        public Level3 Level3 { get; set; }
+    }
 
-        public long NumberId { get; set; }
-        public Number Number { get; set; }
-
-        public DateTime UpdatedAt { get; set; }
-        public string UpdatedBy { get; set; }
-
-        public ICollection<Prime> Primes { get; set; }
-
+    public class Level3
+    {
+        public string Level3Name { get; set; }
+        public DateTime Updated { get; set; }
     }
 }

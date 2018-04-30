@@ -15,13 +15,26 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 using System;
 
-namespace Tanneryd.BulkOperations.EF6.Tests.DM
+namespace Tanneryd.BulkOperations.EF6.Tests.DM.Numbers
 {
-    public class Updated
+    public class Number
     {
+        public long Id { get; set; }
+        public long Value { get; set; }
+
+        public int ParityId { get; set; }
+        public Parity Parity { get; set; }
+
+        public int? PrimeId { get; set; }
+        public Prime Prime { get; set; }
+
+        public int? CompositeId { get; set; }
+        public Composite Composite { get; set; }
         public DateTime UpdatedAt { get; set; }
         public string UpdatedBy { get; set; }
+
     }
 }

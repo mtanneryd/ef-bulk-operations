@@ -17,24 +17,25 @@
 */
 
 using System;
+using System.Collections.Generic;
 
-namespace Tanneryd.BulkOperations.EF6.Tests.DM
+namespace Tanneryd.BulkOperations.EF6.Tests.DM.People
 {
-    public class Number
+    public class Person
     {
+        public Person()
+        {
+            Children = new HashSet<Person>();
+        }
+
         public long Id { get; set; }
-        public long Value { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public DateTime BirthDate { get; set; }
 
-        public int ParityId { get; set; }
-        public Parity Parity { get; set; }
+        public long? MotherId { get; set; }
+        public Person Mother { get; set; }
 
-        public int? PrimeId { get; set; }
-        public Prime Prime { get; set; }
-
-        public int? CompositeId { get; set; }
-        public Composite Composite { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        public string UpdatedBy { get; set; }
-
+        public ICollection<Person> Children { get; set; }
     }
 }

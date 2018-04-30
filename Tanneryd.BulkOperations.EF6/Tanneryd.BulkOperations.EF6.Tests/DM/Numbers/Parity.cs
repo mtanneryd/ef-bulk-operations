@@ -15,27 +15,22 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 using System;
-using System.Collections;
 using System.Collections.Generic;
 
-namespace Tanneryd.BulkOperations.EF6.Tests.DM
+namespace Tanneryd.BulkOperations.EF6.Tests.DM.Numbers
 {
-    public class Person
+    public class Parity
     {
-        public Person()
+        public Parity()
         {
-            Children = new HashSet<Person>();
+            Numbers = new HashSet<Number>();   
         }
-
-        public long Id { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public DateTime BirthDate { get; set; }
-
-        public long? MotherId { get; set; }
-        public Person Mother { get; set; }
-
-        public ICollection<Person> Children { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public DateTime UpdatedAt { get; set; }
+        public string UpdatedBy { get; set; }
+        public ICollection<Number> Numbers { get; set; }
     }
 }

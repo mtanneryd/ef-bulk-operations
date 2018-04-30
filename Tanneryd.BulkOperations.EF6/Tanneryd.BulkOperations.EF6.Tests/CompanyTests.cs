@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6;
 using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.Tests.DM;
+using Tanneryd.BulkOperations.EF6.Tests.DM.Companies;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
 namespace Tanneryd.BulkOperations.EF6.Tests

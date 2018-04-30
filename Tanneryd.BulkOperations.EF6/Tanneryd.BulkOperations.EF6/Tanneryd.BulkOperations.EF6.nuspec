@@ -14,7 +14,7 @@
     <copyright>Copyright 2017-2018</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>Fix for self-referencing tables with identity columns.</releaseNotes>
+    <releaseNotes>Added the select-existing feature.</releaseNotes>
 
   </metadata>
 </package>

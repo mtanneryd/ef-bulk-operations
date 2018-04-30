@@ -16,22 +16,18 @@
 * limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 
-namespace Tanneryd.BulkOperations.EF6.Tests.DM
+namespace Tanneryd.BulkOperations.EF6.Tests.DM.Companies
 {
-    public class Prime
+    public class Company
     {
-        public Prime()
+        public Company()
         {
-            Composites = new HashSet<Composite>();
+            Employees = new HashSet<Employee>();
         }
-        public long NumberId { get; set; }
-        public Number Number { get; set; }
-        public DateTime UpdatedAt { get; set; }
-        public string UpdatedBy { get; set; }
-
-        public ICollection<Composite> Composites { get; set; }
+        public long Id { get; set; }
+        public string Name { get; set; }
+        public ICollection<Employee> Employees { get; set; }
     }
 }

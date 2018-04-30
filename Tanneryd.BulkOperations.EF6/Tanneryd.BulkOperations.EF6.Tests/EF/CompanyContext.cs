@@ -19,6 +19,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
 using Tanneryd.BulkOperations.EF6.Tests.DM;
+using Tanneryd.BulkOperations.EF6.Tests.DM.Companies;
 
 namespace Tanneryd.BulkOperations.EF6.Tests.EF
 {
