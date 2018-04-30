@@ -250,17 +250,19 @@ namespace Tanneryd.BulkOperations.EF6
             {
                 selectClause = "1 as rowno," + selectClause;
             }
+
+            var tempTableName = Guid.NewGuid().ToString("N");
             var query = $@"   
-                        IF OBJECT_ID('tempdb..#{tableName.Name}') IS NOT NULL DROP TABLE #{tableName.Name}
+                        IF OBJECT_ID('tempdb..#{tempTableName}') IS NOT NULL DROP TABLE #{tempTableName}
 
                         SELECT {selectClause}
-                        INTO #{tableName.Name}
+                        INTO #{tempTableName}
                         FROM {tableName.Fullname}
                         WHERE 1=0";
             var cmd = new SqlCommand(query, connection, transaction);
             cmd.ExecuteNonQuery();
 
-            return $"#{tableName.Name}";
+            return tempTableName;
         }
 
         private static void DropTempTable(
@@ -268,7 +270,7 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction,
             string tempTableName)
         {
-            var cmdFooter = $@"DROP TABLE {tempTableName}";
+            var cmdFooter = $@"DROP TABLE #{tempTableName}";
             var cmd = new SqlCommand(cmdFooter, connection, transaction);
             cmd.ExecuteNonQuery();
         }
@@ -379,14 +381,14 @@ namespace Tanneryd.BulkOperations.EF6
                 bulkCopy.BulkCopyTimeout = 5 * 60;
                 bulkCopy.WriteToServer(table);
 
-                var conditionStatements = keyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
+                var conditionStatements = keyMappings.Values.Select(c => $"[t1].{c.TableColumn.Name} = [t2].{c.TableColumn.Name}");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].[rowno] 
-                               FROM {tempTableName}
-                               EXCEPT
-                               SELECT [t0].[rowno] 
                                FROM {tempTableName} AS [t0]
-                               LEFT JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
+                               EXCEPT
+                               SELECT [t1].[rowno] 
+                               FROM {tempTableName} AS [t1]
+                               LEFT JOIN {tableName.Fullname} AS [t2] ON {conditionStatementsSql}";
 
                 var cmd = new SqlCommand(query, conn, request.Transaction);
                 var sqlDataReader = cmd.ExecuteReader();
@@ -654,7 +656,7 @@ namespace Tanneryd.BulkOperations.EF6
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var cmdBody = $@"UPDATE t0 SET {setStatementsSql}
                                  FROM {tableName.Fullname} AS t0
-                                 INNER JOIN #{tableName.Name} AS t1 ON {conditionStatementsSql}
+                                 INNER JOIN #{tempTableName} AS t1 ON {conditionStatementsSql}
                                 ";
                 var cmd = new SqlCommand(cmdBody, conn, transaction);
                 rowsAffected += cmd.ExecuteNonQuery();
@@ -666,13 +668,13 @@ namespace Tanneryd.BulkOperations.EF6
                         .Select(m => m.TableColumn.Name)
                         .ToArray();
                     var columnNames = string.Join(",", columns.Select(c => c));
-                    var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].{c}"));
+                    var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].{c}"));                    
                     cmdBody = $@"INSERT INTO {tableName.Fullname}
                              SELECT {columnNames}
-                             FROM #{tableName.Name}
+                             FROM #{tempTableName}
                              EXCEPT
                              SELECT {t0ColumnNames}
-                             FROM #{tableName.Name} AS t0
+                             FROM #{tempTableName} AS t0
                              INNER JOIN {tableName.Fullname} AS t1 ON {conditionStatementsSql}            
                             ";
                     cmd = new SqlCommand(cmdBody, conn, transaction);
@@ -1047,15 +1049,15 @@ namespace Tanneryd.BulkOperations.EF6
                 //
                 if (newEntities.Count > 0)
                 {
-                    bulkCopy.DestinationTableName = $"#{tableName.Name}";
+                    var tempTableName = Guid.NewGuid().ToString("N");
+                    bulkCopy.DestinationTableName = $"#{tempTableName}";
                     table.Columns.Add(new DataColumn("rowno", typeof(int)));
                     bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("rowno", "rowno"));
-
                     var query = $@"   
-                                    IF OBJECT_ID('tempdb..#{tableName.Name}') IS NOT NULL DROP TABLE #{tableName.Name}
+                                    IF OBJECT_ID('tempdb..#{tempTableName}') IS NOT NULL DROP TABLE #{tableName.Name}
 
                                     SELECT 1 as rowno, *
-                                    INTO #{tableName.Name}
+                                    INTO #{tempTableName}
                                     FROM {tableName.Fullname}
                                     WHERE 1=0
                                 ";
@@ -1134,7 +1136,7 @@ namespace Tanneryd.BulkOperations.EF6
                     query = $@"                                  
                                 INSERT INTO {tableName.Fullname} ({columnNames})
                                 SELECT {columnNames}
-                                FROM   #{tableName.Name}
+                                FROM   #{tempTableName}
                                 ORDER BY rowno
                              ";
                     cmd.CommandText = query;
@@ -1211,7 +1213,7 @@ namespace Tanneryd.BulkOperations.EF6
                     var setStatementsSql = string.Join(" , ", setStatements);
                     cmdBody = $@"UPDATE t0 SET {setStatementsSql}
                                  FROM {tableName.Fullname} AS t0
-                                 INNER JOIN #{tableName.Name} AS t1 ON {conditionStatementsSql}
+                                 INNER JOIN #{tempTableName} AS t1 ON {conditionStatementsSql}
                                 ";
                     cmd = new SqlCommand(cmdBody, conn, transaction);
                     cmd.ExecuteNonQuery();
@@ -1226,7 +1228,7 @@ namespace Tanneryd.BulkOperations.EF6
                     pkColumnMappings.Concat(nonPrimaryKeyColumnMappings).Select(c => c.TableColumn));
                 cmdBody = $@"INSERT INTO {tableName.Fullname} ({listOfColumns})
                              SELECT {listOfColumns} 
-                             FROM #{tableName.Name} AS t0
+                             FROM #{tempTableName} AS t0
                              WHERE NOT EXISTS (
                                 SELECT {listOfPrimaryKeyColumns}
                                 FROM {tableName.Fullname} AS t1
@@ -1368,7 +1370,7 @@ namespace Tanneryd.BulkOperations.EF6
                 (keyColumnMappings[0].TableColumn.IsStoreGeneratedIdentity ||
                  keyColumnMappings[0].TableColumn.IsStoreGeneratedComputed))
             {
-                var query = $@"SET IDENTITY_INSERT #{tableName.Name} ON";
+                var query = $@"SET IDENTITY_INSERT #{tempTableName} ON";
                 var cmd = new SqlCommand(query, conn, sqlTransaction);
                 cmd.ExecuteNonQuery();
             }
