@@ -1056,7 +1056,7 @@ namespace Tanneryd.BulkOperations.EF6
                     table.Columns.Add(new DataColumn("rowno", typeof(int)));
                     bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("rowno", "rowno"));
                     var query = $@"   
-                                    IF OBJECT_ID('tempdb..{tempTableName}') IS NOT NULL DROP TABLE {tableName.Name}
+                                    IF OBJECT_ID('tempdb..{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
 
                                     SELECT 1 as rowno, *
                                     INTO {tempTableName}
