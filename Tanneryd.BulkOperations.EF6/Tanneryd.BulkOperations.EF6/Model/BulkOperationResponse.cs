@@ -13,6 +13,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
     public class BulkInsertResponse : BulkOperationResponse
     {
         public List<Tuple<Type, BulkInsertStatistics>> BulkInsertStatistics { get; set; } = new List<Tuple<Type, BulkInsertStatistics>>();
+        public List<string> TablesWithNoCheckConstraints { get; set; } = new List<string>();
     }
 
     public struct BulkInsertStatistics {

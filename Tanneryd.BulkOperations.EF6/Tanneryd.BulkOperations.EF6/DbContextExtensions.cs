@@ -221,8 +221,15 @@ namespace Tanneryd.BulkOperations.EF6
                     }
                     finally
                     {
-                        mutex.ReleaseMutex();
+                        foreach (var tableName in response.TablesWithNoCheckConstraints)
+                        {
+                            var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
+                            var connection = GetSqlConnection(ctx);
+                            var cmd = new SqlCommand(query, connection);
+                            cmd.ExecuteNonQuery();
+                        }
 
+                        mutex.ReleaseMutex();
                     }
                 }
             }
@@ -1132,6 +1139,7 @@ namespace Tanneryd.BulkOperations.EF6
                         query = $"ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL";
                         cmd.CommandText = query;
                         cmd.ExecuteNonQuery();
+                        response.TablesWithNoCheckConstraints.Add(tableName.Fullname);
                     }
 
                     var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => p.TableColumn.Name));
@@ -1147,14 +1155,7 @@ namespace Tanneryd.BulkOperations.EF6
                     s.Stop();
                     stats.TimeElapsedDuringInsertInto = s.Elapsed;
                     response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
-
-                    if (allowNotNullSelfReferences)
-                    {
-                        query = $"ALTER TABLE {tableName.Fullname} CHECK CONSTRAINT ALL";
-                        cmd.CommandText = query;
-                        cmd.ExecuteNonQuery();
-                    }
-
+                    
                     cmd.CommandText = $"SELECT SCOPE_IDENTITY()";
                     result = cmd.ExecuteScalar();
                     dynamic lastId = Convert.ChangeType(result, pkColumnType);

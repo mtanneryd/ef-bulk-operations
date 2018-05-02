@@ -43,6 +43,10 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
                 .HasMany(p => p.Employees)
                 .WithRequired(p => p.Employer)
                 .HasForeignKey(p => p.EmployerId);
+            modelBuilder.Entity<Company>()
+                .HasMany(p => p.Subsidiaries)
+                .WithRequired(p => p.ParentCompany)
+                .HasForeignKey(p => p.ParentCompanyId);
 
             modelBuilder.Entity<Employee>()
                 .ToTable("Employee")

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -10,6 +11,11 @@ using Tanneryd.BulkOperations.EF6.Tests.EF;
 
 namespace Tanneryd.BulkOperations.EF6.Tests
 {
+    /// <summary>
+    /// These tests primarily assert that we can insert entities with NOT NULL
+    /// self references and that we get the expected exceptions when we do not
+    /// follow the rules of entity engagement.
+    /// </summary>
     [TestClass]
     public class CompanyTests
     {
@@ -29,41 +35,79 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         }
 
         [TestMethod]
-        public void AddingEmployeeWithCompany()
+        [ExpectedException(typeof(System.Data.SqlClient.SqlException))]
+        public void AddingEmployeeToSubsidiaryWithoutParentCompany()
+        {
+            try
+            {
+                var employer = new Company
+                {
+                    Name = "World Inc",
+                };
+                var john = new Employee
+                {
+                    Name = "John",
+                    Employer = employer
+                };
+                var adam = new Employee
+                {
+                    Name = "Adam",
+                    Employer = employer
+                };
+                using (var db = new CompanyContext())
+                {
+                    var request = new BulkInsertRequest<Employee>
+                    {
+                        Entities = new List<Employee> { john, adam },
+                        Recursive = true,
+                        AllowNotNullSelfReferences = true
+                    };
+                    db.BulkInsertAll(request);
+                }
+            }
+            catch (System.Data.SqlClient.SqlException e)
+            {
+                Assert.AreEqual(@"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EF6.Tests.EF.CompanyContext"", table ""dbo.Company"", column 'Id'.", e.Message);
+                throw;
+            }
+        }
+
+        [TestMethod]
+        public void AddingEmployeeToSubsidiary()
         {
             var employer = new Company
             {
                 Name = "World Inc",
             };
-            var employee = new Employee
+            employer.ParentCompany = employer;
+            var john = new Employee
             {
                 Name = "John",
+                Employer = employer
+            };
+            var adam = new Employee
+            {
+                Name = "Adam",
                 Employer = employer
             };
             using (var db = new CompanyContext())
             {
                 var request = new BulkInsertRequest<Employee>
                 {
-                    Entities = new List<Employee> {employee},
+                    Entities = new List<Employee> { john, adam },
                     Recursive = true,
+                    AllowNotNullSelfReferences = true
                 };
                 db.BulkInsertAll(request);
 
-                var actual = db.Employees.Include(e => e.Employer).Single();
-                Assert.AreEqual("John", actual.Name);
-                Assert.AreEqual("World Inc", actual.Employer.Name);
+                var actual = db.Employees.Include(e => e.Employer).OrderBy(e => e.Name).ToArray();
+                Assert.AreEqual("Adam", actual[0].Name);
+                Assert.AreEqual("World Inc", actual[0].Employer.Name);
+                Assert.AreSame(actual[0].Employer, actual[0].Employer.ParentCompany);
+                Assert.AreEqual("John", actual[1].Name);
+                Assert.AreEqual("World Inc", actual[1].Employer.Name);
+                Assert.AreSame(actual[1].Employer, actual[1].Employer.ParentCompany);
 
-                Cleanup();
-
-                request.AllowNotNullSelfReferences = true;
-                employee.Id = 0;
-                employee.EmployerId = 0;
-                employer.Id = 0;
-                db.BulkInsertAll(request);
-
-                actual = db.Employees.Include(e => e.Employer).Single();
-                Assert.AreEqual("John", actual.Name);
-                Assert.AreEqual("World Inc", actual.Employer.Name);
             }
         }
 
@@ -78,6 +122,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             {
                 Name = "World Inc",
             };
+            employer.ParentCompany = employer;
             employer.Employees.Add(employee);
 
             using (var db = new CompanyContext())
@@ -86,22 +131,13 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 {
                     Entities = new List<Company> { employer },
                     Recursive = true,
+                    AllowNotNullSelfReferences = true
                 };
                 db.BulkInsertAll(request);
 
                 var actual = db.Companies.Include(e => e.Employees).Single();
                 Assert.AreEqual("World Inc", actual.Name);
-                Assert.AreEqual("John", actual.Employees.Single().Name);
-
-                Cleanup();
-
-                request.AllowNotNullSelfReferences = true;
-                employee.Id = 0;
-                employee.EmployerId = 0;
-                employer.Id = 0;
-                db.BulkInsertAll(request);
-                actual = db.Companies.Include(e => e.Employees).Single();
-                Assert.AreEqual("World Inc", actual.Name);
+                Assert.AreSame(actual, actual.ParentCompany);
                 Assert.AreEqual("John", actual.Employees.Single().Name);
             }
         }
