@@ -332,11 +332,11 @@ namespace Tanneryd.BulkOperations.EF6
             var mappings = GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
-            var entityPropertByItemProperty = request.KeyPropertyMappings.ToDictionary(p => p.ItemPropertyName, p => p.EntityPropertyName);
+            var itemPropertByEntityProperty = request.KeyPropertyMappings.ToDictionary(p => p.EntityPropertyName, p => p.ItemPropertyName);
             var items = request.Items;
             var conn = GetSqlConnection(ctx);
 
-            if (!entityPropertByItemProperty.Any())
+            if (!request.KeyPropertyMappings.Any())
             {
                 throw new ArgumentException("The KeyPropertyMappings request property must be set and contain at least one name.");
             }
@@ -374,7 +374,7 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     var e = entity;
                     var columnValues = new List<dynamic>();
-                    columnValues.AddRange(keyProperties.Select(p => GetProperty(entityPropertByItemProperty[p.Name], e, DBNull.Value)));
+                    columnValues.AddRange(keyProperties.Select(p => GetProperty(itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
                     columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
@@ -513,7 +513,7 @@ namespace Tanneryd.BulkOperations.EF6
             var items = request.Items;
             var conn = GetSqlConnection(ctx);
 
-            if (!itemPropertByEntityProperty.Any())
+            if (!request.KeyPropertyMappings.Any())
             {
                 throw new ArgumentException("The KeyPropertyMappings request property must be set and contain at least one name.");
             }

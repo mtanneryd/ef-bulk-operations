@@ -23,7 +23,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
 
     public class BulkSelectRequest<T>
     {
-        public BulkSelectRequest(string[] keyPropertyNames)
+        public BulkSelectRequest(string[] keyPropertyNames, IList<T> items = null, SqlTransaction transaction = null)
         {
             KeyPropertyMappings = keyPropertyNames.Select(n => new KeyPropertyMapping
                 {
@@ -31,6 +31,8 @@ namespace Tanneryd.BulkOperations.EF6.Model
                     EntityPropertyName = n
                 })
                 .ToArray();
+            Items = items;
+            Transaction = transaction;
         }
         public IList<T> Items { get; set; }
         public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
