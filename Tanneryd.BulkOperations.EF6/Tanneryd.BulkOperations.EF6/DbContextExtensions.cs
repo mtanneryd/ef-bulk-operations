@@ -36,6 +36,22 @@ namespace Tanneryd.BulkOperations.EF6
     {
         #region Public API
 
+        /// <summary>
+        /// The request object contains a mapping between properties in T1
+        /// and properties in T2. BulkSelect will match all rows in the T2
+        /// table given the list of T1 items and their defined key
+        /// properties and return the set of T2 items matched. This is
+        /// particularly useful when you need to select a number of rows
+        /// from a table using multiple selector columns. If there is only
+        /// one column you need to select on you could simply use the EF
+        /// equivalent of 'where in', Contains() or Any() on your local
+        /// collection holding the values you want to apply 'where in' on.
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="ctx"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
         public static IList<T2> BulkSelect<T1, T2>(
             this DbContext ctx,
             BulkSelectRequest<T1> request) where T2 : new()
@@ -160,8 +176,6 @@ namespace Tanneryd.BulkOperations.EF6
                 Entities = entities,
                 Transaction = transaction,
                 Recursive = recursive,
-                AllowNotNullSelfReferences = false,
-                SortUsingClusteredIndex = false
             };
             return BulkInsertAll(ctx, request);
         }
