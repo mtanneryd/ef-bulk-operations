@@ -239,7 +239,7 @@ namespace Tanneryd.BulkOperations.EF6
                         {
                             var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
                             var connection = GetSqlConnection(ctx);
-                            var cmd = new SqlCommand(query, connection);
+                            var cmd = new SqlCommand(query, connection, request.Transaction);
                             cmd.ExecuteNonQuery();
                         }
 

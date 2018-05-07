@@ -23,8 +23,8 @@ public class BulkInsertRequest<T>
     public IList<T> Entities { get; set; }
     public SqlTransaction Transaction { get; set; }
     public bool Recursive { get; set; }
-    public bool AllowNotNullSelfReferences { get; set; }
-    public bool SortUsingClusteredIndex { get; set; }
+    public bool AllowNotNullSelfReferences { get; set; } = false;
+    public bool SortUsingClusteredIndex { get; set; } = true;
 }
 ```
 
@@ -59,9 +59,39 @@ public class BulkUpdateRequest
      BulkUpdateRequest request)
 ```
 
-#### SelectExisting
-The select-existing feature provides a way to identify the subset of existing or non-existing items in a collection where an item is considered as existing if it is equal to an entity saved in the database according to a set of defined key properties. This provides a very efficient way of figuring out which items in a collection needs to be inserted and which to be updated. The item collection can be of the same type as the EF entity but it does not have to be.
+#### Select
+##### Select
+
+##### SelectExisting
+The select-existing feature provides a way to identify the subset of existing or non-existing items in a local collection where an item is considered as existing if it is equal to an entity saved in the database according to a set of defined key properties. This provides a very efficient way of figuring out which items in your local collection needs to be inserted and which to be updated. The item collection can be of the same type as the EF entity but it does not have to be.
 ```csharp
+public class BulkSelectRequest<T>
+{
+	public BulkSelectRequest(string[] keyPropertyNames, 
+				 IList<T> items = null,
+				 SqlTransaction transaction = null)
+	{
+        KeyPropertyMappings = keyPropertyNames.Select(n => new KeyPropertyMapping
+            {
+                ItemPropertyName = n,
+                EntityPropertyName = n
+            })
+            .ToArray();
+        Items = items;
+        Transaction = transaction;
+    }
+    public IList<T> Items { get; set; }
+    public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
+    public SqlTransaction Transaction { get; set; }
+   
+
+    public BulkSelectRequest()
+    {
+        KeyPropertyMappings = new KeyPropertyMapping[0];
+        Items = new T[0];
+    }
+}
+
 public class KeyPropertyMapping
 {
     public string ItemPropertyName { get; set; }
@@ -74,29 +104,6 @@ public class KeyPropertyMapping
             ItemPropertyName = n,
             EntityPropertyName = n
         }).ToArray();
-    }
-}
-
-public class BulkSelectRequest<T>
-{
-    public BulkSelectRequest(string[] keyPropertyNames)
-    {
-        KeyPropertyMappings = keyPropertyNames.Select(n => new KeyPropertyMapping
-            {
-                ItemPropertyName = n,
-                EntityPropertyName = n
-            })
-            .ToArray();
-    }
-    public IList<T> Items { get; set; }
-    public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
-    public SqlTransaction Transaction { get; set; }
-
-
-    public BulkSelectRequest()
-    {
-        KeyPropertyMappings = new KeyPropertyMapping[0];
-        Items = new T[0];
     }
 }
 ```
