@@ -14,7 +14,7 @@ The extension is built for, and requires, Entity Framework 6 and .NET 4.5 or lat
 
 Install the nuget package [Tanneryd.BulkOperations.EF6](https://www.nuget.org/packages/Tanneryd.BulkOperations.EF6). This will make the following methods available on the DbContext.
 
-### Using
+### API
 
 #### Insert
 ```csharp
@@ -126,6 +126,8 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
     return DoBulkSelectExisting<T1, T2>(ctx, request);
 }
 ```
+## Examples
+
 
 ## Built With
 

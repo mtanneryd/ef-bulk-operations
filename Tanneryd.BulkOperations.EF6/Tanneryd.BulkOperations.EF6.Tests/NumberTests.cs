@@ -48,6 +48,52 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             db.SaveChanges();
         }
 
+        [TestMethod]
+        public void ExistingEntitiesShouldBeSelectedOnSingleKeyUsingSimpleType()
+        {
+            using (var db = new NumberContext())
+            {
+                var now = DateTime.Now;
+
+                var parities = new[]
+                {
+                    new Parity {Name = "Even", UpdatedAt = now, UpdatedBy = "Måns"},
+                    new Parity {Name = "Odd", UpdatedAt = now, UpdatedBy = "Måns"},
+                };
+                var numbers = GenerateNumbers(1, 200, parities[0], parities[1], now).ToArray();
+                db.BulkInsertAll(new BulkInsertRequest<Number>
+                {
+                    Entities = numbers,
+                    Recursive = true
+                });
+
+                var nums = GenerateNumbers(50, 100, parities[0], parities[1], now)
+                    .Select(n => n.Value)
+                    .ToList();
+                var existingNumbers = db.BulkSelect<long, Number>(new BulkSelectRequest<long>
+                {
+                    Items = nums.ToArray(),
+                    KeyPropertyMappings = new[]
+                    {
+                        new KeyPropertyMapping
+                        {
+                            ItemPropertyName = null,
+                            EntityPropertyName = "Value"
+                        },
+                    }
+                });
+
+                var expectedNumbers = numbers.Skip(49).Take(100).ToArray();
+                for (int i = 0; i < 100; i++)
+                {
+                    Assert.AreEqual(expectedNumbers[i].Id, existingNumbers[i].Id);
+                    Assert.AreEqual(expectedNumbers[i].ParityId, existingNumbers[i].ParityId);
+                    Assert.AreEqual(expectedNumbers[i].UpdatedAt.ToString(CultureInfo.InvariantCulture), existingNumbers[i].UpdatedAt.ToString(CultureInfo.InvariantCulture));
+                    Assert.AreEqual(expectedNumbers[i].UpdatedBy, existingNumbers[i].UpdatedBy);
+                    Assert.AreEqual(expectedNumbers[i].Value, existingNumbers[i].Value);
+                }
+            }
+        }
 
         [TestMethod]
         public void ExistingEntitiesShouldBeSelectedOnSingleKey()

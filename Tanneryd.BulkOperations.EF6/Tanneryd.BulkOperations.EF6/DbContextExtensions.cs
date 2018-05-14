@@ -1746,6 +1746,8 @@ namespace Tanneryd.BulkOperations.EF6
         private static dynamic GetProperty(string propertyName, object instance, object def = null)
         {
             var t = instance.GetType();
+            if (t.IsPrimitive) return instance;
+
             var property = t.GetProperty(propertyName);
             return GetProperty(property, instance, def);
         }
