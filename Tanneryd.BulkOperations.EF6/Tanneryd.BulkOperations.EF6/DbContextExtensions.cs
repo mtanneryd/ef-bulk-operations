@@ -304,9 +304,10 @@ namespace Tanneryd.BulkOperations.EF6
             SqlConnection connection,
             SqlTransaction transaction,
             string tableName,
+            SqlBulkCopyOptions options = SqlBulkCopyOptions.Default,
             bool includeRowNumber = false)
         {
-            var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction)
+            var bulkCopy = new SqlBulkCopy(connection, options, transaction)
             {
                 DestinationTableName = tableName,
                 EnableStreaming = true
@@ -369,6 +370,10 @@ namespace Tanneryd.BulkOperations.EF6
 
             if (keyMappings.Any())
             {
+                var containsIdentityKey = keyMappings.Any(m =>
+                    m.Value.TableColumn.IsStoreGeneratedIdentity ||
+                    m.Value.TableColumn.IsStoreGeneratedComputed);
+
                 var tempTableName = CreateTempTable(
                     conn,
                     request.Transaction,
@@ -389,7 +394,9 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tempTableName,
+                    containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                     true);
+                if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
 
                 int i = 0;
                 foreach (var entity in items)
@@ -453,6 +460,10 @@ namespace Tanneryd.BulkOperations.EF6
 
             if (keyMappings.Any())
             {
+                var containsIdentityKey = keyMappings.Any(m =>
+                    m.Value.TableColumn.IsStoreGeneratedIdentity ||
+                    m.Value.TableColumn.IsStoreGeneratedComputed);
+
                 // Create a temporary table with the supplied keys 
                 // as columns. We include the rowno column as well
                 // even though we do not need it. But, for some
@@ -478,7 +489,9 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tempTableName,
+                    containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                     true);
+                if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
 
                 int i = 0;
                 foreach (var entity in items)
@@ -498,7 +511,8 @@ namespace Tanneryd.BulkOperations.EF6
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].*
                                FROM {tableName.Fullname} AS [t0]
-                               INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}";
+                               INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}
+                               ORDER BY [t1].rowno ASC";
 
                 var cmd = new SqlCommand(query, conn, request.Transaction);
                 var sqlDataReader = cmd.ExecuteReader();
@@ -553,6 +567,10 @@ namespace Tanneryd.BulkOperations.EF6
 
             if (keyMappings.Any())
             {
+                var containsIdentityKey = keyMappings.Any(m =>
+                    m.Value.TableColumn.IsStoreGeneratedIdentity ||
+                    m.Value.TableColumn.IsStoreGeneratedComputed);
+
                 // Create a temporary table with the supplied keys 
                 // as columns, plus a rowno column.
                 var tempTableName = CreateTempTable(
@@ -573,7 +591,9 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tempTableName,
+                    containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                     true);
+                if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
 
                 int i = 0;
                 foreach (var entity in items)
@@ -1395,9 +1415,7 @@ namespace Tanneryd.BulkOperations.EF6
                 (keyColumnMappings[0].TableColumn.IsStoreGeneratedIdentity ||
                  keyColumnMappings[0].TableColumn.IsStoreGeneratedComputed))
             {
-                var query = $@"SET IDENTITY_INSERT {tempTableName} ON";
-                var cmd = new SqlCommand(query, conn, sqlTransaction);
-                cmd.ExecuteNonQuery();
+                EnableIdentityInsert(tempTableName, conn, sqlTransaction);
             }
 
             //
@@ -1488,6 +1506,20 @@ namespace Tanneryd.BulkOperations.EF6
             bulkCopy.WriteToServer(table.CreateDataReader());
 
             return tempTableName;
+        }
+
+        private static void EnableIdentityInsert(string tableName, SqlConnection conn, SqlTransaction sqlTransaction)
+        {
+            var query = $@"SET IDENTITY_INSERT {tableName} ON";
+            var cmd = new SqlCommand(query, conn, sqlTransaction);
+            cmd.ExecuteNonQuery();
+        }
+
+        private static void DisableIdentityInsert(string tableName, SqlConnection conn, SqlTransaction sqlTransaction)
+        {
+            var query = $@"SET IDENTITY_INSERT {tableName} OFF";
+            var cmd = new SqlCommand(query, conn, sqlTransaction);
+            cmd.ExecuteNonQuery();
         }
 
         private static BulkPropertyInfo[] GetProperties(Type t)
