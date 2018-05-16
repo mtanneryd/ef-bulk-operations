@@ -269,13 +269,13 @@ namespace Tanneryd.BulkOperations.EF6
             var selectClause = string.Join(",", columnNames);
             if (includeRowNumber)
             {
-                selectClause = "1 as rowno," + selectClause;
+                selectClause = "cast(1 as int) as rowno," + selectClause;
             }
 
             var guid = Guid.NewGuid().ToString("N");
             var tempTableName = $"tempdb..#{guid}";
             var query = $@"   
-                        IF OBJECT_ID('tempdb..{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
+                        IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
 
                         SELECT {selectClause}
                         INTO {tempTableName}
@@ -454,13 +454,17 @@ namespace Tanneryd.BulkOperations.EF6
             if (keyMappings.Any())
             {
                 // Create a temporary table with the supplied keys 
-                // as columns.
+                // as columns. We include the rowno column as well
+                // even though we do not need it. But, for some
+                // ungodly reason WriteToServer does nothing, on
+                // some platforms, if we omit it. Need to figure
+                // that out at some point.
                 var tempTableName = CreateTempTable(
                     conn,
                     request.Transaction,
                     tableName,
                     keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
-                    false);
+                    true);
 
                 var properties = GetProperties(t);
                 var keyProperties = properties
@@ -474,13 +478,15 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tempTableName,
-                    false);
+                    true);
 
+                int i = 0;
                 foreach (var entity in items)
                 {
                     var e = entity;
                     var columnValues = new List<dynamic>();
                     columnValues.AddRange(keyProperties.Select(p => GetProperty(itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
+                    columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
 
@@ -1383,7 +1389,7 @@ namespace Tanneryd.BulkOperations.EF6
             var columnNames = keyColumnMappings.Select(m => m.TableColumn.Name)
                 .Concat(nonKeyColumnMappings.Select(m => m.TableColumn.Name)).ToArray();
 
-            var tempTableName = CreateTempTable(conn, sqlTransaction, tableName, columnNames);
+            var tempTableName = CreateTempTable(conn, sqlTransaction, tableName, columnNames, true);
 
             if (keyColumnMappings.Length == 1 &&
                 (keyColumnMappings[0].TableColumn.IsStoreGeneratedIdentity ||
@@ -1447,24 +1453,31 @@ namespace Tanneryd.BulkOperations.EF6
                     bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(clrPropertyName, tableColumnName));
                 }
             }
-
+            table.Columns.Add(new DataColumn("rowno", typeof(long)));
+            bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("rowno", "rowno"));
             //
             // Fill the data table with our entities.
             //
             if (entities[0] is ExpandoObject)
             {
+                int i = 0;
                 foreach (var entity in entities)
                 {
                     var e = (ExpandoObject)entity;
-                    table.Rows.Add(properties.Select(p => GetProperty(p.Name, e)).ToArray());
+                    var columnValues = properties.Select(p => GetProperty(p.Name, e)).ToList();
+                    columnValues.Add(i++);
+                    table.Rows.Add(columnValues.ToArray());
                 }
             }
             else
             {
+                int i = 0;
                 foreach (var entity in entities)
                 {
                     var e = entity;
-                    table.Rows.Add(properties.Select(p => GetProperty(p.Name, e, DBNull.Value)).ToArray());
+                    var columnValues = properties.Select(p => GetProperty(p.Name, e, DBNull.Value)).ToList();
+                    columnValues.Add(i++);
+                    table.Rows.Add(columnValues.ToArray());
                 }
             }
 
