@@ -14,7 +14,7 @@
     <copyright>Copyright 2017-2018</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>Added the select and select-existing features.</releaseNotes>
+    <releaseNotes>Primitive types can now be used in BulkSelect item collections.</releaseNotes>
 
   </metadata>
 </package>

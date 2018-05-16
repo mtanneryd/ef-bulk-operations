@@ -68,16 +68,16 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 });
 
                 var nums = GenerateNumbers(50, 100, parities[0], parities[1], now)
-                    .Select(n => n.Value)
+                    //.Select(n => n.Value)
                     .ToList();
-                var existingNumbers = db.BulkSelect<long, Number>(new BulkSelectRequest<long>
+                var existingNumbers = db.BulkSelect<Number, Number>(new BulkSelectRequest<Number>
                 {
                     Items = nums.ToArray(),
                     KeyPropertyMappings = new[]
                     {
                         new KeyPropertyMapping
                         {
-                            ItemPropertyName = null,
+                            ItemPropertyName = "Value",
                             EntityPropertyName = "Value"
                         },
                     }

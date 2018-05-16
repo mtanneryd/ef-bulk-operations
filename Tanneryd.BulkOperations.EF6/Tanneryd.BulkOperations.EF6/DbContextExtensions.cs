@@ -273,7 +273,7 @@ namespace Tanneryd.BulkOperations.EF6
             }
 
             var guid = Guid.NewGuid().ToString("N");
-            var tempTableName = $"#{guid}";
+            var tempTableName = $"tempdb..#{guid}";
             var query = $@"   
                         IF OBJECT_ID('tempdb..{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
 
@@ -308,7 +308,8 @@ namespace Tanneryd.BulkOperations.EF6
         {
             var bulkCopy = new SqlBulkCopy(connection, SqlBulkCopyOptions.Default, transaction)
             {
-                DestinationTableName = tableName
+                DestinationTableName = tableName,
+                EnableStreaming = true
             };
 
             foreach (var property in properties)
@@ -401,7 +402,7 @@ namespace Tanneryd.BulkOperations.EF6
                 }
 
                 bulkCopy.BulkCopyTimeout = 5 * 60;
-                bulkCopy.WriteToServer(table);
+                bulkCopy.WriteToServer(table.CreateDataReader());
 
                 var conditionStatements = keyMappings.Values.Select(c => $"[t1].{c.TableColumn.Name} = [t2].{c.TableColumn.Name}");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
@@ -484,8 +485,9 @@ namespace Tanneryd.BulkOperations.EF6
                 }
 
                 bulkCopy.BulkCopyTimeout = 5 * 60;
-                bulkCopy.WriteToServer(table);
+                bulkCopy.WriteToServer(table.CreateDataReader());
 
+                var count = ctx.Database.SqlQuery<int>($"SELECT COUNT(*) FROM {tempTableName}").Single();
                 var conditionStatements = keyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].*
@@ -578,7 +580,7 @@ namespace Tanneryd.BulkOperations.EF6
                 }
 
                 bulkCopy.BulkCopyTimeout = 5 * 60;
-                bulkCopy.WriteToServer(table);
+                bulkCopy.WriteToServer(table.CreateDataReader());
 
                 var conditionStatements = keyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
@@ -1027,7 +1029,7 @@ namespace Tanneryd.BulkOperations.EF6
                 var s = new Stopwatch();
                 s.Start();
                 bulkCopy.BulkCopyTimeout = 5 * 60;
-                bulkCopy.WriteToServer(table);
+                bulkCopy.WriteToServer(table.CreateDataReader());
                 s.Stop();
                 var stats = new BulkInsertStatistics
                 {
@@ -1115,7 +1117,7 @@ namespace Tanneryd.BulkOperations.EF6
                     var s = new Stopwatch();
                     s.Start();
                     bulkCopy.BulkCopyTimeout = 5 * 60;
-                    bulkCopy.WriteToServer(table);
+                    bulkCopy.WriteToServer(table.CreateDataReader());
                     s.Stop();
                     var stats = new BulkInsertStatistics
                     {
@@ -1470,7 +1472,7 @@ namespace Tanneryd.BulkOperations.EF6
             //
             // Fill the temp table.
             //
-            bulkCopy.WriteToServer(table);
+            bulkCopy.WriteToServer(table.CreateDataReader());
 
             return tempTableName;
         }
