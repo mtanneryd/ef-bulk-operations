@@ -718,7 +718,7 @@ namespace Tanneryd.BulkOperations.EF6
                         .Select(m => m.TableColumn.Name)
                         .ToArray();
                     var columnNames = string.Join(",", columns.Select(c => c));
-                    var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].{c}"));                    
+                    var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].{c}"));
                     cmdBody = $@"INSERT INTO {tableName.Fullname}
                              SELECT {columnNames}
                              FROM {tempTableName}
@@ -780,7 +780,6 @@ namespace Tanneryd.BulkOperations.EF6
                     foreach (var entity in entities)
                     {
                         var navProperty = GetProperty(navigationPropertyName, entity);
-
                         if (navProperty != null)
                         {
                             foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
@@ -847,7 +846,8 @@ namespace Tanneryd.BulkOperations.EF6
             //
             if (recursive)
             {
-                foreach (var fkMapping in mappings.FromForeignKeyMappings)
+                var fkMappings = mappings.FromForeignKeyMappings.Concat(mappings.ToForeignKeyMappings.Where(m => m.AssociationMapping != null));
+                foreach (var fkMapping in fkMappings)
                 {
                     var isCollection = fkMapping.BuiltInTypeKind == BuiltInTypeKind.CollectionType ||
                                        fkMapping.BuiltInTypeKind == BuiltInTypeKind.CollectionKind;
@@ -877,12 +877,25 @@ namespace Tanneryd.BulkOperations.EF6
                             }
                             else if (fkMapping.AssociationMapping != null)
                             {
-                                foreach (var navProperty in navProperties)
+                                if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.GetType() == entity.GetType())
                                 {
-                                    dynamic np = new ExpandoObject();
-                                    AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(fkMapping.AssociationMapping.Source.EntityProperty.Name, entity));
-                                    AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(fkMapping.AssociationMapping.Target.EntityProperty.Name, navProperty));
-                                    navPropertyEntities.Add(np);
+                                    foreach (var navProperty in navProperties)
+                                    {
+                                        dynamic np = new ExpandoObject();
+                                        AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(fkMapping.AssociationMapping.Source.EntityProperty.Name, entity));
+                                        AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(fkMapping.AssociationMapping.Target.EntityProperty.Name, navProperty));
+                                        navPropertyEntities.Add(np);
+                                    }
+                                }
+                                else
+                                {
+                                    foreach (var navProperty in navProperties)
+                                    {
+                                        dynamic np = new ExpandoObject();
+                                        AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name,GetProperty(fkMapping.AssociationMapping.Source.EntityProperty.Name, navProperty));
+                                        AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name,GetProperty(fkMapping.AssociationMapping.Target.EntityProperty.Name, entity));
+                                        navPropertyEntities.Add(np);
+                                    }
                                 }
                             }
                         }
@@ -1197,7 +1210,7 @@ namespace Tanneryd.BulkOperations.EF6
                     s.Stop();
                     stats.TimeElapsedDuringInsertInto = s.Elapsed;
                     response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
-                    
+
                     cmd.CommandText = $"SELECT SCOPE_IDENTITY()";
                     result = cmd.ExecuteScalar();
                     dynamic lastId = Convert.ChangeType(result, pkColumnType);
