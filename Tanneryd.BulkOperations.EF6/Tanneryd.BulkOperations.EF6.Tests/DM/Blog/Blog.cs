@@ -15,17 +15,30 @@
 */
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Tanneryd.BulkOperations.EF6.Tests.DM.Instruments
+namespace Tanneryd.BulkOperations.EF6.Tests.DM.Blog
 {
-    public class Instrument
+    public class Blog
     {
-        public int Key { get; set; }
+        public Guid Id { get; set; }
         public string Name { get; set; }
-        public int CurrencyKey { get; set; }
-        public Currency Currency { get; set; }
+        public ICollection<Post> BlogPosts { get; set; }
+    }
+
+    public class Post
+    {
+        public Guid Id { get; set; }
+        public Guid BlogId { get; set; }
+        public Blog Blog { get; set; }
+        public string Text { get; set; }
+        public ICollection<Keyword> PostKeywords { get; set; }
+    }
+
+    public class Keyword
+    {
+        public Guid Id { get; set; }
+        public Guid PostId { get; set; }
+        public Post Post { get; set; }
+        public string Text { get; set; }
     }
 }

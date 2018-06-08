@@ -134,24 +134,25 @@ namespace Tanneryd.BulkOperations.EF6
         {
             var response = new BulkOperationResponse();
             if (request.Entities.Count == 0) return response;
+            DoBulkUpdateAll(ctx, request, response);
 
-            var globalId = CreateGlobalId(ctx);
+            //var globalId = CreateGlobalId(ctx);
 
-            using (var mutex = new Mutex(false, globalId))
-            {
-                if (mutex.WaitOne())
-                {
-                    try
-                    {
-                        DoBulkUpdateAll(ctx, request, response);
+            //using (var mutex = new Mutex(false, globalId))
+            //{
+            //    if (mutex.WaitOne())
+            //    {
+            //        try
+            //        {
+            //            DoBulkUpdateAll(ctx, request, response);
 
-                    }
-                    finally
-                    {
-                        mutex.ReleaseMutex();
-                    }
-                }
-            }
+            //        }
+            //        finally
+            //        {
+            //            mutex.ReleaseMutex();
+            //        }
+            //    }
+            //}
 
             return response;
         }
@@ -206,47 +207,81 @@ namespace Tanneryd.BulkOperations.EF6
             var s = new Stopwatch();
             s.Start();
 
-            var globalId = CreateGlobalId(ctx);
-
-            using (var mutex = new Mutex(false, globalId))
+            try
             {
-                if (mutex.WaitOne())
+                if (request.SortUsingClusteredIndex)
                 {
-                    try
-                    {
-                        if (request.SortUsingClusteredIndex)
-                        {
-                            var tableName = GetTableName(ctx, typeof(T));
-                            var clusteredIndexColumns =
-                                GetClusteredIndexColumns(ctx, tableName.Fullname, request.Transaction);
-                            request.Entities = clusteredIndexColumns.Any()
-                                ? Sort(request.Entities, clusteredIndexColumns)
-                                : request.Entities;
-                        }
-
-                        DoBulkInsertAll(
-                            ctx,
-                            request.Entities.Cast<dynamic>().ToList(),
-                            request.Transaction,
-                            request.Recursive,
-                            request.AllowNotNullSelfReferences,
-                            new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
-                            response);
-                    }
-                    finally
-                    {
-                        foreach (var tableName in response.TablesWithNoCheckConstraints)
-                        {
-                            var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
-                            var connection = GetSqlConnection(ctx);
-                            var cmd = new SqlCommand(query, connection, request.Transaction);
-                            cmd.ExecuteNonQuery();
-                        }
-
-                        mutex.ReleaseMutex();
-                    }
+                    var tableName = GetTableName(ctx, typeof(T));
+                    var clusteredIndexColumns =
+                        GetClusteredIndexColumns(ctx, tableName.Fullname, request.Transaction);
+                    request.Entities = clusteredIndexColumns.Any()
+                        ? Sort(request.Entities, clusteredIndexColumns)
+                        : request.Entities;
                 }
+
+                DoBulkInsertAll(
+                    ctx,
+                    request.Entities.Cast<dynamic>().ToList(),
+                    request.Transaction,
+                    request.Recursive,
+                    request.AllowNotNullSelfReferences,
+                    new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
+                    response);
             }
+            finally
+            {
+                foreach (var tableName in response.TablesWithNoCheckConstraints)
+                {
+                    var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
+                    var connection = GetSqlConnection(ctx);
+                    var cmd = new SqlCommand(query, connection, request.Transaction);
+                    cmd.ExecuteNonQuery();
+                }
+
+                //mutex.ReleaseMutex();
+            }
+
+            //var globalId = CreateGlobalId(ctx);
+
+            //using (var mutex = new Mutex(false, globalId))
+            //{
+            //    if (mutex.WaitOne())
+            //    {
+            //        try
+            //        {
+            //            if (request.SortUsingClusteredIndex)
+            //            {
+            //                var tableName = GetTableName(ctx, typeof(T));
+            //                var clusteredIndexColumns =
+            //                    GetClusteredIndexColumns(ctx, tableName.Fullname, request.Transaction);
+            //                request.Entities = clusteredIndexColumns.Any()
+            //                    ? Sort(request.Entities, clusteredIndexColumns)
+            //                    : request.Entities;
+            //            }
+
+            //            DoBulkInsertAll(
+            //                ctx,
+            //                request.Entities.Cast<dynamic>().ToList(),
+            //                request.Transaction,
+            //                request.Recursive,
+            //                request.AllowNotNullSelfReferences,
+            //                new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
+            //                response);
+            //        }
+            //        finally
+            //        {
+            //            foreach (var tableName in response.TablesWithNoCheckConstraints)
+            //            {
+            //                var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
+            //                var connection = GetSqlConnection(ctx);
+            //                var cmd = new SqlCommand(query, connection, request.Transaction);
+            //                cmd.ExecuteNonQuery();
+            //            }
+
+            //            mutex.ReleaseMutex();
+            //        }
+            //    }
+            //}
 
             s.Stop();
             response.Elapsed = s.Elapsed;
@@ -752,6 +787,7 @@ namespace Tanneryd.BulkOperations.EF6
             if (entities.Count == 0) return;
 
             Type t = entities[0].GetType();
+            Trace.TraceInformation($"DoBulkInsertAll - {t.ToString()}");
             var mappings = GetMappings(ctx, t);
 
             // 
@@ -761,6 +797,7 @@ namespace Tanneryd.BulkOperations.EF6
             //
             if (recursive)
             {
+                Trace.TraceInformation($"DoBulkInsertAll - ToForeignKeyMappings - {t.ToString()}");
                 foreach (var fkMapping in mappings.ToForeignKeyMappings)
                 {
                     // ToForeignKeyMappings means that the entity is connected TO
@@ -846,6 +883,8 @@ namespace Tanneryd.BulkOperations.EF6
             //
             if (recursive)
             {
+                Trace.TraceInformation($"DoBulkInsertAll - FromForeignKeyMappings - {t.ToString()}");
+
                 var fkMappings = mappings.FromForeignKeyMappings.Concat(mappings.ToForeignKeyMappings.Where(m => m.AssociationMapping != null));
                 foreach (var fkMapping in fkMappings)
                 {
@@ -877,6 +916,9 @@ namespace Tanneryd.BulkOperations.EF6
                             }
                             else if (fkMapping.AssociationMapping != null)
                             {
+                                // Some or all of the navProperty entities might be new. So, we need to make sure they are saved first.
+                                DoBulkInsertAll(ctx, navProperties.ToArray(), transaction, recursive, allowNotNullSelfReferences, savedEntities, response);
+
                                 if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.GetType() == entity.GetType())
                                 {
                                     foreach (var navProperty in navProperties)
@@ -1360,15 +1402,14 @@ namespace Tanneryd.BulkOperations.EF6
             }
         }
 
+        //private static string CreateGlobalId(DbContext ctx)
+        //{
+        //    var ds = ctx.Database.Connection.DataSource.Replace(@"\", "_");
+        //    var dbname = ctx.Database.Connection.Database.Replace(@"\", "_");
+        //    var globalId = $@"Global\{ds}_{dbname}";
 
-        private static string CreateGlobalId(DbContext ctx)
-        {
-            var ds = ctx.Database.Connection.DataSource.Replace(@"\", "_");
-            var dbname = ctx.Database.Connection.Database.Replace(@"\", "_");
-            var globalId = $@"Global\{ds}_{dbname}";
-
-            return globalId;
-        }
+        //    return globalId;
+        //}
 
         private static string[] GetClusteredIndexColumns(DbContext ctx, string tableName, SqlTransaction sqlTransaction)
         {
