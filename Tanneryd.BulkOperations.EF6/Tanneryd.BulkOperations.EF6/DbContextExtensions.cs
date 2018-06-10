@@ -136,24 +136,6 @@ namespace Tanneryd.BulkOperations.EF6
             if (request.Entities.Count == 0) return response;
             DoBulkUpdateAll(ctx, request, response);
 
-            //var globalId = CreateGlobalId(ctx);
-
-            //using (var mutex = new Mutex(false, globalId))
-            //{
-            //    if (mutex.WaitOne())
-            //    {
-            //        try
-            //        {
-            //            DoBulkUpdateAll(ctx, request, response);
-
-            //        }
-            //        finally
-            //        {
-            //            mutex.ReleaseMutex();
-            //        }
-            //    }
-            //}
-
             return response;
         }
 
@@ -237,55 +219,10 @@ namespace Tanneryd.BulkOperations.EF6
                     var cmd = new SqlCommand(query, connection, request.Transaction);
                     cmd.ExecuteNonQuery();
                 }
-
-                //mutex.ReleaseMutex();
             }
-
-            //var globalId = CreateGlobalId(ctx);
-
-            //using (var mutex = new Mutex(false, globalId))
-            //{
-            //    if (mutex.WaitOne())
-            //    {
-            //        try
-            //        {
-            //            if (request.SortUsingClusteredIndex)
-            //            {
-            //                var tableName = GetTableName(ctx, typeof(T));
-            //                var clusteredIndexColumns =
-            //                    GetClusteredIndexColumns(ctx, tableName.Fullname, request.Transaction);
-            //                request.Entities = clusteredIndexColumns.Any()
-            //                    ? Sort(request.Entities, clusteredIndexColumns)
-            //                    : request.Entities;
-            //            }
-
-            //            DoBulkInsertAll(
-            //                ctx,
-            //                request.Entities.Cast<dynamic>().ToList(),
-            //                request.Transaction,
-            //                request.Recursive,
-            //                request.AllowNotNullSelfReferences,
-            //                new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
-            //                response);
-            //        }
-            //        finally
-            //        {
-            //            foreach (var tableName in response.TablesWithNoCheckConstraints)
-            //            {
-            //                var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
-            //                var connection = GetSqlConnection(ctx);
-            //                var cmd = new SqlCommand(query, connection, request.Transaction);
-            //                cmd.ExecuteNonQuery();
-            //            }
-
-            //            mutex.ReleaseMutex();
-            //        }
-            //    }
-            //}
 
             s.Stop();
             response.Elapsed = s.Elapsed;
-
 
             return response;
         }
@@ -899,9 +836,16 @@ namespace Tanneryd.BulkOperations.EF6
                     {
                         if (isCollection)
                         {
-                            var navProperties = GetProperty(navigationPropertyName, entity);
+                            var propertyCollection = GetProperty(navigationPropertyName, entity);
+                            var navProperties = new List<dynamic>();
+                            foreach (var p in propertyCollection)
+                            {
+                                navProperties.Add(p);
+                            }
 
-                            if (navProperties != null && fkMapping.ForeignKeyRelations != null)
+                            if (navProperties == null || navProperties.Count == 0) break;
+
+                            if (fkMapping.ForeignKeyRelations != null)
                             {
                                 foreach (var navProperty in navProperties)
                                 {
@@ -917,9 +861,10 @@ namespace Tanneryd.BulkOperations.EF6
                             else if (fkMapping.AssociationMapping != null)
                             {
                                 // Some or all of the navProperty entities might be new. So, we need to make sure they are saved first.
-                                DoBulkInsertAll(ctx, navProperties.ToArray(), transaction, recursive, allowNotNullSelfReferences, savedEntities, response);
+                                DoBulkInsertAll(ctx, navProperties, transaction, recursive, allowNotNullSelfReferences, savedEntities, response);
 
-                                if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.GetType() == entity.GetType())
+                                // This compare does nort work. the declaring type has the wrong namespace for some reason...
+                                if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.Name == entity.GetType().Name)
                                 {
                                     foreach (var navProperty in navProperties)
                                     {
