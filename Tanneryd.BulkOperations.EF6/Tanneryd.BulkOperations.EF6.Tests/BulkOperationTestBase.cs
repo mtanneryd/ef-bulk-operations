@@ -16,6 +16,20 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             Database.SetInitializer(new CreateDatabaseIfNotExists<SchoolContext>());
         }
 
+        protected void CleanupBlogContext()
+        {
+            var db = new BlogContext();
+            db.Blogs.RemoveRange(db.Blogs.ToArray());
+            db.Posts.RemoveRange(db.Posts.ToArray());
+            db.Keywords.RemoveRange(db.Keywords.ToArray());
+            db.SaveChanges();
+        }
+
+        protected void InitializeBlogContext()
+        {
+            Database.SetInitializer(new CreateDatabaseIfNotExists<BlogContext>());
+        }
+
         protected void CleanupSchoolContext()
         {
             var db = new SchoolContext();

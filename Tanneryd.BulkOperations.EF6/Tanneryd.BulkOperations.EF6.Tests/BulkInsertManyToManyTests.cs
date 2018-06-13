@@ -45,10 +45,16 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 };
                 db.BulkInsertAll(request);
                 var dbInstructors = db.Instructors
-                    .Include(i=>i.Courses)
+                    .Include(i => i.Courses)
                     .ToArray();
+                var dbCourses = db.Courses.ToArray();
                 Assert.AreEqual(2, dbInstructors.Length);
-                Assert.AreEqual(5, dbInstructors.SelectMany(i=>i.Courses).Count());
+                Assert.AreEqual(5, dbInstructors.SelectMany(i => i.Courses).Count());
+                Assert.AreEqual(3, dbInstructors[0].Courses.Count);
+                Assert.AreEqual(2, dbInstructors[1].Courses.Count);
+                Assert.AreSame(dbCourses[0].Instructors.Single(), dbCourses[1].Instructors.Single());
+                Assert.AreSame(dbCourses[0].Instructors.Single(), dbCourses[2].Instructors.Single());
+                Assert.AreSame(dbCourses[3].Instructors.Single(), dbCourses[4].Instructors.Single());
             }
         }
 

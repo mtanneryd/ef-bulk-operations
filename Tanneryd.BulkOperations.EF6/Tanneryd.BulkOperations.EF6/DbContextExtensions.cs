@@ -34,6 +34,16 @@ namespace Tanneryd.BulkOperations.EF6
 {
     public static class DbContextExtensions
     {
+        private static HashSet<Type> IntegerTypes = new HashSet<Type>
+        {
+            typeof(Int16),
+            typeof(Int32),
+            typeof(Int64),
+            typeof(UInt16),
+            typeof(UInt32),
+            typeof(UInt64),
+        };
+
         #region Public API
 
         /// <summary>
@@ -837,13 +847,15 @@ namespace Tanneryd.BulkOperations.EF6
                         if (isCollection)
                         {
                             var propertyCollection = GetProperty(navigationPropertyName, entity);
+                            if (propertyCollection == null) break;
+
                             var navProperties = new List<dynamic>();
                             foreach (var p in propertyCollection)
                             {
                                 navProperties.Add(p);
                             }
+                            if (navProperties.Count == 0) break;
 
-                            if (navProperties == null || navProperties.Count == 0) break;
 
                             if (fkMapping.ForeignKeyRelations != null)
                             {
@@ -879,8 +891,8 @@ namespace Tanneryd.BulkOperations.EF6
                                     foreach (var navProperty in navProperties)
                                     {
                                         dynamic np = new ExpandoObject();
-                                        AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name,GetProperty(fkMapping.AssociationMapping.Source.EntityProperty.Name, navProperty));
-                                        AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name,GetProperty(fkMapping.AssociationMapping.Target.EntityProperty.Name, entity));
+                                        AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(fkMapping.AssociationMapping.Source.EntityProperty.Name, navProperty));
+                                        AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(fkMapping.AssociationMapping.Target.EntityProperty.Name, entity));
                                         navPropertyEntities.Add(np);
                                     }
                                 }
@@ -1088,7 +1100,8 @@ namespace Tanneryd.BulkOperations.EF6
                     foreach (var entity in entities)
                     {
                         var pk = GetProperty(pkProperty.Name, entity);
-                        if (pk == 0)
+                        if (pkProperty.TypeName == "Guid" && pk == Guid.Empty ||
+                            pk == 0)
                             newEntities.Add(entity);
                     }
                 }
@@ -1155,78 +1168,135 @@ namespace Tanneryd.BulkOperations.EF6
                     cmd.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
                     cmd.Transaction = transaction;
 
-                    // Get the number of existing rows in the table.
-                    cmd.CommandText = $@"SELECT COUNT(*) FROM {tableName.Fullname}";
-                    var result = cmd.ExecuteScalar();
-                    var count = Convert.ToInt64(result);
-
-                    // Get the identity increment value
-                    cmd.CommandText = $"SELECT IDENT_INCR('{tableName.Fullname}')";
-                    result = cmd.ExecuteScalar();
-                    dynamic identIncrement = Convert.ChangeType(result, pkColumnType);
-
-                    // Get the last identity value generated for our table
-                    cmd.CommandText = $"SELECT IDENT_CURRENT('{tableName.Fullname}')";
-                    result = cmd.ExecuteScalar();
-                    dynamic identcurrent = Convert.ChangeType(result, pkColumnType);
-
-                    var nextId = identcurrent + (count > 0 ? identIncrement : 0);
-
                     var nonPrimaryKeyColumnMappings = columnMappings.Values
                         .Where(m => !keyMembers.Contains(m.TableColumn.Name))
                         .ToArray();
 
-                    if (allowNotNullSelfReferences)
+                    if (IntegerTypes.Contains(pkColumnType))
                     {
-                        query = $"ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL";
-                        cmd.CommandText = query;
-                        cmd.ExecuteNonQuery();
-                        response.TablesWithNoCheckConstraints.Add(tableName.Fullname);
-                    }
+                        // Get the number of existing rows in the table.
+                        cmd.CommandText = $@"SELECT COUNT(*) FROM {tableName.Fullname}";
+                        var result = cmd.ExecuteScalar();
+                        var count = Convert.ToInt64(result);
 
-                    var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => p.TableColumn.Name));
-                    query = $@"                                  
+                        // Get the identity increment value
+                        cmd.CommandText = $"SELECT IDENT_INCR('{tableName.Fullname}')";
+                        result = cmd.ExecuteScalar();
+                        dynamic identIncrement = Convert.ChangeType(result, pkColumnType);
+
+                        // Get the last identity value generated for our table
+                        cmd.CommandText = $"SELECT IDENT_CURRENT('{tableName.Fullname}')";
+                        result = cmd.ExecuteScalar();
+                        dynamic identcurrent = Convert.ChangeType(result, pkColumnType);
+
+                        var nextId = identcurrent + (count > 0 ? identIncrement : 0);
+
+                        if (allowNotNullSelfReferences)
+                        {
+                            query = $"ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL";
+                            cmd.CommandText = query;
+                            cmd.ExecuteNonQuery();
+                            response.TablesWithNoCheckConstraints.Add(tableName.Fullname);
+                        }
+
+                        var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => p.TableColumn.Name));
+                        query = $@"                                  
                                 INSERT INTO {tableName.Fullname} ({columnNames})
                                 SELECT {columnNames}
                                 FROM   {tempTableName}
                                 ORDER BY rowno
                              ";
-                    cmd.CommandText = query;
-                    s.Restart();
-                    rowsAffected += cmd.ExecuteNonQuery();
-                    s.Stop();
-                    stats.TimeElapsedDuringInsertInto = s.Elapsed;
-                    response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
+                        cmd.CommandText = query;
+                        s.Restart();
+                        rowsAffected += cmd.ExecuteNonQuery();
+                        s.Stop();
+                        stats.TimeElapsedDuringInsertInto = s.Elapsed;
+                        response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
 
-                    cmd.CommandText = $"SELECT SCOPE_IDENTITY()";
-                    result = cmd.ExecuteScalar();
-                    dynamic lastId = Convert.ChangeType(result, pkColumnType);
+                        cmd.CommandText = $"SELECT SCOPE_IDENTITY()";
+                        result = cmd.ExecuteScalar();
+                        dynamic lastId = Convert.ChangeType(result, pkColumnType);
 
-                    cmd.CommandText =
-                        $"SELECT [{pkColumn.Name}] From {tableName.Fullname} WHERE [{pkColumn.Name}] >= {nextId} and [{pkColumn.Name}] <= {lastId}";
-                    var reader = cmd.ExecuteReader();
-                    var ids = (from IDataRecord r in reader
-                               let pk = r[pkColumn.Name]
-                               select pk)
-                        .OrderBy(i => i)
-                        .ToArray();
-                    if (ids.Length != newEntities.Count)
-                        throw new ArgumentException(
-                            "More id values generated than we had entities. Something went wrong, try again.");
+                        cmd.CommandText =
+                            $"SELECT [{pkColumn.Name}] From {tableName.Fullname} WHERE [{pkColumn.Name}] >= {nextId} and [{pkColumn.Name}] <= {lastId}";
+                        var reader = cmd.ExecuteReader();
+                        var ids = (from IDataRecord r in reader
+                                let pk = r[pkColumn.Name]
+                                select pk)
+                            .OrderBy(i => i)
+                            .ToArray();
+                        if (ids.Length != newEntities.Count)
+                            throw new ArgumentException(
+                                "More id values generated than we had entities. Something went wrong, try again.");
 
-
-                    for (int i = 0; i < newEntities.Count; i++)
-                    {
-                        SetProperty(pkProperty.Name, newEntities[i], ids[i]);
-
-                        if (hasComplexProperties)
+                        for (int i = 0; i < newEntities.Count; i++)
                         {
-                            var dict = (IDictionary<string, object>)newEntities[i];
-                            if (dict.ContainsKey("#OriginalEntity"))
+                            SetProperty(pkProperty.Name, newEntities[i], ids[i]);
+
+                            if (hasComplexProperties)
                             {
-                                SetProperty(pkProperty.Name, dict["#OriginalEntity"], ids[i]);
+                                var dict = (IDictionary<string, object>) newEntities[i];
+                                if (dict.ContainsKey("#OriginalEntity"))
+                                {
+                                    SetProperty(pkProperty.Name, dict["#OriginalEntity"], ids[i]);
+                                }
                             }
                         }
+                    }
+                    else
+                    {
+                        if (allowNotNullSelfReferences)
+                        {
+                            query = $"ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL";
+                            cmd.CommandText = query;
+                            cmd.ExecuteNonQuery();
+                            response.TablesWithNoCheckConstraints.Add(tableName.Fullname);
+                        }
+
+                        var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => p.TableColumn.Name));
+                        query = $@"  
+                                    MERGE {tableName.Fullname}
+                                    USING 
+                                        (SELECT {columnNames},rowno
+                                         FROM   {tempTableName}) t ({columnNames},rowno)
+                                    ON 1 = 0
+                                    WHEN NOT MATCHED THEN
+                                    INSERT ({columnNames})
+                                    VALUES ({columnNames})
+                                    OUTPUT t.rowno,
+                                           inserted.[{pkColumn.Name}]; 
+                                 ";
+                        cmd.CommandText = query;
+                        s.Restart();
+                        var reader = cmd.ExecuteReader();
+                        var ids = (
+                            from IDataRecord r in reader
+                            let pk = r[pkColumn.Name]
+                            let rno = r["rowno"]
+                            orderby rno
+                            select pk).ToArray();
+                        s.Stop();
+                        stats.TimeElapsedDuringInsertInto = s.Elapsed;
+                        response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
+
+                        if (ids.Length != newEntities.Count)
+                            throw new ArgumentException(
+                                "More id values generated than we had entities. Something went wrong, try again.");
+
+                        for (int i = 0; i < newEntities.Count; i++)
+                        {
+                            SetProperty(pkProperty.Name, newEntities[i], ids[i]);
+
+                            if (hasComplexProperties)
+                            {
+                                var dict = (IDictionary<string, object>)newEntities[i];
+                                if (dict.ContainsKey("#OriginalEntity"))
+                                {
+                                    SetProperty(pkProperty.Name, dict["#OriginalEntity"], ids[i]);
+                                }
+                            }
+                        }
+
                     }
                 }
             }

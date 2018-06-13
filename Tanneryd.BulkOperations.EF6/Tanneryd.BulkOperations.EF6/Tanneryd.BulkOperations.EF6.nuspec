@@ -14,7 +14,7 @@
     <copyright>Copyright 2017-2018</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>Primitive types can now be used in BulkSelect item collections.</releaseNotes>
+    <releaseNotes>Improved support for Many-to-Many relationships when doing bulk insert.</releaseNotes>
 
   </metadata>
 </package>
