@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 using System;
+using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -734,7 +735,7 @@ namespace Tanneryd.BulkOperations.EF6
             if (entities.Count == 0) return;
 
             Type t = entities[0].GetType();
-            Trace.TraceInformation($"DoBulkInsertAll - {t.ToString()}");
+            //Trace.TraceInformation($"DoBulkInsertAll - {t.ToString()}");
             var mappings = GetMappings(ctx, t);
 
             // 
@@ -744,7 +745,7 @@ namespace Tanneryd.BulkOperations.EF6
             //
             if (recursive)
             {
-                Trace.TraceInformation($"DoBulkInsertAll - ToForeignKeyMappings - {t.ToString()}");
+                //Trace.TraceInformation($"DoBulkInsertAll - ToForeignKeyMappings - {t.ToString()}");
                 foreach (var fkMapping in mappings.ToForeignKeyMappings)
                 {
                     // ToForeignKeyMappings means that the entity is connected TO
@@ -830,7 +831,7 @@ namespace Tanneryd.BulkOperations.EF6
             //
             if (recursive)
             {
-                Trace.TraceInformation($"DoBulkInsertAll - FromForeignKeyMappings - {t.ToString()}");
+                //Trace.TraceInformation($"DoBulkInsertAll - FromForeignKeyMappings - {t.ToString()}");
 
                 var fkMappings = mappings.FromForeignKeyMappings.Concat(mappings.ToForeignKeyMappings.Where(m => m.AssociationMapping != null));
                 foreach (var fkMapping in fkMappings)
@@ -1175,7 +1176,7 @@ namespace Tanneryd.BulkOperations.EF6
                     if (IntegerTypes.Contains(pkColumnType))
                     {
                         // Get the number of existing rows in the table.
-                        cmd.CommandText = $@"SELECT COUNT(*) FROM {tableName.Fullname}";
+                        cmd.CommandText = $@"SELECT CASE WHEN EXISTS (SELECT TOP 1 * FROM {tableName.Fullname}) THEN 1 ELSE 0 END";
                         var result = cmd.ExecuteScalar();
                         var count = Convert.ToInt64(result);
 
@@ -1863,6 +1864,7 @@ namespace Tanneryd.BulkOperations.EF6
         {
             var t = instance.GetType();
             if (t.IsPrimitive) return instance;
+            if (t == typeof(string)) return instance;
 
             var property = t.GetProperty(propertyName);
             return GetProperty(property, instance, def);
