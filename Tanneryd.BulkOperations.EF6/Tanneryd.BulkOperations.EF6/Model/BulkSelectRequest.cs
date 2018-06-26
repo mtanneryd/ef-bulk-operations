@@ -52,7 +52,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public IList<T> Items { get; set; }
         public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
         public SqlTransaction Transaction { get; set; }
-   
+        public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(1);
 
         public BulkSelectRequest()
         {

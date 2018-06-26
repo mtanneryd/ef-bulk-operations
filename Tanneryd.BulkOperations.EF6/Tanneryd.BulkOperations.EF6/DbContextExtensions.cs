@@ -218,6 +218,7 @@ namespace Tanneryd.BulkOperations.EF6
                     request.Transaction,
                     request.Recursive,
                     request.AllowNotNullSelfReferences,
+                    request.CommandTimeout,
                     new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
                     response);
             }
@@ -293,7 +294,8 @@ namespace Tanneryd.BulkOperations.EF6
             var bulkCopy = new SqlBulkCopy(connection, options, transaction)
             {
                 DestinationTableName = tableName,
-                EnableStreaming = true
+                EnableStreaming = true,
+                BulkCopyTimeout = 10 * 60
             };
 
             foreach (var property in properties)
@@ -391,7 +393,6 @@ namespace Tanneryd.BulkOperations.EF6
                     table.Rows.Add(columnValues.ToArray());
                 }
 
-                bulkCopy.BulkCopyTimeout = 5 * 60;
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
                 var conditionStatements = keyMappings.Values.Select(c => $"[t1].{c.TableColumn.Name} = [t2].{c.TableColumn.Name}");
@@ -404,6 +405,7 @@ namespace Tanneryd.BulkOperations.EF6
                                INNER JOIN {tableName.Fullname} AS [t2] ON {conditionStatementsSql}";
 
                 var cmd = new SqlCommand(query, conn, request.Transaction);
+                cmd.CommandTimeout = (int) request.CommandTimeout.TotalSeconds;
                 var sqlDataReader = cmd.ExecuteReader();
 
                 var existingEntities = new List<T1>();
@@ -486,7 +488,6 @@ namespace Tanneryd.BulkOperations.EF6
                     table.Rows.Add(columnValues.ToArray());
                 }
 
-                bulkCopy.BulkCopyTimeout = 5 * 60;
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
                 var count = ctx.Database.SqlQuery<int>($"SELECT COUNT(*) FROM {tempTableName}").Single();
@@ -498,6 +499,7 @@ namespace Tanneryd.BulkOperations.EF6
                                ORDER BY [t1].rowno ASC";
 
                 var cmd = new SqlCommand(query, conn, request.Transaction);
+                cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
                 var sqlDataReader = cmd.ExecuteReader();
 
                 var selectedEntities = new List<T2>();
@@ -588,7 +590,6 @@ namespace Tanneryd.BulkOperations.EF6
                     table.Rows.Add(columnValues.ToArray());
                 }
 
-                bulkCopy.BulkCopyTimeout = 5 * 60;
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
                 var conditionStatements = keyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
@@ -598,6 +599,7 @@ namespace Tanneryd.BulkOperations.EF6
                                INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
 
                 var cmd = new SqlCommand(query, conn, request.Transaction);
+                cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
                 var sqlDataReader = cmd.ExecuteReader();
 
                 var existingEntities = new List<T1>();
@@ -692,6 +694,7 @@ namespace Tanneryd.BulkOperations.EF6
                                  INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
                                 ";
                 var cmd = new SqlCommand(cmdBody, conn, transaction);
+                cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
                 rowsAffected += cmd.ExecuteNonQuery();
 
                 if (request.InsertIfNew)
@@ -711,6 +714,7 @@ namespace Tanneryd.BulkOperations.EF6
                              INNER JOIN {tableName.Fullname} AS t1 ON {conditionStatementsSql}            
                             ";
                     cmd = new SqlCommand(cmdBody, conn, transaction);
+                    cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
                     rowsAffected += cmd.ExecuteNonQuery();
                 }
 
@@ -729,6 +733,7 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction,
             bool recursive,
             bool allowNotNullSelfReferences,
+            TimeSpan commandTimeout,
             Dictionary<object, object> savedEntities,
             BulkInsertResponse response)
         {
@@ -795,7 +800,7 @@ namespace Tanneryd.BulkOperations.EF6
                     }
                     if (!navProperties.Any()) continue;
 
-                    DoBulkInsertAll(ctx, navProperties.ToArray(), transaction, recursive, allowNotNullSelfReferences, savedEntities, response);
+                    DoBulkInsertAll(ctx, navProperties.ToArray(), transaction, recursive, allowNotNullSelfReferences, commandTimeout, savedEntities, response);
                     foreach (var modifiedEntity in modifiedEntities)
                     {
                         var e = modifiedEntity[0];
@@ -821,7 +826,7 @@ namespace Tanneryd.BulkOperations.EF6
                 validEntities.Add(entity);
                 savedEntities.Add(entity, entity);
             }
-            DoBulkCopy(ctx, validEntities, t, mappings, transaction, allowNotNullSelfReferences, response);
+            DoBulkCopy(ctx, validEntities, t, mappings, transaction, allowNotNullSelfReferences, commandTimeout, response);
 
             //
             // Any many-to-one (parent-child) foreign key related entities are found here. 
@@ -874,7 +879,7 @@ namespace Tanneryd.BulkOperations.EF6
                             else if (fkMapping.AssociationMapping != null)
                             {
                                 // Some or all of the navProperty entities might be new. So, we need to make sure they are saved first.
-                                DoBulkInsertAll(ctx, navProperties, transaction, recursive, allowNotNullSelfReferences, savedEntities, response);
+                                DoBulkInsertAll(ctx, navProperties, transaction, recursive, allowNotNullSelfReferences, commandTimeout, savedEntities, response);
 
                                 // This compare does nort work. the declaring type has the wrong namespace for some reason...
                                 if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.Name == entity.GetType().Name)
@@ -962,10 +967,10 @@ namespace Tanneryd.BulkOperations.EF6
                                     EntityProperty = fkMapping.AssociationMapping.Target.TableColumn,
                                     TableColumn = fkMapping.AssociationMapping.Target.TableColumn
                                 });
-                            DoBulkCopy(ctx, navPropertyEntities.ToArray(), typeof(ExpandoObject), expandoMappings, transaction, allowNotNullSelfReferences, response);
+                            DoBulkCopy(ctx, navPropertyEntities.ToArray(), typeof(ExpandoObject), expandoMappings, transaction, allowNotNullSelfReferences, commandTimeout, response);
                         }
                         else
-                            DoBulkInsertAll(ctx, navPropertyEntities.ToArray(), transaction, recursive, allowNotNullSelfReferences, savedEntities, response);
+                            DoBulkInsertAll(ctx, navPropertyEntities.ToArray(), transaction, recursive, allowNotNullSelfReferences, commandTimeout, savedEntities, response);
                     }
                 }
             }
@@ -978,6 +983,7 @@ namespace Tanneryd.BulkOperations.EF6
             Mappings mappings,
             SqlTransaction transaction,
             bool allowNotNullSelfReferences,
+            TimeSpan commandTimeout,
             BulkInsertResponse response)
         {
             // If we for some reason are called with an empty list we return immediately.
@@ -1007,7 +1013,12 @@ namespace Tanneryd.BulkOperations.EF6
                 entities = flattenedEntities;
             }
 
-            var bulkCopy = new SqlBulkCopy(conn, SqlBulkCopyOptions.Default, transaction) { DestinationTableName = tableName.Fullname };
+            var bulkCopy = new SqlBulkCopy(conn, SqlBulkCopyOptions.Default, transaction)
+            {
+                DestinationTableName = tableName.Fullname,
+                EnableStreaming = true,
+                BulkCopyTimeout = 10 * 60,
+            };
             var table = new DataTable();
 
             // Ignore all properties that we have no mappings for.
@@ -1067,7 +1078,6 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var s = new Stopwatch();
                 s.Start();
-                bulkCopy.BulkCopyTimeout = 5 * 60;
                 bulkCopy.WriteToServer(table.CreateDataReader());
                 s.Stop();
                 var stats = new BulkInsertStatistics
@@ -1156,7 +1166,6 @@ namespace Tanneryd.BulkOperations.EF6
 
                     var s = new Stopwatch();
                     s.Start();
-                    bulkCopy.BulkCopyTimeout = 5 * 60;
                     bulkCopy.WriteToServer(table.CreateDataReader());
                     s.Stop();
                     var stats = new BulkInsertStatistics
@@ -1332,6 +1341,7 @@ namespace Tanneryd.BulkOperations.EF6
                                  INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
                                 ";
                     cmd = new SqlCommand(cmdBody, conn, transaction);
+                    cmd.CommandTimeout = (int)commandTimeout.TotalSeconds;
                     cmd.ExecuteNonQuery();
                 }
 
@@ -1352,6 +1362,7 @@ namespace Tanneryd.BulkOperations.EF6
                              )
                                 ";
                 cmd = new SqlCommand(cmdBody, conn, transaction);
+                cmd.CommandTimeout = (int)commandTimeout.TotalSeconds;
                 rowsAffected += cmd.ExecuteNonQuery();
 
                 //
@@ -1495,7 +1506,8 @@ namespace Tanneryd.BulkOperations.EF6
                 new SqlBulkCopy(conn, SqlBulkCopyOptions.KeepIdentity, sqlTransaction)
                 {
                     DestinationTableName = tempTableName,
-                    BulkCopyTimeout = 5 * 60,
+                    EnableStreaming = true,
+                    BulkCopyTimeout = 10 * 60,
                 };
 
             var allProperties = GetProperties(entities[0]);

@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections;
 using System.Data.SqlClient;
 
@@ -32,5 +34,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public string[] KeyPropertyNames { get; set; }
         public SqlTransaction Transaction { get; set; }
         public bool InsertIfNew { get; set; }
+        public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(30);
+
     }
 }

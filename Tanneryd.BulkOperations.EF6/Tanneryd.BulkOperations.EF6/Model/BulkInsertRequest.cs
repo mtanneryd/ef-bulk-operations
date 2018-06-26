@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 
@@ -25,5 +27,6 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public bool Recursive { get; set; } = false;
         public bool AllowNotNullSelfReferences { get; set; } = false;
         public bool SortUsingClusteredIndex { get; set; } = true;
+        public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(30);
     }
 }
