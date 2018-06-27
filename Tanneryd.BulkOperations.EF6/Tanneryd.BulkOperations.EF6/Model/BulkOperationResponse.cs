@@ -15,6 +15,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Tanneryd.BulkOperations.EF6.Model
 {
@@ -29,6 +30,17 @@ namespace Tanneryd.BulkOperations.EF6.Model
     {
         public List<Tuple<Type, BulkInsertStatistics>> BulkInsertStatistics { get; set; } = new List<Tuple<Type, BulkInsertStatistics>>();
         public List<string> TablesWithNoCheckConstraints { get; set; } = new List<string>();
+
+        public string[] Report()
+        {
+            var report = new List<string>();
+            foreach (var stat in BulkInsertStatistics)
+            {
+                report.Add($"{stat.Item1.Name} - AffectedRows = {AffectedRows.Single(r => r.Item1 == stat.Item1).Item2}, BulkCopy={stat.Item2.TimeElapsedDuringBulkCopy.TotalSeconds}, InsertInto={stat.Item2.TimeElapsedDuringInsertInto.TotalSeconds}");
+            }
+
+            return report.ToArray();
+        }
     }
 
     public struct BulkInsertStatistics {

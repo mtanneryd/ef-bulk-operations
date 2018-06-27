@@ -243,6 +243,15 @@ namespace Tanneryd.BulkOperations.EF6
 
         #region Private methods
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="transaction"></param>
+        /// <param name="tableName"></param>
+        /// <param name="columnNames"></param>
+        /// <param name="includeRowNumber"></param>
+        /// <returns></returns>
         private static string CreateTempTable(
             SqlConnection connection,
             SqlTransaction transaction,
@@ -271,16 +280,34 @@ namespace Tanneryd.BulkOperations.EF6
             return tempTableName;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="connection"></param>
+        /// <param name="transaction"></param>
+        /// <param name="tempTableName"></param>
         private static void DropTempTable(
             SqlConnection connection,
             SqlTransaction transaction,
             string tempTableName)
         {
-            var cmdFooter = $@"DROP TABLE {tempTableName}";
+            var cmdFooter = $@"IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}";
             var cmd = new SqlCommand(cmdFooter, connection, transaction);
             cmd.ExecuteNonQuery();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="table"></param>
+        /// <param name="properties"></param>
+        /// <param name="columnMappings"></param>
+        /// <param name="connection"></param>
+        /// <param name="transaction"></param>
+        /// <param name="tableName"></param>
+        /// <param name="options"></param>
+        /// <param name="includeRowNumber"></param>
+        /// <returns></returns>
         private static SqlBulkCopy CreateBulkCopy(
             DataTable table,
             BulkPropertyInfo[] properties,
@@ -291,10 +318,12 @@ namespace Tanneryd.BulkOperations.EF6
             SqlBulkCopyOptions options = SqlBulkCopyOptions.Default,
             bool includeRowNumber = false)
         {
+            options = options | SqlBulkCopyOptions.TableLock;
             var bulkCopy = new SqlBulkCopy(connection, options, transaction)
             {
                 DestinationTableName = tableName,
                 EnableStreaming = true,
+                BatchSize = 1000000,
                 BulkCopyTimeout = 10 * 60
             };
 
@@ -309,12 +338,17 @@ namespace Tanneryd.BulkOperations.EF6
                     propertyType = Nullable.GetUnderlyingType(propertyType);
                 }
 
-                // Since we cannot trust the CLR type properties to be in the same order as
-                // the table columns we use the SqlBulkCopy column mappings.
-                table.Columns.Add(new DataColumn(property.Name, propertyType));
-                var clrPropertyName = property.Name;
-                var tableColumnName = columnMappings[property.Name].TableColumn.Name;
-                bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(clrPropertyName, tableColumnName));
+                // Ignore all properties that we have no mappings for. We might have done so
+                // already but just to be really really sure.
+                if (columnMappings.ContainsKey(property.Name))
+                {
+                    // Since we cannot trust the CLR type properties to be in the same order as
+                    // the table columns we use the SqlBulkCopy column mappings.
+                    table.Columns.Add(new DataColumn(property.Name, propertyType));
+                    var clrPropertyName = property.Name;
+                    var tableColumnName = columnMappings[property.Name].TableColumn.Name;
+                    bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(clrPropertyName, tableColumnName));
+                }
             }
 
             if (includeRowNumber)
@@ -330,7 +364,8 @@ namespace Tanneryd.BulkOperations.EF6
         /// <summary>
         /// 
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
         /// <param name="ctx"></param>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -405,7 +440,7 @@ namespace Tanneryd.BulkOperations.EF6
                                INNER JOIN {tableName.Fullname} AS [t2] ON {conditionStatementsSql}";
 
                 var cmd = new SqlCommand(query, conn, request.Transaction);
-                cmd.CommandTimeout = (int) request.CommandTimeout.TotalSeconds;
+                cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
                 var sqlDataReader = cmd.ExecuteReader();
 
                 var existingEntities = new List<T1>();
@@ -424,6 +459,14 @@ namespace Tanneryd.BulkOperations.EF6
 
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="ctx"></param>
+        /// <param name="request"></param>
+        /// <returns></returns>
         private static IList<T2> DoBulkSelect<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request) where T2 : new()
         {
             Type t = typeof(T2);
@@ -489,8 +532,7 @@ namespace Tanneryd.BulkOperations.EF6
                 }
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
-
-                var count = ctx.Database.SqlQuery<int>($"SELECT COUNT(*) FROM {tempTableName}").Single();
+                
                 var conditionStatements = keyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].*
@@ -498,8 +540,10 @@ namespace Tanneryd.BulkOperations.EF6
                                INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}
                                ORDER BY [t1].rowno ASC";
 
-                var cmd = new SqlCommand(query, conn, request.Transaction);
-                cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
+                var cmd = new SqlCommand(query, conn, request.Transaction)
+                {
+                    CommandTimeout = (int) request.CommandTimeout.TotalSeconds
+                };
                 var sqlDataReader = cmd.ExecuteReader();
 
                 var selectedEntities = new List<T2>();
@@ -527,7 +571,8 @@ namespace Tanneryd.BulkOperations.EF6
         /// <summary>
         /// 
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
         /// <param name="ctx"></param>
         /// <param name="request"></param>
         /// <returns></returns>
@@ -617,9 +662,12 @@ namespace Tanneryd.BulkOperations.EF6
             return new List<T1>();
         }
 
-        //
-        // Private methods
-        //
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="request"></param>
+        /// <param name="response"></param>
         private static void DoBulkUpdateAll(
             this DbContext ctx,
             BulkUpdateRequest request,
@@ -727,6 +775,18 @@ namespace Tanneryd.BulkOperations.EF6
             response.AffectedRows.Add(new Tuple<Type, long>(t, rowsAffected));
         }
 
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ctx"></param>
+        /// <param name="entities"></param>
+        /// <param name="transaction"></param>
+        /// <param name="recursive"></param>
+        /// <param name="allowNotNullSelfReferences"></param>
+        /// <param name="commandTimeout"></param>
+        /// <param name="savedEntities"></param>
+        /// <param name="response"></param>
         private static void DoBulkInsertAll(
             this DbContext ctx,
             IList<dynamic> entities,
@@ -1013,36 +1073,43 @@ namespace Tanneryd.BulkOperations.EF6
                 entities = flattenedEntities;
             }
 
-            var bulkCopy = new SqlBulkCopy(conn, SqlBulkCopyOptions.Default, transaction)
-            {
-                DestinationTableName = tableName.Fullname,
-                EnableStreaming = true,
-                BulkCopyTimeout = 10 * 60,
-            };
-            var table = new DataTable();
-
             // Ignore all properties that we have no mappings for.
             var properties = GetProperties(entities[0])
                 .Where(p => columnMappings.ContainsKey(p.Name)).ToArray();
 
-            foreach (var property in properties)
-            {
-                Type propertyType = property.Type;
+            var table = new DataTable();
+            
 
-                // Nullable properties need special treatment.
-                if (propertyType.IsGenericType &&
-                    propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                {
-                    propertyType = Nullable.GetUnderlyingType(propertyType);
-                }
+            //var bulkCopy = new SqlBulkCopy(conn, SqlBulkCopyOptions.Default, transaction)
+            //{
+            //    DestinationTableName = tableName.Fullname,
+            //    EnableStreaming = true,
+            //    BulkCopyTimeout = 10 * 60,
+            //};
+            //var table = new DataTable();
 
-                // Since we cannot trust the CLR type properties to be in the same order as
-                // the table columns we use the SqlBulkCopy column mappings.
-                table.Columns.Add(new DataColumn(property.Name, propertyType));
-                var clrPropertyName = property.Name;
-                var tableColumnName = columnMappings[property.Name].TableColumn.Name;
-                bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(clrPropertyName, tableColumnName));
-            }
+            //// Ignore all properties that we have no mappings for.
+            //var properties = GetProperties(entities[0])
+            //    .Where(p => columnMappings.ContainsKey(p.Name)).ToArray();
+
+            //foreach (var property in properties)
+            //{
+            //    Type propertyType = property.Type;
+
+            //    // Nullable properties need special treatment.
+            //    if (propertyType.IsGenericType &&
+            //        propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            //    {
+            //        propertyType = Nullable.GetUnderlyingType(propertyType);
+            //    }
+
+            //    // Since we cannot trust the CLR type properties to be in the same order as
+            //    // the table columns we use the SqlBulkCopy column mappings.
+            //    table.Columns.Add(new DataColumn(property.Name, propertyType));
+            //    var clrPropertyName = property.Name;
+            //    var tableColumnName = columnMappings[property.Name].TableColumn.Name;
+            //    bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(clrPropertyName, tableColumnName));
+            //}
 
             // Check to see if the table has a primary key.
             dynamic declaringType = columnMappings
@@ -1056,6 +1123,16 @@ namespace Tanneryd.BulkOperations.EF6
             // We have no primary key/s. Just add it all.
             if (pkColumnMappings.Length == 0)
             {
+                var bulkCopy = CreateBulkCopy(
+                    table,
+                    properties,
+                    columnMappings,
+                    conn,
+                    transaction,
+                    tableName.Fullname,
+                    SqlBulkCopyOptions.Default,
+                    false);
+
                 if (entities[0] is ExpandoObject)
                 {
                     foreach (var entity in entities)
@@ -1125,9 +1202,17 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     var guid = Guid.NewGuid().ToString("N");
                     var tempTableName = $"#{guid}";
-                    bulkCopy.DestinationTableName = tempTableName;
-                    table.Columns.Add(new DataColumn("rowno", typeof(int)));
-                    bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("rowno", "rowno"));
+
+                    var bulkCopy = CreateBulkCopy(
+                        table,
+                        properties,
+                        columnMappings,
+                        conn,
+                        transaction,
+                        tempTableName,
+                        SqlBulkCopyOptions.Default,
+                        true);
+
                     var query = $@"   
                                     IF OBJECT_ID('tempdb..{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
 
@@ -1231,8 +1316,8 @@ namespace Tanneryd.BulkOperations.EF6
                             $"SELECT [{pkColumn.Name}] From {tableName.Fullname} WHERE [{pkColumn.Name}] >= {nextId} and [{pkColumn.Name}] <= {lastId}";
                         var reader = cmd.ExecuteReader();
                         var ids = (from IDataRecord r in reader
-                                let pk = r[pkColumn.Name]
-                                select pk)
+                                   let pk = r[pkColumn.Name]
+                                   select pk)
                             .OrderBy(i => i)
                             .ToArray();
                         if (ids.Length != newEntities.Count)
@@ -1245,7 +1330,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                             if (hasComplexProperties)
                             {
-                                var dict = (IDictionary<string, object>) newEntities[i];
+                                var dict = (IDictionary<string, object>)newEntities[i];
                                 if (dict.ContainsKey("#OriginalEntity"))
                                 {
                                     SetProperty(pkProperty.Name, dict["#OriginalEntity"], ids[i]);
@@ -1499,17 +1584,6 @@ namespace Tanneryd.BulkOperations.EF6
                 EnableIdentityInsert(tempTableName, conn, sqlTransaction);
             }
 
-            //
-            // Setup a bulk copy instance to populate the temp table.
-            //
-            var bulkCopy =
-                new SqlBulkCopy(conn, SqlBulkCopyOptions.KeepIdentity, sqlTransaction)
-                {
-                    DestinationTableName = tempTableName,
-                    EnableStreaming = true,
-                    BulkCopyTimeout = 10 * 60,
-                };
-
             var allProperties = GetProperties(entities[0]);
             //
             // Select the primary key clr properties 
@@ -1525,36 +1599,59 @@ namespace Tanneryd.BulkOperations.EF6
                 .ToArray();
             var properties = pkColumnProperties.Concat(selectedColumnProperties).ToArray();
 
-            //
-            // Configure a data table to use for the bulk copy 
-            // operation into the temp table.
-            //
             var table = new DataTable();
-            foreach (var property in properties)
-            {
-                Type propertyType = property.Type;
+            var bulkCopy = CreateBulkCopy(
+                table,
+                properties,
+                columnMappings,
+                conn,
+                sqlTransaction,
+                tempTableName,
+                SqlBulkCopyOptions.KeepIdentity,
+                true);
 
-                // Nullable properties need special treatment.
-                if (propertyType.IsGenericType &&
-                    propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                {
-                    propertyType = Nullable.GetUnderlyingType(propertyType);
-                }
+            ////
+            //// Setup a bulk copy instance to populate the temp table.
+            ////
+            //var bulkCopy =
+            //    new SqlBulkCopy(conn, SqlBulkCopyOptions.KeepIdentity, sqlTransaction)
+            //    {
+            //        DestinationTableName = tempTableName,
+            //        EnableStreaming = true,
+            //        BulkCopyTimeout = 10 * 60,
+            //    };
 
-                // Ignore all properties that we have no mappings for.
-                if (columnMappings.ContainsKey(property.Name))
-                {
-                    // Since we cannot trust the CLR type properties to be in the same order as
-                    // the table columns we use the SqlBulkCopy column mappings.
-                    table.Columns.Add(new DataColumn(property.Name, propertyType));
+            ////
+            //// Configure a data table to use for the bulk copy 
+            //// operation into the temp table.
+            ////
+            //var table = new DataTable();
+            //foreach (var property in properties)
+            //{
+            //    Type propertyType = property.Type;
 
-                    var clrPropertyName = property.Name;
-                    var tableColumnName = columnMappings[property.Name].TableColumn.Name;
-                    bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(clrPropertyName, tableColumnName));
-                }
-            }
-            table.Columns.Add(new DataColumn("rowno", typeof(long)));
-            bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("rowno", "rowno"));
+            //    // Nullable properties need special treatment.
+            //    if (propertyType.IsGenericType &&
+            //        propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            //    {
+            //        propertyType = Nullable.GetUnderlyingType(propertyType);
+            //    }
+
+            //    // Ignore all properties that we have no mappings for.
+            //    if (columnMappings.ContainsKey(property.Name))
+            //    {
+            //        // Since we cannot trust the CLR type properties to be in the same order as
+            //        // the table columns we use the SqlBulkCopy column mappings.
+            //        table.Columns.Add(new DataColumn(property.Name, propertyType));
+
+            //        var clrPropertyName = property.Name;
+            //        var tableColumnName = columnMappings[property.Name].TableColumn.Name;
+            //        bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(clrPropertyName, tableColumnName));
+            //    }
+            //}
+            //table.Columns.Add(new DataColumn("rowno", typeof(long)));
+            //bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("rowno", "rowno"));
+
             //
             // Fill the data table with our entities.
             //
