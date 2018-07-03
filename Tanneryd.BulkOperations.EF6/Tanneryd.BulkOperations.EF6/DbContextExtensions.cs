@@ -371,6 +371,8 @@ namespace Tanneryd.BulkOperations.EF6
         /// <returns></returns>
         private static IList<T1> DoBulkSelectNotExisting<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request)
         {
+            if (!request.Items.Any()) return new List<T1>();
+
             Type t = typeof(T2);
             var mappings = GetMappings(ctx, t);
             var tableName = mappings.TableName;
@@ -419,11 +421,12 @@ namespace Tanneryd.BulkOperations.EF6
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
 
                 int i = 0;
+                var type = items[0].GetType();
                 foreach (var entity in items)
                 {
                     var e = entity;
                     var columnValues = new List<dynamic>();
-                    columnValues.AddRange(keyProperties.Select(p => GetProperty(itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
+                    columnValues.AddRange(keyProperties.Select(p => GetProperty(type, itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
                     columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
@@ -469,6 +472,8 @@ namespace Tanneryd.BulkOperations.EF6
         /// <returns></returns>
         private static IList<T2> DoBulkSelect<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request) where T2 : new()
         {
+            if (!request.Items.Any()) return new List<T2>();
+
             Type t = typeof(T2);
             var mappings = GetMappings(ctx, t);
             var tableName = mappings.TableName;
@@ -522,11 +527,12 @@ namespace Tanneryd.BulkOperations.EF6
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
 
                 int i = 0;
+                var type = items[0].GetType();
                 foreach (var entity in items)
                 {
                     var e = entity;
                     var columnValues = new List<dynamic>();
-                    columnValues.AddRange(keyProperties.Select(p => GetProperty(itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
+                    columnValues.AddRange(keyProperties.Select(p => GetProperty(type, itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
                     columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
@@ -578,6 +584,8 @@ namespace Tanneryd.BulkOperations.EF6
         /// <returns></returns>
         private static IList<T1> DoBulkSelectExisting<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request)
         {
+            if (!request.Items.Any()) return new List<T1>();
+
             Type t = typeof(T2);
             var mappings = GetMappings(ctx, t);
             var tableName = mappings.TableName;
@@ -626,11 +634,12 @@ namespace Tanneryd.BulkOperations.EF6
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
 
                 int i = 0;
+                var type = items[0].GetType();
                 foreach (var entity in items)
                 {
                     var e = entity;
                     var columnValues = new List<dynamic>();
-                    columnValues.AddRange(keyProperties.Select(p => GetProperty(itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
+                    columnValues.AddRange(keyProperties.Select(p => GetProperty(type, itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
                     columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
@@ -800,7 +809,6 @@ namespace Tanneryd.BulkOperations.EF6
             if (entities.Count == 0) return;
 
             Type t = entities[0].GetType();
-            //Trace.TraceInformation($"DoBulkInsertAll - {t.ToString()}");
             var mappings = GetMappings(ctx, t);
 
             // 
@@ -827,18 +835,21 @@ namespace Tanneryd.BulkOperations.EF6
 
                     var navProperties = new HashSet<object>();
                     var modifiedEntities = new List<object[]>();
+                    Type navPropertyType = null;
                     foreach (var entity in entities)
                     {
-                        var navProperty = GetProperty(navigationPropertyName, entity);
+                        var navProperty = GetProperty(t, navigationPropertyName, entity);
                         if (navProperty != null)
                         {
+                            if (navPropertyType == null)
+                                navPropertyType = GetProperty(t, navigationPropertyName, entity).GetType();
                             foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
                             {
-                                var navPropertyKey = GetProperty(foreignKeyRelation.ToProperty, entity);
+                                var navPropertyKey = GetProperty(t, foreignKeyRelation.ToProperty, entity);
 
                                 if (navPropertyKey == null || navPropertyKey == 0)
                                 {
-                                    var currentValue = GetProperty(foreignKeyRelation.FromProperty, navProperty);
+                                    var currentValue = GetProperty(navPropertyType, foreignKeyRelation.FromProperty, navProperty);
                                     if (currentValue > 0)
                                     {
                                         SetProperty(foreignKeyRelation.ToProperty, entity, currentValue);
@@ -912,7 +923,7 @@ namespace Tanneryd.BulkOperations.EF6
                     {
                         if (isCollection)
                         {
-                            var propertyCollection = GetProperty(navigationPropertyName, entity);
+                            var propertyCollection = GetProperty(t, navigationPropertyName, entity);
                             if (propertyCollection == null) break;
 
                             var navProperties = new List<dynamic>();
@@ -923,6 +934,7 @@ namespace Tanneryd.BulkOperations.EF6
                             if (navProperties.Count == 0) break;
 
 
+                            var navPropertyType = navProperties[0].GetType();
                             if (fkMapping.ForeignKeyRelations != null)
                             {
                                 foreach (var navProperty in navProperties)
@@ -930,7 +942,7 @@ namespace Tanneryd.BulkOperations.EF6
                                     foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
                                     {
                                         SetProperty(foreignKeyRelation.ToProperty, navProperty,
-                                            GetProperty(foreignKeyRelation.FromProperty, entity));
+                                            GetProperty(t, foreignKeyRelation.FromProperty, entity));
                                     }
 
                                     navPropertyEntities.Add(navProperty);
@@ -941,14 +953,13 @@ namespace Tanneryd.BulkOperations.EF6
                                 // Some or all of the navProperty entities might be new. So, we need to make sure they are saved first.
                                 DoBulkInsertAll(ctx, navProperties, transaction, recursive, allowNotNullSelfReferences, commandTimeout, savedEntities, response);
 
-                                // This compare does nort work. the declaring type has the wrong namespace for some reason...
                                 if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.Name == entity.GetType().Name)
                                 {
                                     foreach (var navProperty in navProperties)
                                     {
                                         dynamic np = new ExpandoObject();
-                                        AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(fkMapping.AssociationMapping.Source.EntityProperty.Name, entity));
-                                        AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(fkMapping.AssociationMapping.Target.EntityProperty.Name, navProperty));
+                                        AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(t, fkMapping.AssociationMapping.Source.EntityProperty.Name, entity));
+                                        AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(navPropertyType, fkMapping.AssociationMapping.Target.EntityProperty.Name, navProperty));
                                         navPropertyEntities.Add(np);
                                     }
                                 }
@@ -957,8 +968,8 @@ namespace Tanneryd.BulkOperations.EF6
                                     foreach (var navProperty in navProperties)
                                     {
                                         dynamic np = new ExpandoObject();
-                                        AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(fkMapping.AssociationMapping.Source.EntityProperty.Name, navProperty));
-                                        AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(fkMapping.AssociationMapping.Target.EntityProperty.Name, entity));
+                                        AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(navPropertyType, fkMapping.AssociationMapping.Source.EntityProperty.Name, navProperty));
+                                        AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(t, fkMapping.AssociationMapping.Target.EntityProperty.Name, entity));
                                         navPropertyEntities.Add(np);
                                     }
                                 }
@@ -966,12 +977,12 @@ namespace Tanneryd.BulkOperations.EF6
                         }
                         else
                         {
-                            var navProperty = GetProperty(navigationPropertyName, entity);
+                            var navProperty = GetProperty(t, navigationPropertyName, entity);
                             if (navProperty != null)
                             {
                                 foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
                                 {
-                                    SetProperty(foreignKeyRelation.ToProperty, navProperty, GetProperty(foreignKeyRelation.FromProperty, entity));
+                                    SetProperty(foreignKeyRelation.ToProperty, navProperty, GetProperty(t, foreignKeyRelation.FromProperty, entity));
                                 }
 
                                 var same = navProperty.GetType() == entity.GetType() &&
@@ -1080,37 +1091,6 @@ namespace Tanneryd.BulkOperations.EF6
             var table = new DataTable();
             
 
-            //var bulkCopy = new SqlBulkCopy(conn, SqlBulkCopyOptions.Default, transaction)
-            //{
-            //    DestinationTableName = tableName.Fullname,
-            //    EnableStreaming = true,
-            //    BulkCopyTimeout = 10 * 60,
-            //};
-            //var table = new DataTable();
-
-            //// Ignore all properties that we have no mappings for.
-            //var properties = GetProperties(entities[0])
-            //    .Where(p => columnMappings.ContainsKey(p.Name)).ToArray();
-
-            //foreach (var property in properties)
-            //{
-            //    Type propertyType = property.Type;
-
-            //    // Nullable properties need special treatment.
-            //    if (propertyType.IsGenericType &&
-            //        propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
-            //    {
-            //        propertyType = Nullable.GetUnderlyingType(propertyType);
-            //    }
-
-            //    // Since we cannot trust the CLR type properties to be in the same order as
-            //    // the table columns we use the SqlBulkCopy column mappings.
-            //    table.Columns.Add(new DataColumn(property.Name, propertyType));
-            //    var clrPropertyName = property.Name;
-            //    var tableColumnName = columnMappings[property.Name].TableColumn.Name;
-            //    bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(clrPropertyName, tableColumnName));
-            //}
-
             // Check to see if the table has a primary key.
             dynamic declaringType = columnMappings
                 .Values
@@ -1148,7 +1128,7 @@ namespace Tanneryd.BulkOperations.EF6
                     foreach (var entity in entities)
                     {
                         var e = entity;
-                        table.Rows.Add(props.Select(p => GetProperty(p.Name, e, DBNull.Value))
+                        table.Rows.Add(props.Select(p => GetProperty(t, p.Name, e, DBNull.Value))
                             .ToArray());
                     }
                 }
@@ -1187,7 +1167,7 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     foreach (var entity in entities)
                     {
-                        var pk = GetProperty(pkProperty.Name, entity);
+                        var pk = GetProperty(t, pkProperty.Name, entity);
                         if (pkProperty.TypeName == "Guid" && pk == Guid.Empty ||
                             pk == 0)
                             newEntities.Add(entity);
@@ -1243,7 +1223,7 @@ namespace Tanneryd.BulkOperations.EF6
                         {
                             var e = entity;
                             var columnValues = new List<dynamic>();
-                            columnValues.AddRange(properties.Select(p => GetProperty(p.Name, e, DBNull.Value)));
+                            columnValues.AddRange(properties.Select(p => GetProperty(t, p.Name, e, DBNull.Value)));
                             columnValues.Add(i++);
                             table.Rows.Add(columnValues.ToArray());
                         }
@@ -1610,49 +1590,7 @@ namespace Tanneryd.BulkOperations.EF6
                 SqlBulkCopyOptions.KeepIdentity,
                 true);
 
-            ////
-            //// Setup a bulk copy instance to populate the temp table.
-            ////
-            //var bulkCopy =
-            //    new SqlBulkCopy(conn, SqlBulkCopyOptions.KeepIdentity, sqlTransaction)
-            //    {
-            //        DestinationTableName = tempTableName,
-            //        EnableStreaming = true,
-            //        BulkCopyTimeout = 10 * 60,
-            //    };
-
-            ////
-            //// Configure a data table to use for the bulk copy 
-            //// operation into the temp table.
-            ////
-            //var table = new DataTable();
-            //foreach (var property in properties)
-            //{
-            //    Type propertyType = property.Type;
-
-            //    // Nullable properties need special treatment.
-            //    if (propertyType.IsGenericType &&
-            //        propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
-            //    {
-            //        propertyType = Nullable.GetUnderlyingType(propertyType);
-            //    }
-
-            //    // Ignore all properties that we have no mappings for.
-            //    if (columnMappings.ContainsKey(property.Name))
-            //    {
-            //        // Since we cannot trust the CLR type properties to be in the same order as
-            //        // the table columns we use the SqlBulkCopy column mappings.
-            //        table.Columns.Add(new DataColumn(property.Name, propertyType));
-
-            //        var clrPropertyName = property.Name;
-            //        var tableColumnName = columnMappings[property.Name].TableColumn.Name;
-            //        bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(clrPropertyName, tableColumnName));
-            //    }
-            //}
-            //table.Columns.Add(new DataColumn("rowno", typeof(long)));
-            //bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("rowno", "rowno"));
-
-            //
+           //
             // Fill the data table with our entities.
             //
             if (entities[0] is ExpandoObject)
@@ -1669,10 +1607,11 @@ namespace Tanneryd.BulkOperations.EF6
             else
             {
                 int i = 0;
+                var type = entities[0].GetType();
                 foreach (var entity in entities)
                 {
                     var e = entity;
-                    var columnValues = properties.Select(p => GetProperty(p.Name, e, DBNull.Value)).ToList();
+                    var columnValues = properties.Select(p => GetProperty(type, p.Name, e, DBNull.Value)).ToList();
                     columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
@@ -1972,6 +1911,11 @@ namespace Tanneryd.BulkOperations.EF6
         private static dynamic GetProperty(string propertyName, object instance, object def = null)
         {
             var t = instance.GetType();
+            return GetProperty(t, propertyName, instance, def);
+        }
+
+        private static dynamic GetProperty(Type t, string propertyName, object instance, object def = null)
+        {
             if (t.IsPrimitive) return instance;
             if (t == typeof(string)) return instance;
 
