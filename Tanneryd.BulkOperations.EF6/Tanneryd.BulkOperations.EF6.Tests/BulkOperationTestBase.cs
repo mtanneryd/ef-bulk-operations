@@ -10,24 +10,13 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 {
     [TestClass]
     public class BulkOperationTestBase
+
     {
+        #region School
+
         protected void InitializeSchoolContext()
         {
             Database.SetInitializer(new CreateDatabaseIfNotExists<SchoolContext>());
-        }
-
-        protected void CleanupBlogContext()
-        {
-            var db = new BlogContext();
-            db.Blogs.RemoveRange(db.Blogs.ToArray());
-            db.Posts.RemoveRange(db.Posts.ToArray());
-            db.Keywords.RemoveRange(db.Keywords.ToArray());
-            db.SaveChanges();
-        }
-
-        protected void InitializeBlogContext()
-        {
-            Database.SetInitializer(new CreateDatabaseIfNotExists<BlogContext>());
         }
 
         protected void CleanupSchoolContext()
@@ -39,6 +28,28 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             db.Departments.RemoveRange(db.Departments.ToArray());
             db.SaveChanges();
         }
+
+        #endregion
+
+        #region Blog
+
+        protected void InitializeBlogContext()
+        {
+            Database.SetInitializer(new CreateDatabaseIfNotExists<BlogContext>());
+        }
+
+        protected void CleanupBlogContext()
+        {
+            var db = new BlogContext();
+            db.Blogs.RemoveRange(db.Blogs.ToArray());
+            db.Posts.RemoveRange(db.Posts.ToArray());
+            db.Keywords.RemoveRange(db.Keywords.ToArray());
+            db.SaveChanges();
+        }
+
+        #endregion
+
+        #region People
 
         protected void InitializePeopleContext()
         {
@@ -52,6 +63,11 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             db.SaveChanges();
         }
 
+
+        #endregion
+        
+        #region Company
+
         protected void InitializeCompanyContext()
         {
             Database.SetInitializer(new CreateDatabaseIfNotExists<CompanyContext>());
@@ -64,6 +80,9 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             db.Companies.RemoveRange(db.Companies.ToArray());
             db.SaveChanges();
         }
+
+        #endregion
+
 
         protected void InitializeNumberContext()
         {
@@ -81,6 +100,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             db.Levels.RemoveRange(db.Levels.ToArray());
             db.SaveChanges();
         }
+               
 
         protected static IEnumerable<Number> GenerateNumbers(int start, int count, DateTime now)
         {

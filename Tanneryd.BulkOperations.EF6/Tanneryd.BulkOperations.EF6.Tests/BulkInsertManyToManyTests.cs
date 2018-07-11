@@ -24,6 +24,10 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             CleanupSchoolContext();
         }
 
+        /// <summary>
+        /// Test that two instructors with multiple but disjoint courses
+        /// can be bulk inserted correctly.
+        /// </summary>
         [TestMethod]
         public void InstructorsWithMulitpleCoursesShouldBeBulkInserted()
         {
@@ -58,6 +62,11 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             }
         }
 
+        /// <summary>
+        /// Test that five courses, each with a single instructor, can
+        /// be bulk inserted. There are only two instructors. Three courses
+        /// share the first of them and two courses share the second. 
+        /// </summary>
         [TestMethod]
         public void CoursesWithSingleInstructorShouldBeBulkInserted()
         {
@@ -93,6 +102,10 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         }
 
 
+        /// <summary>
+        /// Create two instructor entities.
+        /// </summary>
+        /// <returns></returns>
         private IEnumerable<Instructor> GetInstructors()
         {
             yield return new Instructor
@@ -111,6 +124,10 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             };
         }
 
+        /// <summary>
+        /// Create five course entities belonging two the same department.
+        /// </summary>
+        /// <returns></returns>
         private IEnumerable<Course> GetCourses()
         {
             var department = new Department
