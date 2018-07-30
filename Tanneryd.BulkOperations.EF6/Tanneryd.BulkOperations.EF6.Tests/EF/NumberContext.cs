@@ -23,7 +23,6 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
 {
     public class NumberContext : DbContext
     {
-        public DbSet<Level1> Levels { get; set; }
         public DbSet<Parity> Parities { get; set; }
         public DbSet<Number> Numbers { get; set; }
         public DbSet<Prime> Primes { get; set; }
@@ -31,28 +30,6 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Level1>()
-                .ToTable("Level1")
-                .HasKey(u => u.Id);
-            modelBuilder.Entity<Level1>()
-                .Property(u => u.Id)
-                .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
-
-            modelBuilder.ComplexType<Level2>()
-                .Property(p => p.Level2Name)
-                .HasColumnName("Level2Name");
-
-            modelBuilder.ComplexType<Level3>()
-                .Property(p => p.Level3Name)
-                .HasColumnName("Level3Name");
-
-            modelBuilder.ComplexType<Updated>()
-                .Property(p => p.UpdatedAt)
-                .HasColumnName("UpdatedAt");
-            modelBuilder.ComplexType<Updated>()
-                .Property(p => p.UpdatedBy)
-                .HasColumnName("UpdatedBy");
-
             modelBuilder.Entity<Parity>()
                 .ToTable("Parity")
                 .HasKey(u => u.Id);

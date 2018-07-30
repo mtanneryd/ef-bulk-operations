@@ -27,12 +27,17 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             CleanupBlogContext();
         }
 
+        /// <summary>
+        /// Test that one-to-many hierarchies can be bulk inserted where
+        /// we have a guid as primary, and foreign,
+        /// key.
+        /// </summary>
         [TestMethod]
         public void OneToManyWithGuidPrimaryKey()
         {
             using (var db = new BlogContext())
             {
-                var blog = new Blog {Name = "My Blog"};
+                var blog = new Blog { Name = "My Blog" };
                 var firstPost = new Post
                 {
                     Blog = blog,
@@ -47,7 +52,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 };
                 var req = new BulkInsertRequest<Blog>
                 {
-                    Entities = new[] {blog}.ToList(),
+                    Entities = new[] { blog }.ToList(),
                     AllowNotNullSelfReferences = false,
                     SortUsingClusteredIndex = true,
                     Recursive = true
@@ -57,10 +62,10 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         }
 
         /// <summary>
-            /// We use parity to test the one-to-many relationship. Each number
-            /// has a foreign key relation to one of the two parity entries.
-            /// </summary>
-            [TestMethod]
+        /// We use parity to test the one-to-many relationship. Each number
+        /// has a foreign key relation to one of the two parity entries.
+        /// </summary>
+        [TestMethod]
         public void OneToManyWhereTheOneAlreadyExists()
         {
             using (var db = new NumberContext())

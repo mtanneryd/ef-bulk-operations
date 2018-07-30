@@ -83,6 +83,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
         #endregion
 
+        #region Numbers
 
         protected void InitializeNumberContext()
         {
@@ -97,10 +98,27 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             db.Primes.RemoveRange(db.Primes.ToArray());
             db.Numbers.RemoveRange(db.Numbers.ToArray());
             db.Parities.RemoveRange(db.Parities.ToArray());
+            db.SaveChanges();
+        }
+
+        #endregion
+
+        #region Levels
+
+        protected void InitializeLevelContext()
+        {
+            Database.SetInitializer(new CreateDatabaseIfNotExists<LevelContext>());
+            CleanupLevelContext();
+        }
+
+        protected void CleanupLevelContext()
+        {
+            var db = new LevelContext();
             db.Levels.RemoveRange(db.Levels.ToArray());
             db.SaveChanges();
         }
-               
+
+        #endregion
 
         protected static IEnumerable<Number> GenerateNumbers(int start, int count, DateTime now)
         {

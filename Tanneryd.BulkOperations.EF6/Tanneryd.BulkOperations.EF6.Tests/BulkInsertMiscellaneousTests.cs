@@ -2,6 +2,7 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
+using Tanneryd.BulkOperations.EF6.Tests.DM.Levels;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Numbers;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
@@ -14,12 +15,14 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         public void Initialize()
         {
             InitializeNumberContext();
+            InitializeLevelContext();
         }
 
         [TestCleanup]
         public void CleanUp()
         {
             CleanupNumberContext();
+            CleanupLevelContext();
         }
 
         [TestMethod]
@@ -77,7 +80,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         [TestMethod]
         public void ComplexTypesShouldBeInserted()
         {
-            using (var db = new NumberContext())
+            using (var db = new LevelContext())
             {
                 // The level entities are used to test EF complex types.
                 var expectedLevels = new[]

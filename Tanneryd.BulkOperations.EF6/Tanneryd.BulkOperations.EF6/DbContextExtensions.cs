@@ -444,13 +444,15 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var cmd = new SqlCommand(query, conn, request.Transaction);
                 cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
-                var sqlDataReader = cmd.ExecuteReader();
 
                 var existingEntities = new List<T1>();
-                while (sqlDataReader.Read())
+                using (var sqlDataReader = cmd.ExecuteReader())
                 {
-                    var rowNo = (int)sqlDataReader[0];
-                    existingEntities.Add(items[rowNo]);
+                    while (sqlDataReader.Read())
+                    {
+                        var rowNo = (int) sqlDataReader[0];
+                        existingEntities.Add(items[rowNo]);
+                    }
                 }
 
                 DropTempTable(conn, request.Transaction, tempTableName);
@@ -550,19 +552,21 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     CommandTimeout = (int) request.CommandTimeout.TotalSeconds
                 };
-                var sqlDataReader = cmd.ExecuteReader();
 
                 var selectedEntities = new List<T2>();
-                while (sqlDataReader.Read())
+                using (var sqlDataReader = cmd.ExecuteReader())
                 {
-                    var t2 = new T2();
-                    selectedEntities.Add(t2);
-                    foreach (var property in properties)
+                    while (sqlDataReader.Read())
                     {
-                        if (!columnMappings.ContainsKey(property.Name)) continue;
-                        var mapping = columnMappings[property.Name];
-                        var val = sqlDataReader[mapping.TableColumn.Name];
-                        SetProperty(property, t2, val);
+                        var t2 = new T2();
+                        selectedEntities.Add(t2);
+                        foreach (var property in properties)
+                        {
+                            if (!columnMappings.ContainsKey(property.Name)) continue;
+                            var mapping = columnMappings[property.Name];
+                            var val = sqlDataReader[mapping.TableColumn.Name];
+                            SetProperty(property, t2, val);
+                        }
                     }
                 }
 
@@ -654,13 +658,16 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var cmd = new SqlCommand(query, conn, request.Transaction);
                 cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
-                var sqlDataReader = cmd.ExecuteReader();
-
+                
                 var existingEntities = new List<T1>();
-                while (sqlDataReader.Read())
+
+                using (var sqlDataReader = cmd.ExecuteReader())
                 {
-                    var rowNo = (int)sqlDataReader[0];
-                    existingEntities.Add(items[rowNo]);
+                    while (sqlDataReader.Read())
+                    {
+                        var rowNo = (int) sqlDataReader[0];
+                        existingEntities.Add(items[rowNo]);
+                    }
                 }
 
                 DropTempTable(conn, request.Transaction, tempTableName);
@@ -1292,14 +1299,18 @@ namespace Tanneryd.BulkOperations.EF6
                         result = cmd.ExecuteScalar();
                         dynamic lastId = Convert.ChangeType(result, pkColumnType);
 
-                        cmd.CommandText =
-                            $"SELECT [{pkColumn.Name}] From {tableName.Fullname} WHERE [{pkColumn.Name}] >= {nextId} and [{pkColumn.Name}] <= {lastId}";
-                        var reader = cmd.ExecuteReader();
-                        var ids = (from IDataRecord r in reader
-                                   let pk = r[pkColumn.Name]
-                                   select pk)
-                            .OrderBy(i => i)
-                            .ToArray();
+                        cmd.CommandText = $"SELECT [{pkColumn.Name}] From {tableName.Fullname} WHERE [{pkColumn.Name}] >= {nextId} and [{pkColumn.Name}] <= {lastId}";
+
+                        object[] ids = null;
+                        using (var sqlDataReader = cmd.ExecuteReader())
+                        {
+                            ids = (from IDataRecord r in sqlDataReader
+                                       let pk = r[pkColumn.Name]
+                                    select pk)
+                                .OrderBy(i => i)
+                                .ToArray();
+                        }
+
                         if (ids.Length != newEntities.Count)
                             throw new ArgumentException(
                                 "More id values generated than we had entities. Something went wrong, try again.");
@@ -1343,13 +1354,18 @@ namespace Tanneryd.BulkOperations.EF6
                                  ";
                         cmd.CommandText = query;
                         s.Restart();
-                        var reader = cmd.ExecuteReader();
-                        var ids = (
-                            from IDataRecord r in reader
-                            let pk = r[pkColumn.Name]
-                            let rno = r["rowno"]
-                            orderby rno
-                            select pk).ToArray();
+
+                        object[] ids = null;
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            ids = (
+                                from IDataRecord r in reader
+                                let pk = r[pkColumn.Name]
+                                let rno = r["rowno"]
+                                orderby rno
+                                select pk).ToArray();
+                        }
+
                         s.Stop();
                         stats.TimeElapsedDuringInsertInto = s.Elapsed;
                         response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
@@ -1517,11 +1533,15 @@ namespace Tanneryd.BulkOperations.EF6
                     ORDER BY ic.index_column_id;";
             var cmd = new SqlCommand(query, connection, sqlTransaction);
 
-            var reader = cmd.ExecuteReader();
-            var clusteredColumns = (
-                    from IDataRecord r in reader
-                    select (string)r[0])
-                .ToArray();
+            string[] clusteredColumns = null;
+            using (var reader = cmd.ExecuteReader())
+            {
+
+                clusteredColumns = (
+                        from IDataRecord r in reader
+                        select (string)r[0])
+                    .ToArray();
+            }
 
             return clusteredColumns;
         }
