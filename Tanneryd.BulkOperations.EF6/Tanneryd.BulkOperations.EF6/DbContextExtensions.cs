@@ -1281,7 +1281,7 @@ namespace Tanneryd.BulkOperations.EF6
                             response.TablesWithNoCheckConstraints.Add(tableName.Fullname);
                         }
 
-                        var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => p.TableColumn.Name));
+                        var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => $"[{p.TableColumn.Name}]"));
                         query = $@"                                  
                                 INSERT INTO {tableName.Fullname} ({columnNames})
                                 SELECT {columnNames}
