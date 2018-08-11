@@ -1339,7 +1339,7 @@ namespace Tanneryd.BulkOperations.EF6
                             response.TablesWithNoCheckConstraints.Add(tableName.Fullname);
                         }
 
-                        var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => p.TableColumn.Name));
+                        var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => $"[{p.TableColumn.Name}]"));
                         query = $@"  
                                     MERGE {tableName.Fullname}
                                     USING 
@@ -1402,7 +1402,7 @@ namespace Tanneryd.BulkOperations.EF6
 
 
                 var conditionStatements =
-                    pkColumnMappings.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
+                    pkColumnMappings.Select(c => $"[t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}]");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
 
                 string cmdBody;
@@ -1415,7 +1415,7 @@ namespace Tanneryd.BulkOperations.EF6
                 if (nonPrimaryKeyColumnMappings.Any())
                 {
                     var setStatements = nonPrimaryKeyColumnMappings.Select(c =>
-                        $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
+                        $"[t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}]");
                     var setStatementsSql = string.Join(" , ", setStatements);
                     cmdBody = $@"UPDATE t0 SET {setStatementsSql}
                                  FROM {tableName.Fullname} AS t0
@@ -1427,12 +1427,16 @@ namespace Tanneryd.BulkOperations.EF6
                 }
 
                 //
-                //  Insert any new entities.
+                //  Insert any new entities. (THIS REALLY SHOULD NOT WORK. CONFIRM WITH TEST AND THEN FIX IT.)
                 //
                 string listOfPrimaryKeyColumns = string.Join(",",
                     pkColumnMappings.Select(c => c.TableColumn));
                 string listOfColumns = string.Join(",",
                     pkColumnMappings.Concat(nonPrimaryKeyColumnMappings).Select(c => c.TableColumn));
+
+                //string listOfColumns = string.Join(",",
+                //    pkColumnMappings.Concat(nonPrimaryKeyColumnMappings).Select(c => $"[{c.TableColumn.Name}]"));
+
                 cmdBody = $@"INSERT INTO {tableName.Fullname} ({listOfColumns})
                              SELECT {listOfColumns} 
                              FROM {tempTableName} AS t0
