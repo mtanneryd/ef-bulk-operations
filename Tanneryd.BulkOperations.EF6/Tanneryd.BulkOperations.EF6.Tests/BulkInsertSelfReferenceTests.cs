@@ -200,6 +200,32 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             }
         }
 
+        //[TestMethod]
+        //public void AddingUser()
+        //{
+        //    var user = new User
+        //    {
+        //        UserName = "anna",
+        //        Password = "hemligt",
+        //        FirstName = "Anna",
+        //        LastName = "Andersson",
+        //        BirthDate = new DateTime(1980, 1, 1),
+        //    };
+            
+        //    using (var db = new PeopleContext())
+        //    {
+        //        var request = new BulkInsertRequest<User>
+        //        {
+        //            Entities = new List<User> { user },
+        //            Recursive = true,
+        //        };
+        //        db.BulkInsertAll(request);
+
+        //        var people = db.People.ToArray();
+        //        Assert.AreEqual(1, people.Length);
+        //    }
+        //}
+
         [TestMethod]
         public void AddingChildWithMother()
         {

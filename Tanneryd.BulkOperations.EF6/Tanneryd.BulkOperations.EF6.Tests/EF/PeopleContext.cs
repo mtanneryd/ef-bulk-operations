@@ -79,7 +79,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
 
             //modelBuilder.Entity<User>()
             //    .HasMany(p => p.Children)
-            //    .WithOptional(p => p.Mother)
+            //    .WithOptional() // p => p.Mother
             //    .HasForeignKey(p => p.MotherId);
 
             //#endregion

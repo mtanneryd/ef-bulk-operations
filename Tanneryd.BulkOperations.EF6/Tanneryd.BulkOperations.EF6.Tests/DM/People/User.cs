@@ -1,4 +1,6 @@
-﻿namespace Tanneryd.BulkOperations.EF6.Tests.DM.People
+﻿using System;
+
+namespace Tanneryd.BulkOperations.EF6.Tests.DM.People
 {
     //public class User : Person
     //{
