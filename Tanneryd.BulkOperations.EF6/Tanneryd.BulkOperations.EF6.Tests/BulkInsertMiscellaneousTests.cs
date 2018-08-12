@@ -2,7 +2,9 @@
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
+using Tanneryd.BulkOperations.EF6.Tests.DM.Blog;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Levels;
+using Tanneryd.BulkOperations.EF6.Tests.DM.Miscellaneous;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Numbers;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
@@ -16,6 +18,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         {
             InitializeNumberContext();
             InitializeLevelContext();
+            InitializeBlogContext();
+            InitializeMiscellaneousContext();
         }
 
         [TestCleanup]
@@ -23,6 +27,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         {
             CleanupNumberContext();
             CleanupLevelContext();
+            CleanupBlogContext();
+            CleanupMiscellaneousContext();
         }
 
         [TestMethod]
@@ -106,6 +112,46 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 Assert.AreEqual(expectedLevels[0].Level2.Level2Name, actualLevels[0].Level2.Level2Name);
                 Assert.AreEqual(expectedLevels[0].Level2.Level3.Level3Name, actualLevels[0].Level2.Level3.Level3Name);
                 Assert.AreEqual(expectedLevels[0].Level2.Level3.Updated.Ticks, actualLevels[0].Level2.Level3.Updated.Ticks);
+            }
+        }
+
+        [TestMethod]
+        public void RowWithReservedSqlKeywordAsColumnNameShouldBeInserted()
+        {
+            using (var db = new MiscellaneousContext())
+            {
+                var e = new ReservedSqlKeyword
+                {
+                    Identity = 10
+                };
+                db.BulkInsertAll(new[] {e});
+
+                Assert.AreEqual(10, e.Identity);
+            }
+        }
+
+        [TestMethod]
+        public void RowWithCompositePrimaryKeyShouldBeInserted()
+        {
+            using (var db = new MiscellaneousContext())
+            {
+                var x = new Coordinate
+                {
+                    Value = 1
+                };
+                var y = new Coordinate
+                {
+                    Value = 2
+                };
+                var p = new Point
+                {
+                    XCoordinate = x,
+                    YCoordinate = y,
+                    Value = 100
+                };
+                db.BulkInsertAll(new[] { p },null,true);
+
+                Assert.AreEqual(100, p.Value);
             }
         }
     }

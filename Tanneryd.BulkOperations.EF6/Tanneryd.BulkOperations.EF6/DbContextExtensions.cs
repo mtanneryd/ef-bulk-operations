@@ -1426,16 +1426,10 @@ namespace Tanneryd.BulkOperations.EF6
                     cmd.ExecuteNonQuery();
                 }
 
-                //
-                //  Insert any new entities. (THIS REALLY SHOULD NOT WORK. CONFIRM WITH TEST AND THEN FIX IT.)
-                //
                 string listOfPrimaryKeyColumns = string.Join(",",
-                    pkColumnMappings.Select(c => c.TableColumn));
+                    pkColumnMappings.Select(c => $"[{c.TableColumn.Name}]"));
                 string listOfColumns = string.Join(",",
-                    pkColumnMappings.Concat(nonPrimaryKeyColumnMappings).Select(c => c.TableColumn));
-
-                //string listOfColumns = string.Join(",",
-                //    pkColumnMappings.Concat(nonPrimaryKeyColumnMappings).Select(c => $"[{c.TableColumn.Name}]"));
+                    pkColumnMappings.Concat(nonPrimaryKeyColumnMappings).Select(c => $"[{c.TableColumn.Name}]"));
 
                 cmdBody = $@"INSERT INTO {tableName.Fullname} ({listOfColumns})
                              SELECT {listOfColumns} 

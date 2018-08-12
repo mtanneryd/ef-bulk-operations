@@ -66,6 +66,9 @@
     <Compile Include="DM\Companies\Employee.cs" />
     <Compile Include="DM\Levels\Level2.cs" />
     <Compile Include="DM\Levels\Level3.cs" />
+    <Compile Include="DM\Miscellaneous\Coordinate.cs" />
+    <Compile Include="DM\Miscellaneous\Point.cs" />
+    <Compile Include="DM\Miscellaneous\ReservedSqlKeyword.cs" />
     <Compile Include="DM\Numbers\Composite.cs" />
     <Compile Include="DM\Levels\Level1.cs" />
     <Compile Include="DM\Numbers\Number.cs" />
@@ -79,6 +82,7 @@
     <Compile Include="DM\School\OfficeAssignment.cs" />
     <Compile Include="EF\BlogContext.cs" />
     <Compile Include="EF\LevelContext.cs" />
+    <Compile Include="EF\MiscellaneousContext.cs" />
     <Compile Include="EF\NumberContext.cs" />
     <Compile Include="EF\CompanyContext.cs" />
     <Compile Include="EF\PeopleContext.cs" />

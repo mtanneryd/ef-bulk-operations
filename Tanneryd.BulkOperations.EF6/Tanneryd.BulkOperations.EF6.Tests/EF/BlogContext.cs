@@ -63,8 +63,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
             modelBuilder.Entity<Keyword>()
                 .Property(p => p.Text)
-                .IsRequired();
+                .IsRequired();            
         }
-
     }
 }

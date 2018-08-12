@@ -31,11 +31,29 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
         #endregion
 
+        #region Miscellaneous
+
+        protected void InitializeMiscellaneousContext()
+        {
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<MiscellaneousContext>());
+        }
+
+        protected void CleanupMiscellaneousContext()
+        {
+            var db = new MiscellaneousContext();
+            db.ReservedSqlKeywords.RemoveRange(db.ReservedSqlKeywords.ToArray());
+            db.Coordinates.RemoveRange(db.Coordinates.ToArray());
+            db.Points.RemoveRange(db.Points.ToArray());
+            db.SaveChanges();
+        }
+
+        #endregion
+
         #region Blog
 
         protected void InitializeBlogContext()
         {
-            Database.SetInitializer(new CreateDatabaseIfNotExists<BlogContext>());
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<BlogContext>());
         }
 
         protected void CleanupBlogContext()
@@ -53,7 +71,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
         protected void InitializePeopleContext()
         {
-            Database.SetInitializer(new CreateDatabaseIfNotExists<PeopleContext>());
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<PeopleContext>());
         }
 
         protected void CleanupPeopleContext()
@@ -87,7 +105,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
         protected void InitializeNumberContext()
         {
-            Database.SetInitializer(new CreateDatabaseIfNotExists<NumberContext>());
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<NumberContext>());
             CleanupNumberContext();
         }
 
@@ -107,7 +125,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
         protected void InitializeLevelContext()
         {
-            Database.SetInitializer(new CreateDatabaseIfNotExists<LevelContext>());
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<LevelContext>());
             CleanupLevelContext();
         }
 
