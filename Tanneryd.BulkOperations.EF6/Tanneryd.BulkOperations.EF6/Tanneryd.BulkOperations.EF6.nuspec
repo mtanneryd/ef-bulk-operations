@@ -14,7 +14,7 @@
     <copyright>Copyright 2017-2018</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>The 1.2.0-beta5 release corrects some bugs related to guid primary keys. Some minor performance fixes have also been made.</releaseNotes>
+    <releaseNotes>The 1.2.0-rc1 The 1.2 release adds the bulk select functionality and also contains various minor improvements and bug fixes.</releaseNotes>
 
   </metadata>
 </package>
