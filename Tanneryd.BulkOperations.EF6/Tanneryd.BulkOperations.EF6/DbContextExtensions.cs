@@ -931,14 +931,14 @@ namespace Tanneryd.BulkOperations.EF6
                         if (isCollection)
                         {
                             var propertyCollection = GetProperty(t, navigationPropertyName, entity);
-                            if (propertyCollection == null) break;
+                            if (propertyCollection == null) continue;
 
                             var navProperties = new List<dynamic>();
                             foreach (var p in propertyCollection)
                             {
                                 navProperties.Add(p);
                             }
-                            if (navProperties.Count == 0) break;
+                            if (navProperties.Count == 0) continue;
 
 
                             var navPropertyType = navProperties[0].GetType();
