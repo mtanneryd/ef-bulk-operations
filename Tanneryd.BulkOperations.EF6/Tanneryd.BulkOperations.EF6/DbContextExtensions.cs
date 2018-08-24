@@ -35,7 +35,7 @@ namespace Tanneryd.BulkOperations.EF6
 {
     public static class DbContextExtensions
     {
-        private static HashSet<Type> IntegerTypes = new HashSet<Type>
+        private static readonly HashSet<Type> IntegerTypes = new HashSet<Type>
         {
             typeof(Int16),
             typeof(Int32),
@@ -259,7 +259,8 @@ namespace Tanneryd.BulkOperations.EF6
             string[] columnNames,
             bool includeRowNumber = false)
         {
-            var selectClause = string.Join(",", columnNames);
+            var selectClause = string.Join(",", columnNames.Select(p => $"[{p}]"));
+
             if (includeRowNumber)
             {
                 selectClause = "cast(1 as int) as rowno," + selectClause;
@@ -433,7 +434,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
-                var conditionStatements = keyMappings.Values.Select(c => $"[t1].{c.TableColumn.Name} = [t2].{c.TableColumn.Name}");
+                var conditionStatements = keyMappings.Values.Select(c => $"[t1].[{c.TableColumn.Name}] = [t2].[{c.TableColumn.Name}]");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].[rowno] 
                                FROM {tempTableName} AS [t0]
@@ -541,7 +542,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
                 
-                var conditionStatements = keyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
+                var conditionStatements = keyMappings.Values.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].*
                                FROM {tableName.Fullname} AS [t0]
@@ -650,7 +651,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
-                var conditionStatements = keyMappings.Values.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
+                var conditionStatements = keyMappings.Values.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].[rowno]
                                FROM {tempTableName} AS [t0]
@@ -749,9 +750,9 @@ namespace Tanneryd.BulkOperations.EF6
                 //
                 // Update the target table using the temp table we just created.
                 //
-                var setStatements = modifiedColumnMappings.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
+                var setStatements = modifiedColumnMappings.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
                 var setStatementsSql = string.Join(" , ", setStatements);
-                var conditionStatements = selectedKeyMappings.Select(c => $"t0.{c.TableColumn.Name} = t1.{c.TableColumn.Name}");
+                var conditionStatements = selectedKeyMappings.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var cmdBody = $@"UPDATE t0 SET {setStatementsSql}
                                  FROM {tableName.Fullname} AS t0
@@ -767,8 +768,8 @@ namespace Tanneryd.BulkOperations.EF6
                         .Where(m => !primaryKeyMembers.Contains(m.TableColumn.Name))
                         .Select(m => m.TableColumn.Name)
                         .ToArray();
-                    var columnNames = string.Join(",", columns.Select(c => c));
-                    var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].{c}"));
+                    var columnNames = string.Join(",", columns.Select(c => $"[{c}]"));
+                    var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].[{c}]"));
                     cmdBody = $@"INSERT INTO {tableName.Fullname}
                              SELECT {columnNames}
                              FROM {tempTableName}
@@ -1417,9 +1418,9 @@ namespace Tanneryd.BulkOperations.EF6
                     var setStatements = nonPrimaryKeyColumnMappings.Select(c =>
                         $"[t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}]");
                     var setStatementsSql = string.Join(" , ", setStatements);
-                    cmdBody = $@"UPDATE t0 SET {setStatementsSql}
-                                 FROM {tableName.Fullname} AS t0
-                                 INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
+                    cmdBody = $@"UPDATE [t0] SET {setStatementsSql}
+                                 FROM {tableName.Fullname} AS [t0]
+                                 INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}
                                 ";
                     cmd = new SqlCommand(cmdBody, conn, transaction);
                     cmd.CommandTimeout = (int)commandTimeout.TotalSeconds;
@@ -1433,10 +1434,10 @@ namespace Tanneryd.BulkOperations.EF6
 
                 cmdBody = $@"INSERT INTO {tableName.Fullname} ({listOfColumns})
                              SELECT {listOfColumns} 
-                             FROM {tempTableName} AS t0
+                             FROM {tempTableName} AS [t0]
                              WHERE NOT EXISTS (
                                 SELECT {listOfPrimaryKeyColumns}
-                                FROM {tableName.Fullname} AS t1
+                                FROM {tableName.Fullname} AS [t1]
                                 WHERE {conditionStatementsSql}
                              )
                                 ";
