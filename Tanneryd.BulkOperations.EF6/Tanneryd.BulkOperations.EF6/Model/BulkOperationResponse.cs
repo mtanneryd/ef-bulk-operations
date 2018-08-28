@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright ©  2017-2018 Tånneryd IT AB
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -34,11 +34,18 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public string[] Report()
         {
             var report = new List<string>();
-            foreach (var stat in BulkInsertStatistics)
+            foreach (var r in AffectedRows)
             {
-                report.Add($"{stat.Item1.Name} - AffectedRows = {AffectedRows.Single(r => r.Item1 == stat.Item1).Item2}, BulkCopy={stat.Item2.TimeElapsedDuringBulkCopy.TotalSeconds}, InsertInto={stat.Item2.TimeElapsedDuringInsertInto.TotalSeconds}");
+                report.Add($"{r.Item2} rows affected for {r.Item1.Name}");
             }
 
+            foreach (var stat in BulkInsertStatistics)
+            {
+                report.Add($"{stat.Item1.Name} - BulkCopy={stat.Item2.TimeElapsedDuringBulkCopy.TotalSeconds}, InsertInto={stat.Item2.TimeElapsedDuringInsertInto.TotalSeconds}");
+            }
+
+
+            
             return report.ToArray();
         }
     }
