@@ -4,14 +4,13 @@ A nuget package that extends the DbContext in EF6 with bulk operations for both 
 
 ## Getting Started
 
+### Background
 Read the CodeProject article [Bulk operations using Entity Framework](https://www.codeproject.com/Articles/1226978/Bulk-operations-using-Entity-Framework) if you are interested in some background.
 
 ### Prerequisites
-
 The extension is built for, and requires, Entity Framework 6 and .NET 4.5 or later.
 
 ### Installing
-
 Install the nuget package [Tanneryd.BulkOperations.EF6](https://www.nuget.org/packages/Tanneryd.BulkOperations.EF6). This will make the following methods available on the DbContext.
 
 ### API
