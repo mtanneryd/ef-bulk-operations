@@ -24,6 +24,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
     {
         public IList<T> Entities { get; set; }
         public SqlTransaction Transaction { get; set; }
+        public bool UpdateStatistics { get; set; } = true;
         public bool Recursive { get; set; } = false;
         public bool AllowNotNullSelfReferences { get; set; } = false;
         public bool SortUsingClusteredIndex { get; set; } = true;

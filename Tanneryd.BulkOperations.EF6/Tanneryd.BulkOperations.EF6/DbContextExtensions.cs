@@ -202,9 +202,10 @@ namespace Tanneryd.BulkOperations.EF6
 
             try
             {
+                var tableName = GetTableName(ctx, typeof(T));
+
                 if (request.SortUsingClusteredIndex)
-                {
-                    var tableName = GetTableName(ctx, typeof(T));
+                {                   
                     var clusteredIndexColumns =
                         GetClusteredIndexColumns(ctx, tableName.Fullname, request.Transaction);
                     request.Entities = clusteredIndexColumns.Any()
@@ -221,6 +222,14 @@ namespace Tanneryd.BulkOperations.EF6
                     request.CommandTimeout,
                     new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
                     response);
+
+                if (request.UpdateStatistics)
+                {
+                    var query = $"UPDATE STATISTICS {tableName.Fullname}";
+                    var connection = GetSqlConnection(ctx);
+                    var cmd = new SqlCommand(query, connection, request.Transaction);
+                    cmd.ExecuteNonQuery();
+                }
             }
             finally
             {
