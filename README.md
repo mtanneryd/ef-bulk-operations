@@ -21,12 +21,13 @@ public class BulkInsertRequest<T>
 {
     public IList<T> Entities { get; set; }
     public SqlTransaction Transaction { get; set; }
-    public bool Recursive { get; set; }
+	public bool UpdateStatistics { get; set; } = false;
+    public bool Recursive { get; set; } = false;
     public bool AllowNotNullSelfReferences { get; set; } = false;
     public bool SortUsingClusteredIndex { get; set; } = true;
 }
 ```
-
+* When UpdateStatistics is set the command "UPDATE STATISTICS <tablename> WITH ALL" will be executed after the insert.
 * When Recursive is set to true the entire entity hierarchy will be inserted. 
 * When AllowNotNullSelfReferences is set to true, entities with self referencing foreign keys declared as NOT NULL will be properly inserted. But, this will only work if the database user has the required privileges to execute **ALTER TABLE \<table name\> NOCHECK CONSTRAINT ALL** and **ALTER TABLE \<table name\> CHECK CONSTRAINT ALL**.
 * When SortUsingClusteredIndex is set to true the entities will be sorted according to the clustered index of the target table.

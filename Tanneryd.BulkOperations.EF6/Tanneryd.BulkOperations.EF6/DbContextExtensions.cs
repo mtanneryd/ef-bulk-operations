@@ -225,7 +225,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 if (request.UpdateStatistics)
                 {
-                    var query = $"UPDATE STATISTICS {tableName.Fullname}";
+                    var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
                     var connection = GetSqlConnection(ctx);
                     var cmd = new SqlCommand(query, connection, request.Transaction);
                     cmd.ExecuteNonQuery();
