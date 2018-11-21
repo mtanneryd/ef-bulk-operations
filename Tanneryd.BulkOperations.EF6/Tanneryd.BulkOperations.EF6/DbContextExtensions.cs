@@ -443,7 +443,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
-                var conditionStatements = keyMappings.Values.Select(c => $"[t1].[{c.TableColumn.Name}] = [t2].[{c.TableColumn.Name}]");
+                var conditionStatements = keyMappings.Values.Select(c => $"isnull([t1].[{c.TableColumn.Name}], 0) = isnull([t2].[{c.TableColumn.Name}], 0)");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].[rowno] 
                                FROM {tempTableName} AS [t0]
@@ -660,7 +660,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
-                var conditionStatements = keyMappings.Values.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
+                var conditionStatements = keyMappings.Values.Select(c => $"isnull(t0.[{c.TableColumn.Name}], 0) = isnull(t1.[{c.TableColumn.Name}], 0)");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].[rowno]
                                FROM {tempTableName} AS [t0]

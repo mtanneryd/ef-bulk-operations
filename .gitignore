@@ -13,3 +13,4 @@
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.nuspec
 *.nupkg
 *.user
+/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.Tests/EF/StebbingContext.cs

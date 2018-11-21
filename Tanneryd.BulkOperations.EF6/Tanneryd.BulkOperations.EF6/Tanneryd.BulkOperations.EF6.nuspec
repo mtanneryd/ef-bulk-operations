@@ -14,7 +14,7 @@
     <copyright>Copyright 2017-2018</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>Fixes a problem with the response statistics. Adds the option to run update statistics after a bulk insert. When doing inserts into huge tables the statistics sometimes will not be updated until later and query performance might degrade considerably because of this.</releaseNotes>
+    <releaseNotes>Bugfix: BulkSelect did not work properly with null columns.</releaseNotes>
 
   </metadata>
 </package>

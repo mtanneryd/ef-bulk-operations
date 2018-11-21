@@ -47,7 +47,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                     {
                         new KeyPropertyMapping
                         {
-                            ItemPropertyName = "Val",
+                            ItemPropertyName = null,
                             EntityPropertyName = "Value"
                         },
                     }
