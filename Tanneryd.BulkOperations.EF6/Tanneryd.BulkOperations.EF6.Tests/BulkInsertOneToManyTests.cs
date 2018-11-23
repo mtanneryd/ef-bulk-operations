@@ -29,11 +29,53 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
         /// <summary>
         /// Test that one-to-many hierarchies can be bulk inserted where
-        /// we have a guid as primary, and foreign,
-        /// key.
+        /// we have a guid as primary, and foreign, key. Also, in this test
+        /// we insert the entity on the "one" side and expect that all
+        /// attached child entities are also inserted properly.
         /// </summary>
         [TestMethod]
-        public void OneToManyWithGuidPrimaryKey()
+        public void OneToManyWithGuidPrimaryKeyInsertingTheTopEntity()
+        {
+            using (var db = new BlogContext())
+            {
+                var blog = new Blog { Name = "My Blog" };
+                var firstPost = new Post
+                {
+                    Text = "My first blogpost.",
+                    PostKeywords = new List<Keyword>() { new Keyword { Text = "first" } }
+                };
+                var secondPost = new Post
+                {
+                    Text = "My second blogpost.",
+                    PostKeywords = new List<Keyword>() { new Keyword { Text = "second" } }
+                };
+                blog.BlogPosts.Add(firstPost);
+                blog.BlogPosts.Add(secondPost);
+                var req = new BulkInsertRequest<Blog>
+                {
+                    Entities = new[] { blog }.ToList(),
+                    AllowNotNullSelfReferences = false,
+                    SortUsingClusteredIndex = true,
+                    Recursive = true
+                };
+                var response = db.BulkInsertAll(req);
+                var posts = db.Posts
+                    .Include(p=>p.Blog)
+                    .ToArray();
+                Assert.AreEqual(2, posts.Count());
+                Assert.AreEqual(posts[1].Blog, posts[0].Blog);
+            }
+        }
+
+
+        /// <summary>
+        /// Test that one-to-many hierarchies can be bulk inserted where
+        /// we have a guid as primary, and foreign, key. Also, in this test
+        /// we insert the entities on the "many" side and expect that the
+        /// attached parent entity is also inserted properly.
+        /// </summary>
+        [TestMethod]
+        public void OneToManyWithGuidPrimaryKeyInsertingTheChildEntities()
         {
             using (var db = new BlogContext())
             {
@@ -50,17 +92,22 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                     Text = "My second blogpost.",
                     PostKeywords = new List<Keyword>() { new Keyword { Text = "second" } }
                 };
-                var req = new BulkInsertRequest<Blog>
+                var req = new BulkInsertRequest<Post>
                 {
-                    Entities = new[] { blog }.ToList(),
+                    Entities = new[] { firstPost, secondPost }.ToList(),
                     AllowNotNullSelfReferences = false,
                     SortUsingClusteredIndex = true,
                     Recursive = true
                 };
                 var response = db.BulkInsertAll(req);
+                var posts = db.Posts
+                    .Include(p => p.Blog)
+                    .ToArray();
+                Assert.AreEqual(2, posts.Count());
+                Assert.AreEqual(posts[1].Blog, posts[0].Blog);
             }
         }
-
+       
         /// <summary>
         /// We use parity to test the one-to-many relationship. Each number
         /// has a foreign key relation to one of the two parity entries.

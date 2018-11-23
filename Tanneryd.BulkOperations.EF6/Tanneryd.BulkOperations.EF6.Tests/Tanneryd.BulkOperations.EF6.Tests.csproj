@@ -61,6 +61,7 @@
     <Compile Include="BulkOperationTestBase.cs" />
     <Compile Include="BulkSelectExistingTests.cs" />
     <Compile Include="BulkSelectTests.cs" />
+    <Compile Include="BulkUpdateTests.cs" />
     <Compile Include="DM\Blog\Blog.cs" />
     <Compile Include="DM\Companies\Company.cs" />
     <Compile Include="DM\Companies\Employee.cs" />

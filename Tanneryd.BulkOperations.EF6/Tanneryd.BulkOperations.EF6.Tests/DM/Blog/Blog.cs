@@ -20,9 +20,13 @@ namespace Tanneryd.BulkOperations.EF6.Tests.DM.Blog
 {
     public class Blog
     {
+        public Blog()
+        {
+            BlogPosts = new HashSet<Post>();
+        }
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public ICollection<Post> BlogPosts { get; set; }
+        public virtual ICollection<Post> BlogPosts { get; set; }
     }
 
     public class Post

@@ -21,6 +21,7 @@ using System.Data;
 using System.Data.Entity;
 using System.Data.Entity.Core.Mapping;
 using System.Data.Entity.Core.Metadata.Edm;
+using System.Data.Entity.Core.Objects;
 using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -403,10 +404,10 @@ namespace Tanneryd.BulkOperations.EF6
             if (keyMappings.Any())
             {
                 var containsIdentityKey = keyMappings.Any(m =>
-                    m.Value.TableColumn.IsStoreGeneratedIdentity ||
+                    (m.Value.TableColumn.IsStoreGeneratedIdentity && m.Value.TableColumn.TypeName != "uniqueidentifier") ||
                     m.Value.TableColumn.IsStoreGeneratedComputed);
 
-                var tempTableName = CreateTempTable(
+                    var tempTableName = CreateTempTable(
                     conn,
                     request.Transaction,
                     tableName,
@@ -506,7 +507,8 @@ namespace Tanneryd.BulkOperations.EF6
             if (keyMappings.Any())
             {
                 var containsIdentityKey = keyMappings.Any(m =>
-                    m.Value.TableColumn.IsStoreGeneratedIdentity ||
+                    (m.Value.TableColumn.IsStoreGeneratedIdentity &&
+                     m.Value.TableColumn.TypeName != "uniqueidentifier") ||
                     m.Value.TableColumn.IsStoreGeneratedComputed);
 
                 // Create a temporary table with the supplied keys 
@@ -620,7 +622,8 @@ namespace Tanneryd.BulkOperations.EF6
             if (keyMappings.Any())
             {
                 var containsIdentityKey = keyMappings.Any(m =>
-                    m.Value.TableColumn.IsStoreGeneratedIdentity ||
+                    (m.Value.TableColumn.IsStoreGeneratedIdentity &&
+                     m.Value.TableColumn.TypeName != "uniqueidentifier") ||
                     m.Value.TableColumn.IsStoreGeneratedComputed);
 
                 // Create a temporary table with the supplied keys 
@@ -862,12 +865,18 @@ namespace Tanneryd.BulkOperations.EF6
                                 navPropertyType = GetProperty(t, navigationPropertyName, entity).GetType();
                             foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
                             {
+                                PropertyInfo toPropertyInfo = t.GetProperty(foreignKeyRelation.ToProperty);
+                                var navPropertyKeyType = toPropertyInfo.PropertyType;
+                                var isGuid = navPropertyKeyType == typeof(Guid);
                                 var navPropertyKey = GetProperty(t, foreignKeyRelation.ToProperty, entity);
 
-                                if (navPropertyKey == null || navPropertyKey == 0)
+                                if (navPropertyKey == null ||
+                                    (isGuid && navPropertyKey == Guid.Empty) ||
+                                    navPropertyKey == 0)
                                 {
                                     var currentValue = GetProperty(navPropertyType, foreignKeyRelation.FromProperty, navProperty);
-                                    if (currentValue > 0)
+                                    if ((isGuid && navPropertyKey != Guid.Empty) ||
+                                        (!isGuid && currentValue > 0))
                                     {
                                         SetProperty(foreignKeyRelation.ToProperty, entity, currentValue);
                                     }
@@ -1586,7 +1595,7 @@ namespace Tanneryd.BulkOperations.EF6
             var tempTableName = CreateTempTable(conn, sqlTransaction, tableName, columnNames, true);
 
             if (keyColumnMappings.Length == 1 &&
-                (keyColumnMappings[0].TableColumn.IsStoreGeneratedIdentity ||
+                ((keyColumnMappings[0].TableColumn.IsStoreGeneratedIdentity && keyColumnMappings[0].TableColumn.TypeName != "uniqueidentifier") ||
                  keyColumnMappings[0].TableColumn.IsStoreGeneratedComputed))
             {
                 EnableIdentityInsert(tempTableName, conn, sqlTransaction);
@@ -1793,6 +1802,7 @@ namespace Tanneryd.BulkOperations.EF6
             var objectContext = ((IObjectContextAdapter)ctx).ObjectContext;
             var workspace = objectContext.MetadataWorkspace;
             var containerName = objectContext.DefaultContainerName;
+            t = ObjectContext.GetObjectType(t);
             var entityName = t.Name;
 
             var storageMapping = (EntityContainerMapping)workspace.GetItem<GlobalItem>(containerName, DataSpace.CSSpace);

@@ -14,7 +14,11 @@
     <copyright>Copyright 2017-2018</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>Bugfix: BulkSelect did not work properly with null columns.</releaseNotes>
+    <releaseNotes>
+      Bugfix: BulkSelect did not work properly with null columns.
+      Bugfix: Contexts using lazy loading and thus dynamix proxies did not work as expected.
+      Bugfix: Tables with Guid primary keys did not work as expected in some situations.
+    </releaseNotes>
 
   </metadata>
 </package>
