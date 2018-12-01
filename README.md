@@ -21,7 +21,7 @@ public class BulkInsertRequest<T>
 {
     public IList<T> Entities { get; set; }
     public SqlTransaction Transaction { get; set; }
-	public bool UpdateStatistics { get; set; } = false;
+    public bool UpdateStatistics { get; set; } = false;
     public bool Recursive { get; set; } = false;
     public bool AllowNotNullSelfReferences { get; set; } = false;
     public bool SortUsingClusteredIndex { get; set; } = true;
@@ -126,14 +126,18 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
     return DoBulkSelectExisting<T1, T2>(ctx, request);
 }
 ```
-## Examples
+## Release history
+##### 1.2.2 (2018-12-01)
+ * Bugfix: BulkSelect did not work properly with null columns.
+ * Bugfix: Contexts using lazy loading and thus dynamic proxies did not work as expected.
+ * Bugfix: Tables with Guid primary keys did not work as expected in some situations.
 
 
 ## Built With
 
 * Visual Studio 2017
 * .NET Framework 4.5
-* Entity Framework 6.0.2
+* Entity Framework 6.2.0
 
 ## Versioning
 
