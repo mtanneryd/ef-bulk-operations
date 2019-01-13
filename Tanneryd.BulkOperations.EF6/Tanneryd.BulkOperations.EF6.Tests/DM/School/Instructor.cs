@@ -13,6 +13,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests.DM.School
         public int InstructorID { get; set; }
         public string LastName { get; set; }
         public string FirstName { get; set; }
+        public string FullName { get; private set; }
+
         public System.DateTime HireDate { get; set; }
 
         public OfficeAssignment OfficeAssignment { get; set; }

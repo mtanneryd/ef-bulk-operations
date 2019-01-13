@@ -23,6 +23,10 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         {
             var db = new SchoolContext();
             db.OfficeAssignments.RemoveRange(db.OfficeAssignments.ToArray());
+            foreach (var i in db.Instructors)
+            {
+                i.Courses.Clear();
+            }
             db.Instructors.RemoveRange(db.Instructors.ToArray());
             db.Courses.RemoveRange(db.Courses.ToArray());
             db.Departments.RemoveRange(db.Departments.ToArray());

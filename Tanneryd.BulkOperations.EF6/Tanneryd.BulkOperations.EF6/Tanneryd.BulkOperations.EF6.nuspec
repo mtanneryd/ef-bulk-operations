@@ -8,17 +8,13 @@
     <description>This extension provides bulk insert, bulk update and bulk select. Bulk insert supports complete entity hierarchies, maintaining foreign key relationsships.</description>
     <authors>Måns Tånneryd</authors>
     <owners>Tånneryd IT AB</owners>
-    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <license type="file">License\LICENSE.TXT</license>
     <projectUrl>https://github.com/mtanneryd/ef6-bulk-operations</projectUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <copyright>Copyright 2017-2018</copyright>
+    <copyright>Copyright 2017-2019</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>
-      Bugfix: BulkSelect did not work properly with null columns.
-      Bugfix: Contexts using lazy loading and thus dynamix proxies did not work as expected.
-      Bugfix: Tables with Guid primary keys did not work as expected in some situations.
-    </releaseNotes>
+    <releaseNotes>Bugfixes: Insert did not work for tables with non-key computed columns. Inserting hierarchies with many-to-many relationships sometimes caused a stack overflow due to endless recursion.</releaseNotes>
 
   </metadata>
 </package>

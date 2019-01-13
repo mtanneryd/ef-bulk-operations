@@ -90,6 +90,15 @@
     <Compile Include="BulkInsertSelfReferenceTests.cs" />
     <Compile Include="BulkInsertOneToManyTests.cs" />
     <Compile Include="EF\SchoolContext.cs" />
+    <Compile Include="Migrations\201901131910265_InitialCreate.cs" />
+    <Compile Include="Migrations\201901131910265_InitialCreate.Designer.cs">
+      <DependentUpon>201901131910265_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\201901131912134_AddComputedFullNameColumnToInstructor.cs" />
+    <Compile Include="Migrations\201901131912134_AddComputedFullNameColumnToInstructor.Designer.cs">
+      <DependentUpon>201901131912134_AddComputedFullNameColumnToInstructor.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -101,6 +110,14 @@
       <Project>{9f0c6dfb-0831-4dc2-b1c6-f3fe5b554bfa}</Project>
       <Name>Tanneryd.BulkOperations.EF6</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201901131910265_InitialCreate.resx">
+      <DependentUpon>201901131910265_InitialCreate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201901131912134_AddComputedFullNameColumnToInstructor.resx">
+      <DependentUpon>201901131912134_AddComputedFullNameColumnToInstructor.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

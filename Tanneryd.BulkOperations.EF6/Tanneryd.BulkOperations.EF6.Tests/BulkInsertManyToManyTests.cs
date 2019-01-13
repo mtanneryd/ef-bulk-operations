@@ -16,12 +16,70 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         public void Initialize()
         {
             InitializeSchoolContext();
+            CleanupSchoolContext(); // make sure we start from scratch, previous tests might have been aborted before cleanup
         }
 
         [TestCleanup]
         public void CleanUp()
         {
             CleanupSchoolContext();
+        }
+
+        [TestMethod]
+        public void StackOverflowTest()
+        {
+            using (var db = new SchoolContext())
+            {
+                var i1 = new Instructor
+                {
+                    FirstName = "Mickey",
+                    LastName = "Mouse",
+                    HireDate = new DateTime(1928, 5, 15),
+                    OfficeAssignment = new OfficeAssignment {Location = "Room 1A"}
+                };
+                db.Instructors.Add(i1);
+                db.SaveChanges();
+
+                var d1 = new Department
+                {
+                    Name = "Computer Science",
+                    Budget = 10000000,
+                };
+
+                var c1 = new Course
+                {
+                    Credits = 4,
+                    Title = "Foundations of Data Science",
+                    Department = d1
+                };
+
+                db.Courses.Add(c1);
+                db.SaveChanges();
+
+                i1.Courses.Add(c1);
+                db.SaveChanges();
+
+                Assert.AreEqual(1, db.Instructors.SelectMany(i => i.Courses).Distinct().Count());
+
+                var instructor = db.Instructors
+                    .Include(i => i.Courses.Select(c => c.Department))
+                    .Include(i => i.OfficeAssignment)
+                    .Single();
+
+                instructor.InstructorID = 0;
+                instructor.OfficeAssignment.InstructorID = 0;
+
+                var request = new BulkInsertRequest<Instructor>
+                {
+                    Entities = new[] {instructor}.ToList(),
+                    Recursive = true,
+                    AllowNotNullSelfReferences = false
+                };
+                db.BulkInsertAll(request);
+
+                
+                Assert.AreEqual(2, db.Instructors.SelectMany(i=>i.Courses).Count());
+            }
         }
 
         /// <summary>

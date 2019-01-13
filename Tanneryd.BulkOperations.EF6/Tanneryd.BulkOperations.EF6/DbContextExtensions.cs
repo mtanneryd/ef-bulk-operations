@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 using System;
-using System.CodeDom;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data;
@@ -29,7 +28,6 @@ using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
 using Tanneryd.BulkOperations.EF6.Model;
 
 namespace Tanneryd.BulkOperations.EF6
@@ -222,6 +220,7 @@ namespace Tanneryd.BulkOperations.EF6
                     request.AllowNotNullSelfReferences,
                     request.CommandTimeout,
                     new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
+                    new Dictionary<Type, Mappings>(),
                     response);
 
                 if (request.UpdateStatistics)
@@ -815,6 +814,7 @@ namespace Tanneryd.BulkOperations.EF6
         /// <param name="allowNotNullSelfReferences"></param>
         /// <param name="commandTimeout"></param>
         /// <param name="savedEntities"></param>
+        /// <param name="mappingsByType"></param>
         /// <param name="response"></param>
         private static void DoBulkInsertAll(
             this DbContext ctx,
@@ -824,12 +824,17 @@ namespace Tanneryd.BulkOperations.EF6
             bool allowNotNullSelfReferences,
             TimeSpan commandTimeout,
             Dictionary<object, object> savedEntities,
+            Dictionary<Type, Mappings> mappingsByType,
             BulkInsertResponse response)
         {
             if (entities.Count == 0) return;
 
             Type t = entities[0].GetType();
-            var mappings = GetMappings(ctx, t);
+            if (!mappingsByType.ContainsKey(t))
+            {
+                mappingsByType.Add(t, GetMappings(ctx, t));
+            }
+            var mappings = mappingsByType[t];
 
             // 
             // Find any 'one-or-zero to many' related entities. If found, those
@@ -844,8 +849,8 @@ namespace Tanneryd.BulkOperations.EF6
                     // ToForeignKeyMappings means that the entity is connected TO
                     // another entity via a foreign key relationship. So, these mappings
                     // must always be one-to-one. At least I can't come up with a
-                    // situation whee we would be interestedin a collection type
-                    // mapping here. when we have self references collections appear
+                    // situation where we would be interested in a collection type
+                    // mapping here. When we have self references collections appear
                     // here but we ignore them and take care of them in the from mapping.
                     var isCollection = fkMapping.BuiltInTypeKind == BuiltInTypeKind.CollectionType ||
                                        fkMapping.BuiltInTypeKind == BuiltInTypeKind.CollectionKind;
@@ -870,6 +875,8 @@ namespace Tanneryd.BulkOperations.EF6
                                 var isGuid = navPropertyKeyType == typeof(Guid);
                                 var navPropertyKey = GetProperty(t, foreignKeyRelation.ToProperty, entity);
 
+                                // we do nothing unless the one-to-one
+                                // nav property in previously unknown
                                 if (navPropertyKey == null ||
                                     (isGuid && navPropertyKey == Guid.Empty) ||
                                     navPropertyKey == 0)
@@ -897,7 +904,16 @@ namespace Tanneryd.BulkOperations.EF6
                     }
                     if (!navProperties.Any()) continue;
 
-                    DoBulkInsertAll(ctx, navProperties.ToArray(), transaction, recursive, allowNotNullSelfReferences, commandTimeout, savedEntities, response);
+                    DoBulkInsertAll(
+                        ctx, 
+                        navProperties.ToList(), 
+                        transaction, 
+                        recursive, 
+                        allowNotNullSelfReferences, 
+                        commandTimeout, 
+                        savedEntities, 
+                        mappingsByType,
+                        response);
                     foreach (var modifiedEntity in modifiedEntities)
                     {
                         var e = modifiedEntity[0];
@@ -976,8 +992,29 @@ namespace Tanneryd.BulkOperations.EF6
                             }
                             else if (fkMapping.AssociationMapping != null)
                             {
-                                // Some or all of the navProperty entities might be new. So, we need to make sure they are saved first.
-                                DoBulkInsertAll(ctx, navProperties, transaction, recursive, allowNotNullSelfReferences, commandTimeout, savedEntities, response);
+                                // Some or all of the navProperty entities might be new.
+                                // So, we need to make sure they are saved first. But we
+                                // need to make sure that we ONLY pass new entities to
+                                // the recursive call. Otherwise we might end up with a
+                                // never ending loop.
+                                var pkColumnMappings = GetPrimaryKeyColumnMappings(ctx, (Type) navPropertyType, mappingsByType);
+                                var pkProperty = pkColumnMappings[0].EntityProperty;
+
+                                var newNavProperties = new ArrayList();
+                                foreach (var navProperty in navProperties)
+                                {
+                                    var pk = GetProperty(pkProperty.Name, navProperty);
+                                    if (pk == 0) newNavProperties.Add(navProperty);
+                                }
+                                DoBulkInsertAll(ctx,
+                                    newNavProperties.ToArray(), 
+                                    transaction, 
+                                    recursive, 
+                                    allowNotNullSelfReferences,
+                                    commandTimeout, 
+                                    savedEntities,
+                                    mappingsByType,
+                                    response);
 
                                 if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.Name == entity.GetType().Name)
                                 {
@@ -1038,6 +1075,7 @@ namespace Tanneryd.BulkOperations.EF6
                             request,
                             response);
                     }
+
                     if (navPropertyEntities.Any())
                     {
                         if (navPropertyEntities.First() is ExpandoObject)
@@ -1064,13 +1102,42 @@ namespace Tanneryd.BulkOperations.EF6
                                     EntityProperty = fkMapping.AssociationMapping.Target.TableColumn,
                                     TableColumn = fkMapping.AssociationMapping.Target.TableColumn
                                 });
-                            DoBulkCopy(ctx, navPropertyEntities.ToArray(), typeof(ExpandoObject), expandoMappings, transaction, allowNotNullSelfReferences, commandTimeout, response);
+                            DoBulkCopy(ctx, navPropertyEntities.ToArray(), typeof(ExpandoObject), expandoMappings,
+                                transaction, allowNotNullSelfReferences, commandTimeout, response);
                         }
                         else
-                            DoBulkInsertAll(ctx, navPropertyEntities.ToArray(), transaction, recursive, allowNotNullSelfReferences, commandTimeout, savedEntities, response);
+                            DoBulkInsertAll(
+                                ctx,
+                                navPropertyEntities.ToArray(),
+                                transaction,
+                                recursive,
+                                allowNotNullSelfReferences,
+                                commandTimeout,
+                                savedEntities,
+                                mappingsByType,
+                                response);
                     }
                 }
             }
+        }
+
+        private static TableColumnMapping[] GetPrimaryKeyColumnMappings(DbContext ctx, Type t, Dictionary<Type, Mappings> mappingsByType)
+        {
+            if (!mappingsByType.ContainsKey(t))
+            {
+                mappingsByType.Add(t, GetMappings(ctx, t));
+            }
+            var mappings = mappingsByType[t];
+
+            var columnMappings = mappings.ColumnMappingByPropertyName;
+            dynamic declaringType = columnMappings
+                .Values
+                .First().TableColumn.DeclaringType;
+            var keyMembers = declaringType.KeyMembers;
+            var pkColumnMappings = columnMappings.Values
+                .Where(m => keyMembers.Contains(m.TableColumn.Name))
+                .ToArray();
+            return pkColumnMappings;
         }
 
         private static void DoBulkCopy(
@@ -1271,6 +1338,8 @@ namespace Tanneryd.BulkOperations.EF6
 
                     var nonPrimaryKeyColumnMappings = columnMappings.Values
                         .Where(m => !keyMembers.Contains(m.TableColumn.Name))
+                        .Where(m => !m.TableColumn.IsStoreGeneratedComputed)
+                        .Where(m => !m.TableColumn.IsStoreGeneratedIdentity)
                         .ToArray();
 
                     if (IntegerTypes.Contains(pkColumnType))
