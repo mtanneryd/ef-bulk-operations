@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Entity;
 using System.Linq;
@@ -7,6 +8,8 @@ using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Levels;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Miscellaneous;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Numbers;
+using Tanneryd.BulkOperations.EF6.Tests.DM.People;
+using Tanneryd.BulkOperations.EF6.Tests.DM.School;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
 namespace Tanneryd.BulkOperations.EF6.Tests
@@ -17,6 +20,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         [TestInitialize]
         public void Initialize()
         {
+            InitializeSchoolContext();
             InitializeNumberContext();
             InitializeLevelContext();
             InitializeBlogContext();
@@ -26,6 +30,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         [TestCleanup]
         public void CleanUp()
         {
+            CleanupSchoolContext();
             CleanupNumberContext();
             CleanupLevelContext();
             CleanupBlogContext();

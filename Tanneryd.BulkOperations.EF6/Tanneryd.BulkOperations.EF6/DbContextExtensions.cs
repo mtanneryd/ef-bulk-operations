@@ -1286,10 +1286,12 @@ namespace Tanneryd.BulkOperations.EF6
                         SqlBulkCopyOptions.Default,
                         true);
 
+                    var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name);
+                    var selectClause = string.Join(",", allColumnNames.Select(p => $"[{p}]"));
                     var query = $@"   
                                     IF OBJECT_ID('tempdb..{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
 
-                                    SELECT 1 as rowno, *
+                                    SELECT 1 as rowno, {selectClause}
                                     INTO {tempTableName}
                                     FROM {tableName.Fullname}
                                     WHERE 1=0

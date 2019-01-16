@@ -24,7 +24,6 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
     public class PeopleContext : DbContext
     {
         public DbSet<Person> People { get; set; }
-        //public DbSet<User> Users { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -52,37 +51,6 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
                 .HasForeignKey(p => p.MotherId);
 
             #endregion
-
-            //#region User
-
-            //modelBuilder.Entity<User>()
-            //    .ToTable("User")
-            //    .HasKey(p => p.Id);
-            //modelBuilder.Entity<User>()
-            //    .Property(p => p.Id)
-            //    .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
-            //modelBuilder.Entity<User>()
-            //    .Property(p => p.UserName)
-            //    .IsRequired();
-            //modelBuilder.Entity<User>()
-            //    .Property(p => p.Password)
-            //    .IsRequired();
-            //modelBuilder.Entity<User>()
-            //    .Property(p => p.FirstName)
-            //    .IsRequired();
-            //modelBuilder.Entity<User>()
-            //    .Property(p => p.LastName)
-            //    .IsRequired();
-            //modelBuilder.Entity<User>()
-            //    .Property(p => p.BirthDate)
-            //    .IsRequired();
-
-            //modelBuilder.Entity<User>()
-            //    .HasMany(p => p.Children)
-            //    .WithOptional() // p => p.Mother
-            //    .HasForeignKey(p => p.MotherId);
-
-            //#endregion
         }
     }
-}
+ }

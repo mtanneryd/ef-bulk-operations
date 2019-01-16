@@ -8,7 +8,7 @@
     <description>This extension provides bulk insert, bulk update and bulk select. Bulk insert supports complete entity hierarchies, maintaining foreign key relationsships.</description>
     <authors>Måns Tånneryd</authors>
     <owners>Tånneryd IT AB</owners>
-    <license type="file">License\LICENSE.TXT</license>
+    <license type="expression">Apache-2.0</license>
     <projectUrl>https://github.com/mtanneryd/ef6-bulk-operations</projectUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
     <copyright>Copyright 2017-2019</copyright>

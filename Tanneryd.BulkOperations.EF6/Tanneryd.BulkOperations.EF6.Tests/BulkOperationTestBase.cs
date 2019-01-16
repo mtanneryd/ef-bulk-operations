@@ -77,17 +77,16 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         {
             Database.SetInitializer(new DropCreateDatabaseIfModelChanges<PeopleContext>());
         }
-
+        
         protected void CleanupPeopleContext()
         {
             var db = new PeopleContext();
             db.People.RemoveRange(db.People.ToArray());
             db.SaveChanges();
         }
-
-
-        #endregion
         
+        #endregion
+
         #region Company
 
         protected void InitializeCompanyContext()

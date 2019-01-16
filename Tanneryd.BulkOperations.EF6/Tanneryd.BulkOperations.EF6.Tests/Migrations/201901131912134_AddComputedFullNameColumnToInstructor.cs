@@ -8,7 +8,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Migrations
         public override void Up()
         {
             //AddColumn("dbo.Instructor", "FullName", c => c.String());
-            Sql("ALTER TABLE dbo.Instructor ADD FullName AS FirstName + ' ' + LastName");
+            Sql("ALTER TABLE dbo.Instructor ADD FullName AS (FirstName + ' ' + LastName) PERSISTED NOT NULL");
         }
         
         public override void Down()

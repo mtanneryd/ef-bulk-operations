@@ -29,6 +29,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.DM.People
         public long Id { get; set; }
         public string FirstName { get; set; }
         public string LastName { get; set; }
+
         public DateTime BirthDate { get; set; }
 
         public long? MotherId { get; set; }

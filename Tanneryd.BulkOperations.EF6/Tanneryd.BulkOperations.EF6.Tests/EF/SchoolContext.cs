@@ -20,7 +20,7 @@ using Tanneryd.BulkOperations.EF6.Tests.DM.School;
 
 namespace Tanneryd.BulkOperations.EF6.Tests.EF
 {
-   // https://msdn.microsoft.com/en-us/library/jj591620%28v=vs.113%29.aspx?f=255&MSPPError=-2147217396
+    // https://msdn.microsoft.com/en-us/library/jj591620%28v=vs.113%29.aspx?f=255&MSPPError=-2147217396
     public class SchoolContext : DbContext
     {
         public DbSet<Course> Courses { get; set; }
