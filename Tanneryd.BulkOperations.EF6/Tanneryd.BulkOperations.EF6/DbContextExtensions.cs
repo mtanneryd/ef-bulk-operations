@@ -46,6 +46,13 @@ namespace Tanneryd.BulkOperations.EF6
 
         #region Public API
 
+        public static void BulkDeleteNotExisting<T1, T2>(
+            this DbContext ctx,
+            BulkDeleteRequest<T1> request)
+        {
+            DoBulkDeleteNotExisting<T1, T2>(ctx, request);
+        }
+
         /// <summary>
         /// The request object contains a mapping between properties in T1
         /// and properties in T2. BulkSelect will match all rows in the T2
@@ -472,6 +479,99 @@ namespace Tanneryd.BulkOperations.EF6
 
             return new List<T1>();
 
+        }
+
+        private static void DoBulkDeleteNotExisting<T1, T2>(DbContext ctx, BulkDeleteRequest<T1> request)
+        {
+            if (!request.Items.Any()) return;
+
+            Type t = typeof(T2);
+            var mappings = GetMappings(ctx, t);
+            var tableName = mappings.TableName;
+            var columnMappings = mappings.ColumnMappingByPropertyName;
+            var itemPropertyByEntityProperty =
+                request.KeyPropertyMappings.ToDictionary(p => p.EntityPropertyName, p => p.ItemPropertyName);
+            var items = request.Items;
+            var conn = GetSqlConnection(ctx);
+
+            if (!itemPropertyByEntityProperty.Any())
+            {
+                throw new ArgumentException(
+                    "The KeyPropertyMappings request property must be set and contain at least one name.");
+            }
+
+            var keyMappings = columnMappings.Values
+                .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.EntityProperty.Name))
+                .ToDictionary(m => m.EntityProperty.Name, m => m);
+
+            if (keyMappings.Any())
+            {
+                var containsIdentityKey = keyMappings.Any(m =>
+                    (m.Value.TableColumn.IsStoreGeneratedIdentity &&
+                     m.Value.TableColumn.TypeName != "uniqueidentifier") ||
+                    m.Value.TableColumn.IsStoreGeneratedComputed);
+
+                // Create a temporary table with the supplied keys 
+                // as columns. We include the rowno column as well
+                // even though we do not need it. But, for some
+                // ungodly reason WriteToServer does nothing, on
+                // some platforms, if we omit it. Need to figure
+                // that out at some point.
+                var tempTableName = CreateTempTable(
+                    conn,
+                    request.Transaction,
+                    tableName,
+                    keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
+                    true);
+
+                var properties = GetProperties(t);
+                var keyProperties = properties
+                    .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
+
+                var table = new DataTable();
+                var bulkCopy = CreateBulkCopy(
+                    table,
+                    keyProperties,
+                    keyMappings,
+                    conn,
+                    request.Transaction,
+                    tempTableName,
+                    containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
+                    true);
+                if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
+
+                int i = 0;
+                var type = items[0].GetType();
+                foreach (var entity in items)
+                {
+                    var e = entity;
+                    var columnValues = new List<dynamic>();
+                    columnValues.AddRange(keyProperties.Select(p =>
+                        GetProperty(type, itemPropertyByEntityProperty[p.Name], e, DBNull.Value)));
+                    columnValues.Add(i++);
+                    table.Rows.Add(columnValues.ToArray());
+                }
+
+                bulkCopy.WriteToServer(table.CreateDataReader());
+
+                var conditionStatements = keyMappings.Values.Select(c => $"isnull(t0.[{c.TableColumn.Name}], 0) = isnull(t1.[{c.TableColumn.Name}], 0)");
+                var conditionStatementsSql = string.Join(" AND ", conditionStatements);
+                var query = $@"DELETE {tableName.Fullname}
+                               FROM  {tableName.Fullname} AS [t0]
+                               WHERE NOT EXISTS (
+                                SELECT NULL
+                                FROM {tempTableName} AS [t1]
+                                WHERE {conditionStatementsSql}
+                               )";
+
+                var cmd = new SqlCommand(query, conn, request.Transaction)
+                {
+                    CommandTimeout = (int)request.CommandTimeout.TotalSeconds
+                };
+                cmd.ExecuteNonQuery();
+
+                DropTempTable(conn, request.Transaction, tempTableName);
+            }
         }
 
         /// <summary>

@@ -36,6 +36,15 @@ namespace Tanneryd.BulkOperations.EF6.Model
         }
     }
 
+    public class BulkDeleteRequest<T> : BulkSelectRequest<T>
+    {
+        public BulkDeleteRequest(string[] keyPropertyNames, IList<T> items = null, SqlTransaction transaction = null)
+            :base(keyPropertyNames, items, transaction)
+        {
+            
+        }
+    }
+
     public class BulkSelectRequest<T>
     {
         public BulkSelectRequest(string[] keyPropertyNames, IList<T> items = null, SqlTransaction transaction = null)
