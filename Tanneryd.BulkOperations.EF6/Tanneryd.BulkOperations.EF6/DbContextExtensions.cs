@@ -500,6 +500,7 @@ namespace Tanneryd.BulkOperations.EF6
                     "The KeyPropertyMappings request property must be set and contain at least one name.");
             }
 
+            // Get EF key mappings for the entity properties we are selecting on.
             var keyMappings = columnMappings.Values
                 .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.EntityProperty.Name))
                 .ToDictionary(m => m.EntityProperty.Name, m => m);
@@ -507,9 +508,8 @@ namespace Tanneryd.BulkOperations.EF6
             if (keyMappings.Any())
             {
                 var containsIdentityKey = keyMappings.Any(m =>
-                    (m.Value.TableColumn.IsStoreGeneratedIdentity &&
-                     m.Value.TableColumn.TypeName != "uniqueidentifier") ||
-                    m.Value.TableColumn.IsStoreGeneratedComputed);
+                    m.Value.TableColumn.IsStoreGeneratedIdentity &&
+                    m.Value.TableColumn.TypeName != "uniqueidentifier");
 
                 // Create a temporary table with the supplied keys 
                 // as columns. We include the rowno column as well
@@ -705,7 +705,7 @@ namespace Tanneryd.BulkOperations.EF6
             var mappings = GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
-            var itemPropertByEntityProperty = request.KeyPropertyMappings.ToDictionary(p => p.EntityPropertyName, p => p.ItemPropertyName);
+            var itemPropertyByEntityProperty = request.KeyPropertyMappings.ToDictionary(p => p.EntityPropertyName, p => p.ItemPropertyName);
             var items = request.Items;
             var conn = GetSqlConnection(ctx);
 
@@ -721,9 +721,8 @@ namespace Tanneryd.BulkOperations.EF6
             if (keyMappings.Any())
             {
                 var containsIdentityKey = keyMappings.Any(m =>
-                    (m.Value.TableColumn.IsStoreGeneratedIdentity &&
-                     m.Value.TableColumn.TypeName != "uniqueidentifier") ||
-                    m.Value.TableColumn.IsStoreGeneratedComputed);
+                    m.Value.TableColumn.IsStoreGeneratedIdentity &&
+                    m.Value.TableColumn.TypeName != "uniqueidentifier");
 
                 // Create a temporary table with the supplied keys 
                 // as columns, plus a rowno column.
@@ -755,7 +754,7 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     var e = entity;
                     var columnValues = new List<dynamic>();
-                    columnValues.AddRange(keyProperties.Select(p => GetProperty(type, itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
+                    columnValues.AddRange(keyProperties.Select(p => GetProperty(type, itemPropertyByEntityProperty[p.Name], e, DBNull.Value)));
                     columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
@@ -768,9 +767,11 @@ namespace Tanneryd.BulkOperations.EF6
                                FROM {tempTableName} AS [t0]
                                INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
 
-                var cmd = new SqlCommand(query, conn, request.Transaction);
-                cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
-                
+                var cmd = new SqlCommand(query, conn, request.Transaction)
+                {
+                    CommandTimeout = (int) request.CommandTimeout.TotalSeconds
+                };
+
                 var existingEntities = new List<T1>();
 
                 using (var sqlDataReader = cmd.ExecuteReader())
@@ -1373,8 +1374,24 @@ namespace Tanneryd.BulkOperations.EF6
                 //
                 if (newEntities.Count > 0)
                 {
-                    var guid = Guid.NewGuid().ToString("N");
-                    var tempTableName = $"#{guid}";
+                    //var guid = Guid.NewGuid().ToString("N");
+                    //var tempTableName = $"#{guid}";
+
+                    //var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name);
+                    //var selectClause = string.Join(",", allColumnNames.Select(p => $"[{p}]"));
+                    //var query = $@"   
+                    //                IF OBJECT_ID('tempdb..{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
+
+                    //                SELECT 1 as rowno, {selectClause}
+                    //                INTO {tempTableName}
+                    //                FROM {tableName.Fullname}
+                    //                WHERE 1=0
+                    //            ";
+                    //var cmd = new SqlCommand(query, conn, transaction);
+                    //cmd.ExecuteNonQuery();
+                    var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name).ToArray();
+                    var tempTableName = CreateTempTable(conn, transaction, tableName, allColumnNames, true);
+                    string query = null;
 
                     var bulkCopy = CreateBulkCopy(
                         table,
@@ -1385,19 +1402,6 @@ namespace Tanneryd.BulkOperations.EF6
                         tempTableName,
                         SqlBulkCopyOptions.Default,
                         true);
-
-                    var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name);
-                    var selectClause = string.Join(",", allColumnNames.Select(p => $"[{p}]"));
-                    var query = $@"   
-                                    IF OBJECT_ID('tempdb..{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
-
-                                    SELECT 1 as rowno, {selectClause}
-                                    INTO {tempTableName}
-                                    FROM {tableName.Fullname}
-                                    WHERE 1=0
-                                ";
-                    var cmd = new SqlCommand(query, conn, transaction);
-                    cmd.ExecuteNonQuery();
 
                     if (newEntities[0] is ExpandoObject)
                     {
@@ -1434,7 +1438,7 @@ namespace Tanneryd.BulkOperations.EF6
                     };
 
                     var pkColumnType = Type.GetType(pkColumn.PrimitiveType.ClrEquivalentType.FullName);
-                    cmd = conn.CreateCommand();
+                    var cmd = conn.CreateCommand();
                     cmd.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
                     cmd.Transaction = transaction;
 
@@ -1523,8 +1527,7 @@ namespace Tanneryd.BulkOperations.EF6
                     {
                         if (allowNotNullSelfReferences)
                         {
-                            query = $"ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL";
-                            cmd.CommandText = query;
+                           cmd.CommandText = query;
                             cmd.ExecuteNonQuery();
                             response.TablesWithNoCheckConstraints.Add(tableName.Fullname);
                         }

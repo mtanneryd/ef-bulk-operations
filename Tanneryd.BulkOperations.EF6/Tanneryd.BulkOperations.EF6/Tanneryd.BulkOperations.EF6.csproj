@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Model\BulkDeleteRequest.cs" />
     <Compile Include="Model\BulkInsertRequest.cs" />
     <Compile Include="Model\BulkOperationResponse.cs" />
     <Compile Include="Model\BulkSelectRequest.cs" />
