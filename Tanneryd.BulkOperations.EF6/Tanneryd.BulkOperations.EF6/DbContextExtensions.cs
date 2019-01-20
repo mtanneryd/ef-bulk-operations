@@ -46,6 +46,13 @@ namespace Tanneryd.BulkOperations.EF6
 
         #region Public API
 
+        /// <summary>
+        ///
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="ctx"></param>
+        /// <param name="request"></param>
         public static void BulkDeleteNotExisting<T1, T2>(
             this DbContext ctx,
             BulkDeleteRequest<T1> request)
@@ -554,11 +561,14 @@ namespace Tanneryd.BulkOperations.EF6
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
+                var condStatements = request.SqlConditions.Select(c => $"[t0].[{c.ColumnName}] = {c.ColumnValue}");
+                var condStatementsSql = string.Join(" AND ", condStatements);
                 var conditionStatements = keyMappings.Values.Select(c => $"isnull(t0.[{c.TableColumn.Name}], 0) = isnull(t1.[{c.TableColumn.Name}], 0)");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"DELETE {tableName.Fullname}
                                FROM  {tableName.Fullname} AS [t0]
-                               WHERE NOT EXISTS (
+                               WHERE {condStatementsSql}
+                                AND NOT EXISTS (
                                 SELECT NULL
                                 FROM {tempTableName} AS [t1]
                                 WHERE {conditionStatementsSql}

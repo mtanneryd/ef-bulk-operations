@@ -16,36 +16,15 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
-using System.Linq;
 using System.Linq.Expressions;
 
 namespace Tanneryd.BulkOperations.EF6.Model
 {
-    public class KeyPropertyMapping
-    {
-        public string ItemPropertyName { get; set; }
-        public string EntityPropertyName { get; set; }
-
-        public static KeyPropertyMapping[] IdentityMappings(string[] names)
-        {
-            return names.Select(n => new KeyPropertyMapping
-            {
-                ItemPropertyName = n,
-                EntityPropertyName = n
-            }).ToArray();
-        }
-    }
-
     public class BulkSelectRequest<T>
     {
         public BulkSelectRequest(string[] keyPropertyNames, IList<T> items = null, SqlTransaction transaction = null)
         {
-            KeyPropertyMappings = keyPropertyNames.Select(n => new KeyPropertyMapping
-                {
-                    ItemPropertyName = n,
-                    EntityPropertyName = n
-                })
-                .ToArray();
+            KeyPropertyMappings = KeyPropertyMapping.IdentityMappings(keyPropertyNames);
             Items = items;
             Transaction = transaction;
         }

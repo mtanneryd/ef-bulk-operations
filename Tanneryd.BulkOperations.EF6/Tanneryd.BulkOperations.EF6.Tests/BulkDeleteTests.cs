@@ -26,61 +26,75 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         [TestMethod]
         public void DeleteNotExistingEntities()
         {
-            var p1 = new Person
+            var p0 = new Person
             {
-                FirstName = "Måns",
+                FirstName = "Angelica",
                 LastName = "Tånneryd",
                 BirthDate = DateTime.Now
             };
+            var p1 = new Person
+            {
+                FirstName = "Arvid",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now,
+                Mother = p0
+            };
             var p2 = new Person
             {
-                FirstName = "Angelica",
+                FirstName = "Inga-Lill",
                 LastName = "Tånneryd",
                 BirthDate = DateTime.Now
             };
             var p3 = new Person
             {
                 FirstName = "Linus",
-                LastName = "Tånneryd"
-                ,
-                BirthDate = DateTime.Now
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now,
+                Mother = p0
             };
             var p4 = new Person
             {
-                FirstName = "Arvid",
+                FirstName = "Måns",
                 LastName = "Tånneryd",
-                BirthDate = DateTime.Now
+                BirthDate = DateTime.Now,
+                Mother = p2
             };
             var p5 = new Person
             {
                 FirstName = "Viktor",
                 LastName = "Tånneryd",
-                BirthDate = DateTime.Now
+                BirthDate = DateTime.Now,
+                Mother = p0
             };
 
             using (var db = new PeopleContext())
             {
-                db.People.AddRange(new[] {p1, p2, p3, p4, p5});
+                db.People.AddRange(new[] {p0, p1, p2, p3, p4, p5});
                 db.SaveChanges();
 
-                var people = db.People.ToArray();
-                Assert.AreEqual(5, people.Length);
-                Assert.AreEqual(p1.Id, people[0].Id);
-                Assert.AreEqual(p2.Id, people[1].Id);
-                Assert.AreEqual(p3.Id, people[2].Id);
-                Assert.AreEqual(p4.Id, people[3].Id);
-                Assert.AreEqual(p5.Id, people[4].Id);
+                var people = db.People.OrderBy(p=>p.FirstName).ToArray();
+                Assert.AreEqual(6, people.Length);
+                Assert.AreEqual(p0.Id, people[0].Id);
+                Assert.AreEqual(p1.Id, people[1].Id);
+                Assert.AreEqual(p2.Id, people[2].Id);
+                Assert.AreEqual(p3.Id, people[3].Id);
+                Assert.AreEqual(p4.Id, people[4].Id);
+                Assert.AreEqual(p5.Id, people[5].Id);
 
-                db.BulkDeleteNotExisting<Person, Person>(new BulkDeleteRequest<Person>(new [] { "FirstName", "LastName"})
+                db.BulkDeleteNotExisting<Person, Person>(new BulkDeleteRequest<Person>(
+                    new [] { new SqlCondition{ ColumnName = "MotherId", ColumnValue = p0.Id} }, 
+                    new [] { "FirstName", "LastName"})
                 {
-                    Items = new[] { p1, p2, p3 }.ToList()
+                    Items = new[] { p1, p3 }.ToList()
                 });
 
-                people = db.People.ToArray();
-                Assert.AreEqual(3, people.Length);
-                Assert.AreEqual(p1.Id, people[0].Id);
-                Assert.AreEqual(p2.Id, people[1].Id);
-                Assert.AreEqual(p3.Id, people[2].Id);
+                people = db.People.OrderBy(p => p.FirstName).ToArray();
+                Assert.AreEqual(5, people.Length);
+                Assert.AreEqual(p0.Id, people[0].Id);
+                Assert.AreEqual(p1.Id, people[1].Id);
+                Assert.AreEqual(p2.Id, people[2].Id);
+                Assert.AreEqual(p3.Id, people[3].Id);
+                Assert.AreEqual(p4.Id, people[4].Id);
             }
         }
     }

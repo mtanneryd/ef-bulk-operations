@@ -57,8 +57,10 @@
     <Compile Include="Model\ForeignKeyMapping.cs" />
     <Compile Include="Model\ForeignKeyRelation.cs" />
     <Compile Include="Model\IdentityEqualityComparer.cs" />
+    <Compile Include="Model\KeyPropertyMapping.cs" />
     <Compile Include="Model\Mappings.cs" />
     <Compile Include="Model\SelfReference.cs" />
+    <Compile Include="Model\SqlCondition.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Model\PropInfo.cs" />
     <Compile Include="Model\TableColumnMapping.cs" />
