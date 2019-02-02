@@ -67,6 +67,26 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
             modelBuilder.Entity<Keyword>()
                 .Property(p => p.Text)
                 .IsRequired();            
+
+            modelBuilder.Entity<Visitor>()
+                .ToTable("Visitor")
+                .HasKey(p => p.Id);
+            modelBuilder.Entity<Visitor>()
+                .Property(p => p.Id)
+                .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            modelBuilder.Entity<Visitor>()
+                .Property(p => p.Name)
+                .IsRequired();  
+            
+            modelBuilder.Entity<Visitor>()
+                .HasMany(a => a.Posts)
+                .WithMany()
+                .Map(x =>
+                {
+                    x.MapLeftKey("VisitorId");
+                    x.MapRightKey("PostId");
+                    x.ToTable("VisitorPosts");
+                });
         }
     }
 }

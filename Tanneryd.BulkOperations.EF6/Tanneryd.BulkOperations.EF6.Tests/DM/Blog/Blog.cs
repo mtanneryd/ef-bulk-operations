@@ -31,11 +31,17 @@ namespace Tanneryd.BulkOperations.EF6.Tests.DM.Blog
 
     public class Post
     {
+        public Post()
+        {
+            Visitors = new HashSet<Visitor>();
+        }
+
         public Guid Id { get; set; }
         public Guid BlogId { get; set; }
         public Blog Blog { get; set; }
         public string Text { get; set; }
         public ICollection<Keyword> PostKeywords { get; set; }
+        public ICollection<Visitor> Visitors { get; set; }
     }
 
     public class Keyword
@@ -44,5 +50,16 @@ namespace Tanneryd.BulkOperations.EF6.Tests.DM.Blog
         public Guid PostId { get; set; }
         public Post Post { get; set; }
         public string Text { get; set; }
+    }
+
+    public class Visitor
+    {
+        public Visitor()
+        {
+            Posts = new HashSet<Post>();
+        }
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+        public ICollection<Post> Posts { get; set; }
     }
 }

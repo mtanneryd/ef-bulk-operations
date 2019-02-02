@@ -1115,7 +1115,11 @@ namespace Tanneryd.BulkOperations.EF6
                                 foreach (var navProperty in navProperties)
                                 {
                                     var pk = GetProperty(pkProperty.Name, navProperty);
-                                    if (pk == 0) newNavProperties.Add(navProperty);
+
+                                    var isGuid = IsGuidProperty(pkProperty);
+                                    if ((!isGuid && pk == 0) ||
+                                        isGuid && pk == Guid.Empty)
+                                        newNavProperties.Add(navProperty);
                                 }
                                 DoBulkInsertAll(ctx,
                                     newNavProperties.ToArray(), 
@@ -1363,7 +1367,9 @@ namespace Tanneryd.BulkOperations.EF6
                     {
                         var e = (ExpandoObject)entity;
                         var pk = GetProperty(pkProperty.Name, e);
-                        if (pk == 0)
+                        var isGuid = IsGuidProperty(pkProperty);
+                        if ((!isGuid && pk == 0) ||
+                            isGuid && pk == Guid.Empty)
                             newEntities.Add(entity);
                     }
                 }
@@ -1372,8 +1378,9 @@ namespace Tanneryd.BulkOperations.EF6
                     foreach (var entity in entities)
                     {
                         var pk = GetProperty(t, pkProperty.Name, entity);
-                        if (pkProperty.TypeName == "Guid" && pk == Guid.Empty ||
-                            pk == 0)
+                        var isGuid = IsGuidProperty(pkProperty);
+                        if ((!isGuid && pk == 0) ||
+                            isGuid && pk == Guid.Empty)
                             newEntities.Add(entity);
                     }
                 }
@@ -2155,6 +2162,12 @@ namespace Tanneryd.BulkOperations.EF6
         {
             var val = property.GetValue(instance);
             return val ?? def;
+        }
+
+        private static bool IsGuidProperty(dynamic p)
+        {
+            var isGuid = p.TypeName == "Guid" ||p.TypeName == "uniqueidentifier";
+            return isGuid;
         }
 
         /// <summary>

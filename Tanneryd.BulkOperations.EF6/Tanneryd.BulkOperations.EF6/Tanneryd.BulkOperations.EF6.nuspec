@@ -14,7 +14,7 @@
     <copyright>Copyright 2017-2019</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>Bugfixes: Insert did not work for tables with non-key computed columns. Inserting hierarchies with many-to-many relationships sometimes caused a stack overflow due to endless recursion.</releaseNotes>
+    <releaseNotes>Bugfixes: Join tables with Guid keys misbehaved.</releaseNotes>
 
   </metadata>
 </package>
