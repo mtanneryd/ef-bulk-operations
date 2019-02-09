@@ -114,6 +114,20 @@ namespace Tanneryd.BulkOperations.EF6
             return DoBulkSelectNotExisting<T1, T2>(ctx, request);
         }
 
+        private static IList BulkSelectNotExisting(DbContext ctx, Type t, IList entities, TableColumnMapping[] pkColumnMappings)
+        {
+            var request = typeof(BulkSelectRequest<>).MakeGenericType(t);
+            var keyPropertyNames = pkColumnMappings.Select(m => m.TableColumn.Name).ToArray();
+            var r = Activator.CreateInstance(request, keyPropertyNames, entities.ToArray(t), null);
+            Type ex = typeof(DbContextExtensions);
+            MethodInfo mi = ex.GetMethod("BulkSelectNotExisting");
+            MethodInfo miGeneric = mi.MakeGenericMethod(new[] {t,t});
+            object[] args = {ctx, r};
+            var notExistingEntities = (IList) miGeneric.Invoke(null, args);
+
+            return notExistingEntities;
+        }
+
         /// <summary>
         /// All columns of the entities' corresponding table rows 
         /// will be updated using the table primary key. If a 
@@ -966,6 +980,7 @@ namespace Tanneryd.BulkOperations.EF6
             Type t = entities[0].GetType();
             if (!mappingsByType.ContainsKey(t))
             {
+                
                 mappingsByType.Add(t, GetMappings(ctx, t));
             }
             var mappings = mappingsByType[t];
@@ -1147,19 +1162,8 @@ namespace Tanneryd.BulkOperations.EF6
                                 }
                                 else
                                 {
-                                    //var data = DoBulkSelectNotExisting(ctx, new BulkSelectRequest
-                                    //{
-                                    //    Items = navProperties.ToList(),
-                                    //    KeyPropertyMappings = new[]
-                                    //    {
-                                    //        new KeyPropertyMapping
-                                    //        {
-                                    //            ItemPropertyName = pkProperty.Name,
-                                    //            EntityPropertyName = pkProperty.Name
-                                    //        },
-                                    //    }
-                                    //});
-
+                                    var notExistingNavProperties = BulkSelectNotExisting(ctx, (Type)navPropertyType, navProperties, pkColumnMappings);
+                                    newNavProperties.AddRange(notExistingNavProperties);
                                 }
 
                                 DoBulkInsertAll(ctx,
@@ -1574,15 +1578,8 @@ namespace Tanneryd.BulkOperations.EF6
             }
             else if (pkColumnMappings.Length == 1 && !pkColumnMappings[0].IsForeignKey)
             {
-                var request = typeof(BulkSelectRequest<>).MakeGenericType(t);
-                var keyPropertyNames = pkColumnMappings.Select(m => m.TableColumn.Name).ToArray();
-                var r = Activator.CreateInstance(request, keyPropertyNames, entities.ToArray(t), null);
-                Type ex = typeof(DbContextExtensions);
-                MethodInfo mi = ex.GetMethod("BulkSelectNotExisting");
-                MethodInfo miGeneric = mi.MakeGenericMethod(new[] {t,t});
-                object[] args = {ctx, r};
-                var notExistingEntities = (IList) miGeneric.Invoke(null, args);
-
+                var notExistingEntities = BulkSelectNotExisting(ctx, t, entities, pkColumnMappings);
+                
                 var bulkCopy = CreateBulkCopy(
                     table,
                     properties,
@@ -2186,8 +2183,38 @@ namespace Tanneryd.BulkOperations.EF6
 
             foreach (var toPropertyName in mappings.ToForeignKeyMappings.SelectMany(m => m.ForeignKeyRelations.Select(r => r.ToProperty)))
             {
-                var tableColumnMapping = mappings.ColumnMappingByPropertyName[toPropertyName];
-                tableColumnMapping.IsForeignKey = true;
+                if (mappings.ColumnMappingByPropertyName.ContainsKey(toPropertyName))
+                {
+                    var tableColumnMapping = mappings.ColumnMappingByPropertyName[toPropertyName];
+                    tableColumnMapping.IsForeignKey = true;
+                }
+            }
+
+            foreach (var toPropertyName in mappings.FromForeignKeyMappings.SelectMany(m => m.ForeignKeyRelations.Select(r => r.ToProperty)))
+            {
+                if (mappings.ColumnMappingByPropertyName.ContainsKey(toPropertyName))
+                {
+                    var tableColumnMapping = mappings.ColumnMappingByPropertyName[toPropertyName];
+                    tableColumnMapping.IsForeignKey = true;
+                }
+            }
+
+            var associationMappings = mappings.ToForeignKeyMappings
+                .Where(m => m.AssociationMapping != null)
+                .Select(m => m.AssociationMapping);
+            foreach (var associationMapping in associationMappings)
+            {
+                associationMapping.Source.IsForeignKey = true;
+                associationMapping.Target.IsForeignKey = true;
+            }
+
+            associationMappings = mappings.FromForeignKeyMappings
+                .Where(m => m.AssociationMapping != null)
+                .Select(m => m.AssociationMapping);
+            foreach (var associationMapping in associationMappings)
+            {
+                associationMapping.Source.IsForeignKey = true;
+                associationMapping.Target.IsForeignKey = true;
             }
 
             return mappings;
