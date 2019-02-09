@@ -16,12 +16,12 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
         protected void InitializeTeamContext()
         {
-            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<TeamContext>());
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<UserGeneratedTeamContext>());
         }
 
         protected void CleanupTeamContext()
         {
-            var db = new TeamContext();
+            var db = new UserGeneratedTeamContext();
             db.Players.RemoveRange(db.Players.ToArray());
             db.Coaches.RemoveRange(db.Coaches.ToArray());
             db.Teams.RemoveRange(db.Teams.ToArray());

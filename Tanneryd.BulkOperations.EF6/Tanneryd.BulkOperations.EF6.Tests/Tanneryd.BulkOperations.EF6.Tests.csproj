@@ -84,6 +84,9 @@
     <Compile Include="DM\School\Department.cs" />
     <Compile Include="DM\School\Instructor.cs" />
     <Compile Include="DM\School\OfficeAssignment.cs" />
+    <Compile Include="DM\Teams\UsingDbGeneratedGuidKeys\Coach.cs" />
+    <Compile Include="DM\Teams\UsingDbGeneratedGuidKeys\Player.cs" />
+    <Compile Include="DM\Teams\UsingDbGeneratedGuidKeys\Team.cs" />
     <Compile Include="DM\Teams\UsingUserGeneratedGuidKeys\Coach.cs" />
     <Compile Include="DM\Teams\UsingUserGeneratedGuidKeys\Player.cs" />
     <Compile Include="DM\Teams\UsingUserGeneratedGuidKeys\Team.cs" />

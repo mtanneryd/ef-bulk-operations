@@ -30,7 +30,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         [TestMethod]
         public void AlreadyExistingEntityWithUserGeneratedKeyShouldNotBeInserted()
         {
-            using (var db = new TeamContext())
+            using (var db = new UserGeneratedTeamContext())
             {
                 var team1 = new Team
                 {

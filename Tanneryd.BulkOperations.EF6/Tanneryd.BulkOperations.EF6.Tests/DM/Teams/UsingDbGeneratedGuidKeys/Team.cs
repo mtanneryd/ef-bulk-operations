@@ -13,8 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Reflection;
 
-[assembly: AssemblyVersion("1.2.3")]
-[assembly: AssemblyFileVersion("1.2.3")]
-[assembly: AssemblyInformationalVersion("1.2.3-beta4")]
+using System;
+using System.Collections.Generic;
+
+namespace Tanneryd.BulkOperations.EF6.Tests.DM.Teams.UsingDbGeneratedGuidKeys
+{
+    public class Team
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; }
+
+        public ICollection<Player> Players { get; set; }
+    }
+}
