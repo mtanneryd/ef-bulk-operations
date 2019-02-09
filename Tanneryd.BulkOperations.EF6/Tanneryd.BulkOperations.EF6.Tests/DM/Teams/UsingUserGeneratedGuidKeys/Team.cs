@@ -13,26 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 
-namespace Tanneryd.BulkOperations.EF6.Tests.DM.School
+namespace Tanneryd.BulkOperations.EF6.Tests.DM.Teams.UsingUserGeneratedGuidKeys
 {
-    public class Course
+    public class Team
     {
-        public Course()
-        {
-            this.Instructors = new HashSet<Instructor>();
-        }
-        // Primary key 
-        public int CourseID { get; set; }
+        public Guid Id { get; set; }
+        public string Name { get; set; }
 
-        public string Title { get; set; }
-        public int Credits { get; set; }
-
-        // Foreign key 
-        public int DepartmentID { get; set; }
-        public Department Department { get; set; }
-
-        public ICollection<Instructor> Instructors { get; private set; }
+        public ICollection<Player> Players { get; set; }
     }
 }

@@ -47,6 +47,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ListExtensions.cs" />
     <Compile Include="Model\BulkDeleteRequest.cs" />
     <Compile Include="Model\BulkInsertRequest.cs" />
     <Compile Include="Model\BulkOperationResponse.cs" />
@@ -57,6 +58,7 @@
     <Compile Include="Model\ForeignKeyMapping.cs" />
     <Compile Include="Model\ForeignKeyRelation.cs" />
     <Compile Include="Model\IdentityEqualityComparer.cs" />
+    <Compile Include="Model\IncludeRowNumber.cs" />
     <Compile Include="Model\KeyPropertyMapping.cs" />
     <Compile Include="Model\Mappings.cs" />
     <Compile Include="Model\SelfReference.cs" />

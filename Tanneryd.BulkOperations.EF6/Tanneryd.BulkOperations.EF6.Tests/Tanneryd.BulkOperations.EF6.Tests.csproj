@@ -59,6 +59,7 @@
     <Compile Include="BulkDeleteTests.cs" />
     <Compile Include="BulkInsertManyToManyTests.cs" />
     <Compile Include="BulkInsertMiscellaneousTests.cs" />
+    <Compile Include="BulkInsertTeamTests.cs" />
     <Compile Include="BulkOperationTestBase.cs" />
     <Compile Include="BulkSelectExistingTests.cs" />
     <Compile Include="BulkSelectTests.cs" />
@@ -68,6 +69,7 @@
     <Compile Include="DM\Companies\Employee.cs" />
     <Compile Include="DM\Levels\Level2.cs" />
     <Compile Include="DM\Levels\Level3.cs" />
+    <Compile Include="DM\Logs\LogEntry.cs" />
     <Compile Include="DM\Miscellaneous\Coordinate.cs" />
     <Compile Include="DM\Miscellaneous\Point.cs" />
     <Compile Include="DM\Miscellaneous\ReservedSqlKeyword.cs" />
@@ -82,6 +84,9 @@
     <Compile Include="DM\School\Department.cs" />
     <Compile Include="DM\School\Instructor.cs" />
     <Compile Include="DM\School\OfficeAssignment.cs" />
+    <Compile Include="DM\Teams\UsingUserGeneratedGuidKeys\Coach.cs" />
+    <Compile Include="DM\Teams\UsingUserGeneratedGuidKeys\Player.cs" />
+    <Compile Include="DM\Teams\UsingUserGeneratedGuidKeys\Team.cs" />
     <Compile Include="EF\BlogContext.cs" />
     <Compile Include="EF\LevelContext.cs" />
     <Compile Include="EF\MiscellaneousContext.cs" />
@@ -91,6 +96,8 @@
     <Compile Include="BulkInsertSelfReferenceTests.cs" />
     <Compile Include="BulkInsertOneToManyTests.cs" />
     <Compile Include="EF\SchoolContext.cs" />
+    <Compile Include="EF\TeamContext.cs" />
+    <Compile Include="ListExtensionTests.cs" />
     <Compile Include="Migrations\201901131910265_InitialCreate.cs" />
     <Compile Include="Migrations\201901131910265_InitialCreate.Designer.cs">
       <DependentUpon>201901131910265_InitialCreate.cs</DependentUpon>
@@ -120,6 +127,7 @@
       <DependentUpon>201901131912134_AddComputedFullNameColumnToInstructor.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

@@ -1,5 +1,5 @@
 ﻿/*
-* Copyright ©  2017-2018 Tånneryd IT AB
+* Copyright ©  2017-2019 Tånneryd IT AB
 * 
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.DM.Blog
         public Post()
         {
             Visitors = new HashSet<Visitor>();
+            PostKeywords = new HashSet<Keyword>();
         }
 
         public Guid Id { get; set; }

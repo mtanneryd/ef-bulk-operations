@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright ©  2017-2018 Tånneryd IT AB
+ * Copyright ©  2017-2019 Tånneryd IT AB
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,9 +32,12 @@ namespace Tanneryd.BulkOperations.EF6.Model
     /// </summary>
     internal class ForeignKeyMapping
     {
+        public ForeignKeyMapping()
+        {
+            ForeignKeyRelations = new ForeignKeyRelation[0];
+        }
         public BuiltInTypeKind BuiltInTypeKind { get; set; }
         public string NavigationPropertyName { get; set; }
-        //public string Name { get; set; }
         public string FromType { get; set; }
         public string ToType { get; set; }
 

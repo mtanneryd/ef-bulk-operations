@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Numbers;
@@ -126,6 +128,39 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                         },
                     }
                 });
+
+                for (int i = 0; i < 100; i++)
+                {
+                    Assert.AreSame(numbers[i], existingNumbers[i]);
+                }
+            }
+        }
+
+        [TestMethod]
+        public void ExistingEntitiesShouldBeSelectedUsingRuntimeTypes()
+        {
+            using (var db = new NumberContext())
+            {
+                var now = DateTime.Now;
+
+                var numbers = GenerateNumbers(1, 200, now).ToArray();
+                db.BulkInsertAll(new BulkInsertRequest<Number>
+                {
+                    Entities = numbers,
+                    Recursive = true
+                });
+
+
+                numbers = GenerateNumbers(50, 100, now).ToArray();
+
+                var request = typeof(BulkSelectRequest<>).MakeGenericType(typeof(Number));
+                var r = Activator.CreateInstance(request, new [] { "Value" }, numbers.ToList(), null);
+
+                Type ex = typeof(DbContextExtensions);
+                MethodInfo mi = ex.GetMethod("BulkSelectExisting");
+                MethodInfo miGeneric = mi.MakeGenericMethod(new[] {typeof(Number),typeof(Number)});
+                object[] args = {db, r};
+                var existingNumbers = (List<Number>) miGeneric.Invoke(null, args);
 
                 for (int i = 0; i < 100; i++)
                 {

@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright ©  2017-2018 Tånneryd IT AB
+ * Copyright ©  2017-2019 Tånneryd IT AB
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -218,7 +218,7 @@ namespace Tanneryd.BulkOperations.EF6
                 var tableName = GetTableName(ctx, typeof(T));
 
                 if (request.SortUsingClusteredIndex)
-                {                   
+                {
                     var clusteredIndexColumns =
                         GetClusteredIndexColumns(ctx, tableName.Fullname, request.Transaction);
                     request.Entities = clusteredIndexColumns.Any()
@@ -280,11 +280,11 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction,
             TableName tableName,
             string[] columnNames,
-            bool includeRowNumber = false)
+            IncludeRowNumber includeRowNumber = IncludeRowNumber.No)
         {
             var selectClause = string.Join(",", columnNames.Select(p => $"[{p}]"));
 
-            if (includeRowNumber)
+            if (includeRowNumber == IncludeRowNumber.Yes)
             {
                 selectClause = "cast(1 as int) as rowno," + selectClause;
             }
@@ -340,7 +340,7 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction,
             string tableName,
             SqlBulkCopyOptions options = SqlBulkCopyOptions.Default,
-            bool includeRowNumber = false)
+            IncludeRowNumber includeRowNumber = IncludeRowNumber.No)
         {
             options = options | SqlBulkCopyOptions.TableLock;
             var bulkCopy = new SqlBulkCopy(connection, options, transaction)
@@ -375,7 +375,7 @@ namespace Tanneryd.BulkOperations.EF6
                 }
             }
 
-            if (includeRowNumber)
+            if (includeRowNumber == IncludeRowNumber.Yes)
             {
                 table.Columns.Add(new DataColumn("rowno", typeof(int)));
                 bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("rowno", "rowno"));
@@ -420,12 +420,12 @@ namespace Tanneryd.BulkOperations.EF6
                     (m.Value.TableColumn.IsStoreGeneratedIdentity && m.Value.TableColumn.TypeName != "uniqueidentifier") ||
                     m.Value.TableColumn.IsStoreGeneratedComputed);
 
-                    var tempTableName = CreateTempTable(
-                    conn,
-                    request.Transaction,
-                    tableName,
-                    keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
-                    true);
+                var tempTableName = CreateTempTable(
+                conn,
+                request.Transaction,
+                tableName,
+                keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
+                IncludeRowNumber.Yes);
 
                 // We only need the key columns and the 
                 // rowno column in our temp table.
@@ -441,7 +441,7 @@ namespace Tanneryd.BulkOperations.EF6
                     request.Transaction,
                     tempTableName,
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                    true);
+                    IncludeRowNumber.Yes);
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
 
                 int i = 0;
@@ -457,7 +457,17 @@ namespace Tanneryd.BulkOperations.EF6
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
-                var conditionStatements = keyMappings.Values.Select(c => $"isnull([t1].[{c.TableColumn.Name}], 0) = isnull([t2].[{c.TableColumn.Name}], 0)");
+                var conditionStatements = keyMappings.Values.Select(c =>
+                {
+                    var keyProperty = keyProperties.Single(p => p.Name == c.EntityProperty.Name);
+                    var isGuid = keyProperty.Type == typeof(Guid);
+                    var defaultValue = "0";
+                    if (isGuid)
+                        defaultValue = $@"'{Guid.Empty}'";
+
+                    return $"isnull(t1.[{c.TableColumn.Name}], {defaultValue}) = isnull(t2.[{c.TableColumn.Name}], {defaultValue})";
+                });
+
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].[rowno] 
                                FROM {tempTableName} AS [t0]
@@ -474,7 +484,7 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     while (sqlDataReader.Read())
                     {
-                        var rowNo = (int) sqlDataReader[0];
+                        var rowNo = (int)sqlDataReader[0];
                         existingEntities.Add(items[rowNo]);
                     }
                 }
@@ -529,7 +539,7 @@ namespace Tanneryd.BulkOperations.EF6
                     request.Transaction,
                     tableName,
                     keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
-                    true);
+                    IncludeRowNumber.Yes);
 
                 var properties = GetProperties(t);
                 var keyProperties = properties
@@ -544,7 +554,7 @@ namespace Tanneryd.BulkOperations.EF6
                     request.Transaction,
                     tempTableName,
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                    true);
+                    IncludeRowNumber.Yes);
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
 
                 int i = 0;
@@ -631,7 +641,7 @@ namespace Tanneryd.BulkOperations.EF6
                     request.Transaction,
                     tableName,
                     keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
-                    true);
+                    IncludeRowNumber.Yes);
 
                 var properties = GetProperties(t);
                 var keyProperties = properties
@@ -646,7 +656,7 @@ namespace Tanneryd.BulkOperations.EF6
                     request.Transaction,
                     tempTableName,
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                    true);
+                    IncludeRowNumber.Yes);
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
 
                 int i = 0;
@@ -661,7 +671,7 @@ namespace Tanneryd.BulkOperations.EF6
                 }
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
-                
+
                 var conditionStatements = keyMappings.Values.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].*
@@ -671,7 +681,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var cmd = new SqlCommand(query, conn, request.Transaction)
                 {
-                    CommandTimeout = (int) request.CommandTimeout.TotalSeconds
+                    CommandTimeout = (int)request.CommandTimeout.TotalSeconds
                 };
 
                 var selectedEntities = new List<T2>();
@@ -707,7 +717,8 @@ namespace Tanneryd.BulkOperations.EF6
         /// <param name="ctx"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        private static IList<T1> DoBulkSelectExisting<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request)
+        private static IList<T1> 
+            DoBulkSelectExisting<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request)
         {
             if (!request.Items.Any()) return new List<T1>();
 
@@ -741,7 +752,7 @@ namespace Tanneryd.BulkOperations.EF6
                     request.Transaction,
                     tableName,
                     keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
-                    true);
+                    IncludeRowNumber.Yes);
 
                 var keyProperties = GetProperties(t)
                     .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
@@ -755,7 +766,7 @@ namespace Tanneryd.BulkOperations.EF6
                     request.Transaction,
                     tempTableName,
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                    true);
+                    IncludeRowNumber.Yes);
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
 
                 int i = 0;
@@ -771,7 +782,17 @@ namespace Tanneryd.BulkOperations.EF6
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
-                var conditionStatements = keyMappings.Values.Select(c => $"isnull(t0.[{c.TableColumn.Name}], 0) = isnull(t1.[{c.TableColumn.Name}], 0)");
+                var conditionStatements = keyMappings.Values.Select(c =>
+                {
+                    var keyProperty = keyProperties.Single(p => p.Name == c.EntityProperty.Name);
+                    var isGuid = keyProperty.Type == typeof(Guid);
+                    var defaultValue = "0";
+                    if (isGuid)
+                        defaultValue = $@"'{Guid.Empty}'";
+
+                    return $"isnull(t0.[{c.TableColumn.Name}], {defaultValue}) = isnull(t1.[{c.TableColumn.Name}], {defaultValue})";
+                });
+
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"SELECT [t0].[rowno]
                                FROM {tempTableName} AS [t0]
@@ -779,7 +800,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var cmd = new SqlCommand(query, conn, request.Transaction)
                 {
-                    CommandTimeout = (int) request.CommandTimeout.TotalSeconds
+                    CommandTimeout = (int)request.CommandTimeout.TotalSeconds
                 };
 
                 var existingEntities = new List<T1>();
@@ -788,7 +809,7 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     while (sqlDataReader.Read())
                     {
-                        var rowNo = (int) sqlDataReader[0];
+                        var rowNo = (int)sqlDataReader[0];
                         existingEntities.Add(items[rowNo]);
                     }
                 }
@@ -940,6 +961,8 @@ namespace Tanneryd.BulkOperations.EF6
         {
             if (entities.Count == 0) return;
 
+            // exclude already existing entities
+
             Type t = entities[0].GetType();
             if (!mappingsByType.ContainsKey(t))
             {
@@ -1016,13 +1039,13 @@ namespace Tanneryd.BulkOperations.EF6
                     if (!navProperties.Any()) continue;
 
                     DoBulkInsertAll(
-                        ctx, 
-                        navProperties.ToList(), 
-                        transaction, 
-                        recursive, 
-                        allowNotNullSelfReferences, 
-                        commandTimeout, 
-                        savedEntities, 
+                        ctx,
+                        navProperties.ToList(),
+                        transaction,
+                        recursive,
+                        allowNotNullSelfReferences,
+                        commandTimeout,
+                        savedEntities,
                         mappingsByType,
                         response);
                     foreach (var modifiedEntity in modifiedEntities)
@@ -1088,7 +1111,7 @@ namespace Tanneryd.BulkOperations.EF6
 
 
                             var navPropertyType = navProperties[0].GetType();
-                            if (fkMapping.ForeignKeyRelations != null)
+                            if (fkMapping.ForeignKeyRelations.Any())
                             {
                                 foreach (var navProperty in navProperties)
                                 {
@@ -1108,25 +1131,43 @@ namespace Tanneryd.BulkOperations.EF6
                                 // need to make sure that we ONLY pass new entities to
                                 // the recursive call. Otherwise we might end up with a
                                 // never ending loop.
-                                var pkColumnMappings = GetPrimaryKeyColumnMappings(ctx, (Type) navPropertyType, mappingsByType);
+                                var pkColumnMappings = GetPrimaryKeyColumnMappings(ctx, (Type)navPropertyType, mappingsByType);
                                 var pkProperty = pkColumnMappings[0].EntityProperty;
 
                                 var newNavProperties = new ArrayList();
-                                foreach (var navProperty in navProperties)
+                                var isGuid = IsGuidProperty(pkProperty);
+                                if (!isGuid)
                                 {
-                                    var pk = GetProperty(pkProperty.Name, navProperty);
-
-                                    var isGuid = IsGuidProperty(pkProperty);
-                                    if ((!isGuid && pk == 0) ||
-                                        isGuid && pk == Guid.Empty)
-                                        newNavProperties.Add(navProperty);
+                                    foreach (var navProperty in navProperties)
+                                    {
+                                        var pk = GetProperty(pkProperty.Name, navProperty);
+                                        if (pk == 0)
+                                            newNavProperties.Add(navProperty);
+                                    }
                                 }
+                                else
+                                {
+                                    //var data = DoBulkSelectNotExisting(ctx, new BulkSelectRequest
+                                    //{
+                                    //    Items = navProperties.ToList(),
+                                    //    KeyPropertyMappings = new[]
+                                    //    {
+                                    //        new KeyPropertyMapping
+                                    //        {
+                                    //            ItemPropertyName = pkProperty.Name,
+                                    //            EntityPropertyName = pkProperty.Name
+                                    //        },
+                                    //    }
+                                    //});
+
+                                }
+
                                 DoBulkInsertAll(ctx,
-                                    newNavProperties.ToArray(), 
-                                    transaction, 
-                                    recursive, 
+                                    newNavProperties.ToArray(),
+                                    transaction,
+                                    recursive,
                                     allowNotNullSelfReferences,
-                                    commandTimeout, 
+                                    commandTimeout,
                                     savedEntities,
                                     mappingsByType,
                                     response);
@@ -1297,7 +1338,6 @@ namespace Tanneryd.BulkOperations.EF6
                 .Where(p => columnMappings.ContainsKey(p.Name)).ToArray();
 
             var table = new DataTable();
-            
 
             // Check to see if the table has a primary key.
             dynamic declaringType = columnMappings
@@ -1311,46 +1351,7 @@ namespace Tanneryd.BulkOperations.EF6
             // We have no primary key/s. Just add it all.
             if (pkColumnMappings.Length == 0)
             {
-                var bulkCopy = CreateBulkCopy(
-                    table,
-                    properties,
-                    columnMappings,
-                    conn,
-                    transaction,
-                    tableName.Fullname,
-                    SqlBulkCopyOptions.Default,
-                    false);
-
-                if (entities[0] is ExpandoObject)
-                {
-                    foreach (var entity in entities)
-                    {
-                        var e = (ExpandoObject)entity;
-                        table.Rows.Add(properties.Select(p => GetProperty(p.Name, e, DBNull.Value))
-                            .ToArray());
-                    }
-                }
-                else
-                {
-                    var props = properties.Select(p => t.GetProperty(p.Name)).ToArray();
-                    foreach (var entity in entities)
-                    {
-                        var e = entity;
-                        table.Rows.Add(props.Select(p => GetProperty(t, p.Name, e, DBNull.Value))
-                            .ToArray());
-                    }
-                }
-
-                var s = new Stopwatch();
-                s.Start();
-                bulkCopy.WriteToServer(table.CreateDataReader());
-                s.Stop();
-                var stats = new BulkInsertStatistics
-                {
-                    TimeElapsedDuringBulkCopy = s.Elapsed
-                };
-                response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
-                rowsAffected += table.Rows.Count;
+                throw new ArgumentException("No primary key found. This should not be possible since EF6 has no support for tables without a primary key.");
             }
             // We have a non composite primary key that is either computed or an identity key
             else if (pkColumnMappings.Length == 1 &&
@@ -1359,31 +1360,7 @@ namespace Tanneryd.BulkOperations.EF6
                 var pkColumn = pkColumnMappings[0].TableColumn;
                 var pkProperty = pkColumnMappings[0].EntityProperty;
 
-                var newEntities = new ArrayList();
-
-                if (entities[0] is ExpandoObject)
-                {
-                    foreach (var entity in entities)
-                    {
-                        var e = (ExpandoObject)entity;
-                        var pk = GetProperty(pkProperty.Name, e);
-                        var isGuid = IsGuidProperty(pkProperty);
-                        if ((!isGuid && pk == 0) ||
-                            isGuid && pk == Guid.Empty)
-                            newEntities.Add(entity);
-                    }
-                }
-                else
-                {
-                    foreach (var entity in entities)
-                    {
-                        var pk = GetProperty(t, pkProperty.Name, entity);
-                        var isGuid = IsGuidProperty(pkProperty);
-                        if ((!isGuid && pk == 0) ||
-                            isGuid && pk == Guid.Empty)
-                            newEntities.Add(entity);
-                    }
-                }
+                var newEntities = SelectNewEntities(entities, pkProperty, t);
 
                 //
                 // Save new entities to the database table making sure that the entities
@@ -1391,23 +1368,8 @@ namespace Tanneryd.BulkOperations.EF6
                 //
                 if (newEntities.Count > 0)
                 {
-                    //var guid = Guid.NewGuid().ToString("N");
-                    //var tempTableName = $"#{guid}";
-
-                    //var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name);
-                    //var selectClause = string.Join(",", allColumnNames.Select(p => $"[{p}]"));
-                    //var query = $@"   
-                    //                IF OBJECT_ID('tempdb..{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
-
-                    //                SELECT 1 as rowno, {selectClause}
-                    //                INTO {tempTableName}
-                    //                FROM {tableName.Fullname}
-                    //                WHERE 1=0
-                    //            ";
-                    //var cmd = new SqlCommand(query, conn, transaction);
-                    //cmd.ExecuteNonQuery();
                     var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name).ToArray();
-                    var tempTableName = CreateTempTable(conn, transaction, tableName, allColumnNames, true);
+                    var tempTableName = CreateTempTable(conn, transaction, tableName, allColumnNames, IncludeRowNumber.Yes);
                     string query = null;
 
                     var bulkCopy = CreateBulkCopy(
@@ -1418,32 +1380,9 @@ namespace Tanneryd.BulkOperations.EF6
                         transaction,
                         tempTableName,
                         SqlBulkCopyOptions.Default,
-                        true);
+                        IncludeRowNumber.Yes);
 
-                    if (newEntities[0] is ExpandoObject)
-                    {
-                        long i = 1;
-                        foreach (var entity in newEntities)
-                        {
-                            var e = (ExpandoObject)entity;
-                            var columnValues = new List<dynamic>();
-                            columnValues.AddRange(properties.Select(p => GetProperty(p.Name, e)));
-                            columnValues.Add(i++);
-                            table.Rows.Add(columnValues.ToArray());
-                        }
-                    }
-                    else
-                    {
-                        long i = 1;
-                        foreach (var entity in newEntities)
-                        {
-                            var e = entity;
-                            var columnValues = new List<dynamic>();
-                            columnValues.AddRange(properties.Select(p => GetProperty(t, p.Name, e, DBNull.Value)));
-                            columnValues.Add(i++);
-                            table.Rows.Add(columnValues.ToArray());
-                        }
-                    }
+                    AddEntitiesToTable(table, newEntities, properties, t, IncludeRowNumber.Yes);
 
                     var s = new Stopwatch();
                     s.Start();
@@ -1465,6 +1404,9 @@ namespace Tanneryd.BulkOperations.EF6
                         .Where(m => !m.TableColumn.IsStoreGeneratedIdentity)
                         .ToArray();
 
+                    // We need to do the actual insert differently depending on the
+                    // primary key type. First off we take care of integer type
+                    // primary keys.
                     if (IntegerTypes.Contains(pkColumnType))
                     {
                         // Get the number of existing rows in the table.
@@ -1516,8 +1458,8 @@ namespace Tanneryd.BulkOperations.EF6
                         using (var sqlDataReader = cmd.ExecuteReader())
                         {
                             ids = (from IDataRecord r in sqlDataReader
-                                       let pk = r[pkColumn.Name]
-                                    select pk)
+                                   let pk = r[pkColumn.Name]
+                                   select pk)
                                 .OrderBy(i => i)
                                 .ToArray();
                         }
@@ -1540,11 +1482,13 @@ namespace Tanneryd.BulkOperations.EF6
                             }
                         }
                     }
+                    // When the primary key is not an integer type but still being generated by the database
+                    // we use a mix of MERGE and a temp table to retrieve the generated primary key values.
                     else
                     {
                         if (allowNotNullSelfReferences)
                         {
-                           cmd.CommandText = query;
+                            cmd.CommandText = query;
                             cmd.ExecuteNonQuery();
                             response.TablesWithNoCheckConstraints.Add(tableName.Fullname);
                         }
@@ -1553,8 +1497,8 @@ namespace Tanneryd.BulkOperations.EF6
                         query = $@"  
                                     MERGE {tableName.Fullname}
                                     USING 
-                                        (SELECT {columnNames},rowno
-                                         FROM   {tempTableName}) t ({columnNames},rowno)
+                                        (SELECT {columnNames}, rowno
+                                         FROM   {tempTableName}) t ({columnNames}, rowno)
                                     ON 1 = 0
                                     WHEN NOT MATCHED THEN
                                     INSERT ({columnNames})
@@ -1601,15 +1545,76 @@ namespace Tanneryd.BulkOperations.EF6
                     }
                 }
             }
+            // We have a non composite primary key that is also a foreign key
+            else if (pkColumnMappings.Length == 1 && pkColumnMappings[0].IsForeignKey)
+            {
+                // Here we expect the primary key to have a value. If it does not,
+                // something is wrong and there is nothing we can do. 
+                var bulkCopy = CreateBulkCopy(
+                    table,
+                    properties,
+                    columnMappings,
+                    conn,
+                    transaction,
+                    tableName.Fullname,
+                    SqlBulkCopyOptions.Default,
+                    IncludeRowNumber.No);
+
+                AddEntitiesToTable(table, entities, properties, t, IncludeRowNumber.No);
+
+                var s = new Stopwatch();
+                s.Start();
+                bulkCopy.WriteToServer(table.CreateDataReader());
+                s.Stop();
+                var stats = new BulkInsertStatistics
+                {
+                    TimeElapsedDuringBulkCopy = s.Elapsed
+                };
+                response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
+            }
+            else if (pkColumnMappings.Length == 1 && !pkColumnMappings[0].IsForeignKey)
+            {
+                var request = typeof(BulkSelectRequest<>).MakeGenericType(t);
+                var keyPropertyNames = pkColumnMappings.Select(m => m.TableColumn.Name).ToArray();
+                var r = Activator.CreateInstance(request, keyPropertyNames, entities.ToArray(t), null);
+                Type ex = typeof(DbContextExtensions);
+                MethodInfo mi = ex.GetMethod("BulkSelectNotExisting");
+                MethodInfo miGeneric = mi.MakeGenericMethod(new[] {t,t});
+                object[] args = {ctx, r};
+                var notExistingEntities = (IList) miGeneric.Invoke(null, args);
+
+                var bulkCopy = CreateBulkCopy(
+                    table,
+                    properties,
+                    columnMappings,
+                    conn,
+                    transaction,
+                    tableName.Fullname,
+                    SqlBulkCopyOptions.Default,
+                    IncludeRowNumber.No);
+
+                AddEntitiesToTable(table, notExistingEntities, properties, t, IncludeRowNumber.No);
+
+                var s = new Stopwatch();
+                s.Start();
+                bulkCopy.WriteToServer(table.CreateDataReader());
+                s.Stop();
+                var stats = new BulkInsertStatistics
+                {
+                    TimeElapsedDuringBulkCopy = s.Elapsed
+                };
+                response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
+            }
             // We have a composite primary key.
             else
             {
+                // 
+
                 var nonPrimaryKeyColumnMappings = columnMappings
                     .Values
                     .Except(pkColumnMappings)
                     .ToArray();
                 var tempTableName = FillTempTable(conn, entities, tableName, columnMappings, pkColumnMappings, nonPrimaryKeyColumnMappings, transaction);
-
 
                 var conditionStatements =
                     pkColumnMappings.Select(c => $"[t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}]");
@@ -1624,6 +1629,13 @@ namespace Tanneryd.BulkOperations.EF6
                 //
                 if (nonPrimaryKeyColumnMappings.Any())
                 {
+                    // AlreadyExistingEntityWithUserGeneratedKeyShouldNotBeInserted
+                    // CoursesWithSingleInstructorShouldBeBulkInserted
+                    // EntityHierarchyShouldBeInserted
+                    // InstructorsWithMulitpleCoursesShouldBeBulkInserted
+                    // RowWithCompositePrimaryKeyShouldBeInserted
+                    // StackOverflowTest
+
                     var setStatements = nonPrimaryKeyColumnMappings.Select(c =>
                         $"[t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}]");
                     var setStatementsSql = string.Join(" , ", setStatements);
@@ -1633,7 +1645,8 @@ namespace Tanneryd.BulkOperations.EF6
                                 ";
                     cmd = new SqlCommand(cmdBody, conn, transaction);
                     cmd.CommandTimeout = (int)commandTimeout.TotalSeconds;
-                    cmd.ExecuteNonQuery();
+                    var rowsUpdated = cmd.ExecuteNonQuery();
+                    rowsAffected += rowsUpdated;
                 }
 
                 string listOfPrimaryKeyColumns = string.Join(",",
@@ -1650,8 +1663,7 @@ namespace Tanneryd.BulkOperations.EF6
                                 WHERE {conditionStatementsSql}
                              )
                                 ";
-                cmd = new SqlCommand(cmdBody, conn, transaction);
-                cmd.CommandTimeout = (int)commandTimeout.TotalSeconds;
+                cmd = new SqlCommand(cmdBody, conn, transaction) { CommandTimeout = (int)commandTimeout.TotalSeconds };
                 rowsAffected += cmd.ExecuteNonQuery();
 
                 //
@@ -1661,6 +1673,79 @@ namespace Tanneryd.BulkOperations.EF6
             }
 
             response.AffectedRows.Add(new Tuple<Type, long>(t, rowsAffected));
+        }
+
+
+        private static void AddEntitiesToTable(DataTable table, IList entities, BulkPropertyInfo[] properties, Type t, IncludeRowNumber includeRowNumber)
+        {
+            if (entities.Count == 0) return;
+
+            if (entities[0] is ExpandoObject)
+            {
+                long i = 1;
+                foreach (var entity in entities)
+                {
+                    var e = (ExpandoObject)entity;
+                    var columnValues = properties.Select(p => GetProperty(p.Name, e)).ToList();
+                    if (includeRowNumber == IncludeRowNumber.Yes) columnValues.Add(i++);
+                    table.Rows.Add(columnValues.ToArray());
+                }
+            }
+            else
+            {
+                long i = 1;
+                foreach (var entity in entities)
+                {
+                    var e = entity;
+                    var columnValues = properties.Select(p => GetProperty(t, p.Name, e, DBNull.Value)).ToList();
+                    if (includeRowNumber == IncludeRowNumber.Yes) columnValues.Add(i++);
+                    table.Rows.Add(columnValues.ToArray());
+                }
+            }
+        }
+
+        /// <summary>
+        /// The purpose of this method is to figure out which of the supplied
+        /// entities are new to the database. For tables with database
+        /// generated primary keys this is fairly straight forward but for other
+        /// tables we need to actually have a look in the database table.
+        /// We can use our BulkSelectNotExisting to do this but it requires
+        /// some extra magic since we must invoke the generic method with
+        /// run-time types. It gets a little messy but it works.
+        /// </summary>
+        /// <param name="entities"></param>
+        /// <param name="pkProperty"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        private static ArrayList SelectNewEntities(IList entities, EdmProperty pkProperty, Type t)
+        {
+            var newEntities = new ArrayList();
+
+            if (entities[0] is ExpandoObject)
+            {
+                foreach (var entity in entities)
+                {
+                    var e = (ExpandoObject)entity;
+                    var pk = GetProperty(pkProperty.Name, e);
+                    var isGuid = IsGuidProperty(pkProperty);
+                    if ((!isGuid && pk == 0) ||
+                        isGuid && pk == Guid.Empty)
+                        newEntities.Add(entity);
+                }
+            }
+            else
+            {
+                foreach (var entity in entities)
+                {
+                    var pk = GetProperty(t, pkProperty.Name, entity);
+                    var isGuid = IsGuidProperty(pkProperty);
+                    if ((!isGuid && pk == 0) ||
+                        isGuid && pk == Guid.Empty)
+                        newEntities.Add(entity);
+                }
+            }
+
+            return newEntities;
         }
 
         private static void Flatten(IDictionary<string, object> flatEntity, object entity, Mappings mappings)
@@ -1718,14 +1803,7 @@ namespace Tanneryd.BulkOperations.EF6
             }
         }
 
-        //private static string CreateGlobalId(DbContext ctx)
-        //{
-        //    var ds = ctx.Database.Connection.DataSource.Replace(@"\", "_");
-        //    var dbname = ctx.Database.Connection.Database.Replace(@"\", "_");
-        //    var globalId = $@"Global\{ds}_{dbname}";
 
-        //    return globalId;
-        //}
 
         private static string[] GetClusteredIndexColumns(DbContext ctx, string tableName, SqlTransaction sqlTransaction)
         {
@@ -1783,7 +1861,7 @@ namespace Tanneryd.BulkOperations.EF6
             var columnNames = keyColumnMappings.Select(m => m.TableColumn.Name)
                 .Concat(nonKeyColumnMappings.Select(m => m.TableColumn.Name)).ToArray();
 
-            var tempTableName = CreateTempTable(conn, sqlTransaction, tableName, columnNames, true);
+            var tempTableName = CreateTempTable(conn, sqlTransaction, tableName, columnNames, IncludeRowNumber.Yes);
 
             if (keyColumnMappings.Length == 1 &&
                 ((keyColumnMappings[0].TableColumn.IsStoreGeneratedIdentity && keyColumnMappings[0].TableColumn.TypeName != "uniqueidentifier") ||
@@ -1816,35 +1894,10 @@ namespace Tanneryd.BulkOperations.EF6
                 sqlTransaction,
                 tempTableName,
                 SqlBulkCopyOptions.KeepIdentity,
-                true);
+                IncludeRowNumber.Yes);
 
-           //
-            // Fill the data table with our entities.
-            //
-            if (entities[0] is ExpandoObject)
-            {
-                int i = 0;
-                foreach (var entity in entities)
-                {
-                    var e = (ExpandoObject)entity;
-                    var columnValues = properties.Select(p => GetProperty(p.Name, e)).ToList();
-                    columnValues.Add(i++);
-                    table.Rows.Add(columnValues.ToArray());
-                }
-            }
-            else
-            {
-                int i = 0;
-                var type = entities[0].GetType();
-                foreach (var entity in entities)
-                {
-                    var e = entity;
-                    var columnValues = properties.Select(p => GetProperty(type, p.Name, e, DBNull.Value)).ToList();
-                    columnValues.Add(i++);
-                    table.Rows.Add(columnValues.ToArray());
-                }
-            }
-
+            var type = entities[0].GetType();
+            AddEntitiesToTable(table, entities, properties, type, IncludeRowNumber.Yes);
 
             //
             // Fill the temp table.
@@ -2055,7 +2108,6 @@ namespace Tanneryd.BulkOperations.EF6
                     {
                         NavigationPropertyName = navigationProperty.Name,
                         BuiltInTypeKind = navigationProperty.TypeUsage.EdmType.BuiltInTypeKind,
-                        //Name = relType.Name,
                     };
 
                     //
@@ -2080,17 +2132,21 @@ namespace Tanneryd.BulkOperations.EF6
 
                         fkMapping.FromType = (map.SourceEndMapping.AssociationEnd.TypeUsage.EdmType as RefType)?.ElementType.Name;
                         fkMapping.ToType = (map.TargetEndMapping.AssociationEnd.TypeUsage.EdmType as RefType)?.ElementType.Name;
+                        var schema = map.StoreEntitySet.Schema;
+                        var name = map.StoreEntitySet.Table ?? map.StoreEntitySet.Name;
 
                         fkMapping.AssociationMapping = new AssociationMapping
                         {
                             TableName = new TableName
                             {
-                                Name = map.StoreEntitySet.Table,
-                                Schema = map.StoreEntitySet.Schema,
+                                Name = name,
+                                Schema = schema,
                             },
                             Source = sourceMapping,
                             Target = targetMapping
                         };
+
+
                     }
                     //
                     // One-To-One or One-to-Many
@@ -2118,7 +2174,7 @@ namespace Tanneryd.BulkOperations.EF6
 
             var tableName = GetTableName(ctx, t);
 
-            return new Mappings
+            var mappings = new Mappings
             {
                 TableName = tableName,
                 ComplexPropertyNames = complexPropertyMappings.Select(m => m.Property.Name).ToArray(),
@@ -2127,6 +2183,14 @@ namespace Tanneryd.BulkOperations.EF6
                 ToForeignKeyMappings = foreignKeyMappings.Where(m => m.ToType == entityName).ToArray(),
                 FromForeignKeyMappings = foreignKeyMappings.Where(m => m.FromType == entityName).ToArray()
             };
+
+            foreach (var toPropertyName in mappings.ToForeignKeyMappings.SelectMany(m => m.ForeignKeyRelations.Select(r => r.ToProperty)))
+            {
+                var tableColumnMapping = mappings.ColumnMappingByPropertyName[toPropertyName];
+                tableColumnMapping.IsForeignKey = true;
+            }
+
+            return mappings;
         }
 
         /// <summary>
@@ -2166,7 +2230,7 @@ namespace Tanneryd.BulkOperations.EF6
 
         private static bool IsGuidProperty(dynamic p)
         {
-            var isGuid = p.TypeName == "Guid" ||p.TypeName == "uniqueidentifier";
+            var isGuid = p.TypeName == "Guid" || p.TypeName == "uniqueidentifier";
             return isGuid;
         }
 

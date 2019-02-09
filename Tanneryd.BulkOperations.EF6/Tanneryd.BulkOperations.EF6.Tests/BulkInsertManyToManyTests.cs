@@ -4,6 +4,7 @@ using System.Data.Entity;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
+using Tanneryd.BulkOperations.EF6.Tests.DM.Blog;
 using Tanneryd.BulkOperations.EF6.Tests.DM.School;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
@@ -16,14 +17,59 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         public void Initialize()
         {
             InitializeSchoolContext();
-            CleanupSchoolContext(); // make sure we start from scratch, previous tests might have been aborted before cleanup
+            InitializeBlogContext();
+            InitializeTeamContext();
+            CleanUp(); // make sure we start from scratch, previous tests might have been aborted before cleanup
+
         }
 
         [TestCleanup]
         public void CleanUp()
         {
             CleanupSchoolContext();
+            CleanupBlogContext();
+            CleanupTeamContext();
         }
+
+        [TestMethod]
+        public void JoinTablesWithGuidKeysShouldBeProperlyInserted()
+        {
+            using (var db = new BlogContext())
+            {
+                var blog = new Blog { Name = "My Blog" };
+                var firstPost = new Post
+                {
+                    Blog = blog,
+                    Text = "My first blogpost.",
+                    PostKeywords = new List<Keyword>() { new Keyword { Text = "first" } }
+                };
+                var secondPost = new Post
+                {
+                    Blog = blog,
+                    Text = "My second blogpost.",
+                    PostKeywords = new List<Keyword>() { new Keyword { Text = "second" } }
+                };
+                var visitor = new Visitor
+                {
+                    Name = "Visitor1"
+                };
+                secondPost.Visitors.Add(visitor);
+                var req = new BulkInsertRequest<Post>
+                {
+                    Entities = new[] { firstPost, secondPost }.ToList(),
+                    AllowNotNullSelfReferences = false,
+                    SortUsingClusteredIndex = true,
+                    Recursive = true
+                };
+                var response = db.BulkInsertAll(req);
+                var posts = db.Posts
+                    .Include(p => p.Blog)
+                    .ToArray();
+                Assert.AreEqual(2, posts.Count());
+                Assert.AreEqual(posts[1].Blog, posts[0].Blog);
+            }
+        }
+
 
         [TestMethod]
         public void StackOverflowTest()

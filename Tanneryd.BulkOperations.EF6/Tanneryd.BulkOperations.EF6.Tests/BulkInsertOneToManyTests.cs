@@ -110,45 +110,6 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             }
         }
        
-        [TestMethod]
-        public void JoinTablesWithGuidKeysShouldBeProperlyInserted()
-        {
-            using (var db = new BlogContext())
-            {
-                var blog = new Blog { Name = "My Blog" };
-                var firstPost = new Post
-                {
-                    Blog = blog,
-                    Text = "My first blogpost.",
-                    PostKeywords = new List<Keyword>() { new Keyword { Text = "first" } }
-                };
-                var secondPost = new Post
-                {
-                    Blog = blog,
-                    Text = "My second blogpost.",
-                    PostKeywords = new List<Keyword>() { new Keyword { Text = "second" } }
-                };
-                var visitor = new Visitor
-                {
-                    Name = "Visitor1"
-                };
-                secondPost.Visitors.Add(visitor);
-                var req = new BulkInsertRequest<Post>
-                {
-                    Entities = new[] { firstPost, secondPost }.ToList(),
-                    AllowNotNullSelfReferences = false,
-                    SortUsingClusteredIndex = true,
-                    Recursive = true
-                };
-                var response = db.BulkInsertAll(req);
-                var posts = db.Posts
-                    .Include(p => p.Blog)
-                    .ToArray();
-                Assert.AreEqual(2, posts.Count());
-                Assert.AreEqual(posts[1].Blog, posts[0].Blog);
-            }
-        }
-
         #endregion BlogContext
         
         #region NumberContext

@@ -9,7 +9,6 @@ using Tanneryd.BulkOperations.EF6.Tests.DM.Levels;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Miscellaneous;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Numbers;
 using Tanneryd.BulkOperations.EF6.Tests.DM.People;
-using Tanneryd.BulkOperations.EF6.Tests.DM.School;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
 namespace Tanneryd.BulkOperations.EF6.Tests
@@ -25,6 +24,9 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             InitializeLevelContext();
             InitializeBlogContext();
             InitializeMiscellaneousContext();
+            InitializeTeamContext();
+            InitializePeopleContext();
+            CleanUp();
         }
 
         [TestCleanup]
@@ -35,7 +37,40 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             CleanupLevelContext();
             CleanupBlogContext();
             CleanupMiscellaneousContext();
+            CleanupTeamContext();
+            CleanupPeopleContext();
         }
+
+        [TestMethod]
+        public void AlreadyExistingEntityWithIdentityKeyShouldNotBeInserted()
+        {
+            using (var db = new PeopleContext())
+            {
+                var p = new Person
+                {
+                    FirstName = "Måns",
+                    LastName = "Tånneryd",
+                    BirthDate = new DateTime(1968,10,04)
+                };
+
+                db.BulkInsertAll(new BulkInsertRequest<Person>
+                {
+                    Entities = new[] {p}.ToList()
+                });
+
+
+                Assert.AreEqual(1, db.People.Count());
+
+                db.BulkInsertAll(new BulkInsertRequest<Person>
+                {
+                    Entities = new[] {p}.ToList()
+                });
+
+                Assert.AreEqual(1, db.People.Count());
+
+            }
+        }
+
 
         [TestMethod]
         public void PrimaryKeyColumnMappedToPropertyWithDifferentNameShouldBeAllowed()

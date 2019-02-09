@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright ©  2017-2018 Tånneryd IT AB
+ * Copyright ©  2017-2019 Tånneryd IT AB
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq.Expressions;

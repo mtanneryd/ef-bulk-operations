@@ -12,6 +12,24 @@ namespace Tanneryd.BulkOperations.EF6.Tests
     public class BulkOperationTestBase
 
     {
+        #region Teams
+
+        protected void InitializeTeamContext()
+        {
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<TeamContext>());
+        }
+
+        protected void CleanupTeamContext()
+        {
+            var db = new TeamContext();
+            db.Players.RemoveRange(db.Players.ToArray());
+            db.Coaches.RemoveRange(db.Coaches.ToArray());
+            db.Teams.RemoveRange(db.Teams.ToArray());
+            db.SaveChanges();
+        }
+
+        #endregion
+
         #region School
 
         protected void InitializeSchoolContext()
@@ -66,6 +84,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             db.Blogs.RemoveRange(db.Blogs.ToArray());
             db.Posts.RemoveRange(db.Posts.ToArray());
             db.Keywords.RemoveRange(db.Keywords.ToArray());
+            db.Visitors.RemoveRange(db.Visitors.ToArray());
             db.SaveChanges();
         }
 
@@ -77,14 +96,14 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         {
             Database.SetInitializer(new DropCreateDatabaseIfModelChanges<PeopleContext>());
         }
-        
+
         protected void CleanupPeopleContext()
         {
             var db = new PeopleContext();
             db.People.RemoveRange(db.People.ToArray());
             db.SaveChanges();
         }
-        
+
         #endregion
 
         #region Company
