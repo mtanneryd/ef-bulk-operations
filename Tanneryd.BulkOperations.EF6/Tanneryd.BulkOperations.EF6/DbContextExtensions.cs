@@ -114,11 +114,11 @@ namespace Tanneryd.BulkOperations.EF6
             return DoBulkSelectNotExisting<T1, T2>(ctx, request);
         }
 
-        private static IList BulkSelectNotExisting(DbContext ctx, Type t, IList entities, TableColumnMapping[] pkColumnMappings)
+        private static IList BulkSelectNotExisting(DbContext ctx, Type t, IList entities, TableColumnMapping[] pkColumnMappings, SqlTransaction sqlTransaction)
         {
             var request = typeof(BulkSelectRequest<>).MakeGenericType(t);
             var keyPropertyNames = pkColumnMappings.Select(m => m.TableColumn.Name).ToArray();
-            var r = Activator.CreateInstance(request, keyPropertyNames, entities.ToArray(t), null);
+            var r = Activator.CreateInstance(request, keyPropertyNames, entities.ToArray(t), sqlTransaction);
             Type ex = typeof(DbContextExtensions);
             MethodInfo mi = ex.GetMethod("BulkSelectNotExisting");
             MethodInfo miGeneric = mi.MakeGenericMethod(new[] {t,t});
@@ -955,7 +955,7 @@ namespace Tanneryd.BulkOperations.EF6
         /// </summary>
         /// <param name="ctx"></param>
         /// <param name="entities"></param>
-        /// <param name="transaction"></param>
+        /// <param name="sqlTransaction"></param>
         /// <param name="recursive"></param>
         /// <param name="allowNotNullSelfReferences"></param>
         /// <param name="commandTimeout"></param>
@@ -965,7 +965,7 @@ namespace Tanneryd.BulkOperations.EF6
         private static void DoBulkInsertAll(
             this DbContext ctx,
             IList<dynamic> entities,
-            SqlTransaction transaction,
+            SqlTransaction sqlTransaction,
             bool recursive,
             bool allowNotNullSelfReferences,
             TimeSpan commandTimeout,
@@ -1056,7 +1056,7 @@ namespace Tanneryd.BulkOperations.EF6
                     DoBulkInsertAll(
                         ctx,
                         navProperties.ToList(),
-                        transaction,
+                        sqlTransaction,
                         recursive,
                         allowNotNullSelfReferences,
                         commandTimeout,
@@ -1088,7 +1088,7 @@ namespace Tanneryd.BulkOperations.EF6
                 validEntities.Add(entity);
                 savedEntities.Add(entity, entity);
             }
-            DoBulkCopy(ctx, validEntities, t, mappings, transaction, allowNotNullSelfReferences, commandTimeout, response);
+            DoBulkCopy(ctx, validEntities, t, mappings, sqlTransaction, allowNotNullSelfReferences, commandTimeout, response);
 
             //
             // Any many-to-one (parent-child) foreign key related entities are found here. 
@@ -1162,13 +1162,13 @@ namespace Tanneryd.BulkOperations.EF6
                                 }
                                 else
                                 {
-                                    var notExistingNavProperties = BulkSelectNotExisting(ctx, (Type)navPropertyType, navProperties, pkColumnMappings);
+                                    var notExistingNavProperties = BulkSelectNotExisting(ctx, (Type)navPropertyType, navProperties, pkColumnMappings, sqlTransaction);
                                     newNavProperties.AddRange(notExistingNavProperties);
                                 }
 
                                 DoBulkInsertAll(ctx,
                                     newNavProperties.ToArray(),
-                                    transaction,
+                                    sqlTransaction,
                                     recursive,
                                     allowNotNullSelfReferences,
                                     commandTimeout,
@@ -1228,7 +1228,7 @@ namespace Tanneryd.BulkOperations.EF6
                         {
                             Entities = navPropertySelfReferences.Select(e => e.Entity).Distinct().ToArray(),
                             UpdatedColumnNames = navPropertySelfReferences.SelectMany(e => e.ForeignKeyProperties).Distinct().ToArray(),
-                            Transaction = transaction
+                            Transaction = sqlTransaction
                         };
                         DoBulkUpdateAll(
                             ctx,
@@ -1263,13 +1263,13 @@ namespace Tanneryd.BulkOperations.EF6
                                     TableColumn = fkMapping.AssociationMapping.Target.TableColumn
                                 });
                             DoBulkCopy(ctx, navPropertyEntities.ToArray(), typeof(ExpandoObject), expandoMappings,
-                                transaction, allowNotNullSelfReferences, commandTimeout, response);
+                                sqlTransaction, allowNotNullSelfReferences, commandTimeout, response);
                         }
                         else
                             DoBulkInsertAll(
                                 ctx,
                                 navPropertyEntities.ToArray(),
-                                transaction,
+                                sqlTransaction,
                                 recursive,
                                 allowNotNullSelfReferences,
                                 commandTimeout,
@@ -1564,7 +1564,8 @@ namespace Tanneryd.BulkOperations.EF6
                     SqlBulkCopyOptions.Default,
                     IncludeRowNumber.No);
 
-                AddEntitiesToTable(table, entities, properties, t, IncludeRowNumber.No);
+                var notExistingEntities = BulkSelectNotExisting(ctx, t, entities, pkColumnMappings, transaction);
+                AddEntitiesToTable(table, notExistingEntities, properties, t, IncludeRowNumber.No);
 
                 var s = new Stopwatch();
                 s.Start();
@@ -1576,9 +1577,12 @@ namespace Tanneryd.BulkOperations.EF6
                 };
                 response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
             }
+            // We have a non composite primary key that is not a foreign key and not
+            // database generated. So, we really have to check with the database 
+            // if these entities already exist or not.
             else if (pkColumnMappings.Length == 1 && !pkColumnMappings[0].IsForeignKey)
             {
-                var notExistingEntities = BulkSelectNotExisting(ctx, t, entities, pkColumnMappings);
+                var notExistingEntities = BulkSelectNotExisting(ctx, t, entities, pkColumnMappings, transaction);
                 
                 var bulkCopy = CreateBulkCopy(
                     table,
@@ -1605,8 +1609,6 @@ namespace Tanneryd.BulkOperations.EF6
             // We have a composite primary key.
             else
             {
-                // 
-
                 var nonPrimaryKeyColumnMappings = columnMappings
                     .Values
                     .Except(pkColumnMappings)
@@ -1619,33 +1621,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 string cmdBody;
                 SqlCommand cmd;
-
-                //
-                // Update existing entities in the target table using the temp 
-                // table we just created.
-                //
-                if (nonPrimaryKeyColumnMappings.Any())
-                {
-                    // AlreadyExistingEntityWithUserGeneratedKeyShouldNotBeInserted
-                    // CoursesWithSingleInstructorShouldBeBulkInserted
-                    // EntityHierarchyShouldBeInserted
-                    // InstructorsWithMulitpleCoursesShouldBeBulkInserted
-                    // RowWithCompositePrimaryKeyShouldBeInserted
-                    // StackOverflowTest
-
-                    var setStatements = nonPrimaryKeyColumnMappings.Select(c =>
-                        $"[t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}]");
-                    var setStatementsSql = string.Join(" , ", setStatements);
-                    cmdBody = $@"UPDATE [t0] SET {setStatementsSql}
-                                 FROM {tableName.Fullname} AS [t0]
-                                 INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}
-                                ";
-                    cmd = new SqlCommand(cmdBody, conn, transaction);
-                    cmd.CommandTimeout = (int)commandTimeout.TotalSeconds;
-                    var rowsUpdated = cmd.ExecuteNonQuery();
-                    rowsAffected += rowsUpdated;
-                }
-
+                
                 string listOfPrimaryKeyColumns = string.Join(",",
                     pkColumnMappings.Select(c => $"[{c.TableColumn.Name}]"));
                 string listOfColumns = string.Join(",",
