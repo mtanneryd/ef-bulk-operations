@@ -21,6 +21,10 @@ namespace Tanneryd.BulkOperations.EF6.Tests.DM.Teams.UsingUserGeneratedGuidKeys
 {
     public class Team
     {
+        public Team()
+        {
+            Players = new HashSet<Player>();
+        }
         public Guid Id { get; set; }
         public string Name { get; set; }
 

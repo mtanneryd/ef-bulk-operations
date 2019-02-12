@@ -503,7 +503,7 @@ namespace Tanneryd.BulkOperations.EF6
                     }
                 }
 
-                DropTempTable(conn, request.Transaction, tempTableName);
+                //DropTempTable(conn, request.Transaction, tempTableName);
 
                 return existingEntities;
             }
@@ -863,13 +863,7 @@ namespace Tanneryd.BulkOperations.EF6
             // Check to see if the table has a primary key. If so,
             // get a clr property name to table column name mapping.
             //
-            dynamic declaringType = columnMappings
-                .Values
-                .First().TableColumn.DeclaringType;
-
-            var primaryKeyMembers = new List<string>();
-            foreach (var keyMember in declaringType.KeyMembers)
-                primaryKeyMembers.Add(keyMember.ToString());
+            var primaryKeyMembers = GetPrimaryKeyMembers(columnMappings);
 
             var selectedKeyMembers = keyMemberNames.Any() ? keyMemberNames : primaryKeyMembers.ToArray();
             var allKeyMembers = new List<string>();
@@ -1021,7 +1015,7 @@ namespace Tanneryd.BulkOperations.EF6
                             {
                                 PropertyInfo toPropertyInfo = t.GetProperty(foreignKeyRelation.ToProperty);
                                 var navPropertyKeyType = toPropertyInfo.PropertyType;
-                                var isGuid = navPropertyKeyType == typeof(Guid);
+                                var isGuid = IsGuid(navPropertyKeyType);
                                 var navPropertyKey = GetProperty(t, foreignKeyRelation.ToProperty, entity);
 
                                 // we do nothing unless the one-to-one
@@ -1098,8 +1092,6 @@ namespace Tanneryd.BulkOperations.EF6
             //
             if (recursive)
             {
-                //Trace.TraceInformation($"DoBulkInsertAll - FromForeignKeyMappings - {t.ToString()}");
-
                 var fkMappings = mappings.FromForeignKeyMappings.Concat(mappings.ToForeignKeyMappings.Where(m => m.AssociationMapping != null));
                 foreach (var fkMapping in fkMappings)
                 {
@@ -1110,7 +1102,10 @@ namespace Tanneryd.BulkOperations.EF6
 
                     var navPropertyEntities = new List<dynamic>();
                     var navPropertySelfReferences = new List<SelfReference>();
-                    foreach (var entity in entities)
+                    var joinTableNavPropertiesByEntity = new Dictionary<dynamic, List<dynamic>>();
+                    var joinTableNavProperties = new List<dynamic>();
+
+                    foreach (var entity in validEntities)
                     {
                         if (isCollection)
                         {
@@ -1124,8 +1119,7 @@ namespace Tanneryd.BulkOperations.EF6
                             }
                             if (navProperties.Count == 0) continue;
 
-
-                            var navPropertyType = navProperties[0].GetType();
+                            
                             if (fkMapping.ForeignKeyRelations.Any())
                             {
                                 foreach (var navProperty in navProperties)
@@ -1141,62 +1135,68 @@ namespace Tanneryd.BulkOperations.EF6
                             }
                             else if (fkMapping.AssociationMapping != null)
                             {
-                                // Some or all of the navProperty entities might be new.
-                                // So, we need to make sure they are saved first. But we
-                                // need to make sure that we ONLY pass new entities to
-                                // the recursive call. Otherwise we might end up with a
-                                // never ending loop.
-                                var pkColumnMappings = GetPrimaryKeyColumnMappings(ctx, (Type)navPropertyType, mappingsByType);
-                                var pkProperty = pkColumnMappings[0].EntityProperty;
-
-                                var newNavProperties = new ArrayList();
-                                var isGuid = IsGuidProperty(pkProperty);
-                                if (!isGuid)
-                                {
-                                    foreach (var navProperty in navProperties)
-                                    {
-                                        var pk = GetProperty(pkProperty.Name, navProperty);
-                                        if (pk == 0)
-                                            newNavProperties.Add(navProperty);
-                                    }
-                                }
-                                else
-                                {
-                                    var notExistingNavProperties = BulkSelectNotExisting(ctx, (Type)navPropertyType, navProperties, pkColumnMappings, sqlTransaction);
-                                    newNavProperties.AddRange(notExistingNavProperties);
-                                }
-
-                                DoBulkInsertAll(ctx,
-                                    newNavProperties.ToArray(),
-                                    sqlTransaction,
-                                    recursive,
-                                    allowNotNullSelfReferences,
-                                    commandTimeout,
-                                    savedEntities,
-                                    mappingsByType,
-                                    response);
-
-                                if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.Name == entity.GetType().Name)
-                                {
-                                    foreach (var navProperty in navProperties)
-                                    {
-                                        dynamic np = new ExpandoObject();
-                                        AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(t, fkMapping.AssociationMapping.Source.EntityProperty.Name, entity));
-                                        AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(navPropertyType, fkMapping.AssociationMapping.Target.EntityProperty.Name, navProperty));
-                                        navPropertyEntities.Add(np);
-                                    }
-                                }
-                                else
-                                {
-                                    foreach (var navProperty in navProperties)
-                                    {
-                                        dynamic np = new ExpandoObject();
-                                        AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(navPropertyType, fkMapping.AssociationMapping.Source.EntityProperty.Name, navProperty));
-                                        AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(t, fkMapping.AssociationMapping.Target.EntityProperty.Name, entity));
-                                        navPropertyEntities.Add(np);
-                                    }
-                                }
+                                joinTableNavPropertiesByEntity.Add(entity, navProperties);
+                                joinTableNavProperties.AddRange(navProperties);
                             }
+                            //else if (fkMapping.AssociationMapping != null)
+                            //{
+                            //    // Some or all of the navProperty entities might be new.
+                            //    // So, we need to make sure they are saved first. But we
+                            //    // need to make sure that we ONLY pass new entities to
+                            //    // the recursive call. Otherwise we might end up with a
+                            //    // never ending loop.
+                            //    var pkColumnMappings = GetPrimaryKeyColumnMappings(ctx, (Type)navPropertyType, mappingsByType);
+                            //    var pkProperty = pkColumnMappings[0].EntityProperty;
+
+                            //    var newNavProperties = new ArrayList();
+                            //    var isGuid = IsGuidProperty(pkProperty);
+                            //    if (!isGuid)
+                            //    {
+                            //        foreach (var navProperty in navProperties)
+                            //        {
+                            //            var pk = GetProperty(pkProperty.Name, navProperty);
+                            //            if (pk == 0)
+                            //                newNavProperties.Add(navProperty);
+                            //        }
+                            //    }
+                            //    else
+                            //    {
+                            //        We need to do this check for all nav props for all entities in one go
+                            //        var notExistingNavProperties = BulkSelectNotExisting(ctx, (Type)navPropertyType, navProperties, pkColumnMappings, sqlTransaction);
+                            //        newNavProperties.AddRange(notExistingNavProperties);
+                            //    }
+
+                            //    DoBulkInsertAll(ctx,
+                            //        newNavProperties.ToArray(),
+                            //        sqlTransaction,
+                            //        recursive,
+                            //        allowNotNullSelfReferences,
+                            //        commandTimeout,
+                            //        savedEntities,
+                            //        mappingsByType,
+                            //        response);
+
+                            //    if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.Name == entity.GetType().Name)
+                            //    {
+                            //        foreach (var navProperty in navProperties)
+                            //        {
+                            //            dynamic np = new ExpandoObject();
+                            //            AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(t, fkMapping.AssociationMapping.Source.EntityProperty.Name, entity));
+                            //            AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(navPropertyType, fkMapping.AssociationMapping.Target.EntityProperty.Name, navProperty));
+                            //            navPropertyEntities.Add(np);
+                            //        }
+                            //    }
+                            //    else
+                            //    {
+                            //        foreach (var navProperty in navProperties)
+                            //        {
+                            //            dynamic np = new ExpandoObject();
+                            //            AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(navPropertyType, fkMapping.AssociationMapping.Source.EntityProperty.Name, navProperty));
+                            //            AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(t, fkMapping.AssociationMapping.Target.EntityProperty.Name, entity));
+                            //            navPropertyEntities.Add(np);
+                            //        }
+                            //    }
+                            //}
                         }
                         else
                         {
@@ -1218,6 +1218,47 @@ namespace Tanneryd.BulkOperations.EF6
                                         Entity = entity,
                                         ForeignKeyProperties = fkMapping.ForeignKeyRelations.Select(p => p.ToProperty).ToArray()
                                     });
+                            }
+                        }
+                    }
+
+                    if (joinTableNavPropertiesByEntity.Any())
+                    {
+                        var navPropertyType = (Type)joinTableNavProperties[0].GetType();
+                        var pkColumnMappings = GetPrimaryKeyColumnMappings(ctx, navPropertyType, mappingsByType);
+                        var notExistingNavProperties = BulkSelectNotExisting(ctx, navPropertyType, joinTableNavProperties, pkColumnMappings, sqlTransaction);
+                        DoBulkInsertAll(ctx,
+                            notExistingNavProperties.ToArray(navPropertyType),
+                            sqlTransaction,
+                            recursive,
+                            allowNotNullSelfReferences,
+                            commandTimeout,
+                            savedEntities,
+                            mappingsByType,
+                            response);
+
+                        foreach (var joinTableNavPropertiesForEntity in joinTableNavPropertiesByEntity)
+                        {
+                            var entity = joinTableNavPropertiesForEntity.Key;
+                            if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.Name == entity.GetType().Name)
+                            {
+                                foreach (var navProperty in joinTableNavPropertiesForEntity.Value)
+                                {
+                                    dynamic np = new ExpandoObject();
+                                    AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(t, fkMapping.AssociationMapping.Source.EntityProperty.Name, entity));
+                                    AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(navPropertyType, fkMapping.AssociationMapping.Target.EntityProperty.Name, navProperty));
+                                    navPropertyEntities.Add(np);
+                                }
+                            }
+                            else
+                            {
+                                foreach (var navProperty in joinTableNavPropertiesForEntity.Value)
+                                {
+                                    dynamic np = new ExpandoObject();
+                                    AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name, GetProperty(navPropertyType, fkMapping.AssociationMapping.Source.EntityProperty.Name, navProperty));
+                                    AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name, GetProperty(t, fkMapping.AssociationMapping.Target.EntityProperty.Name, entity));
+                                    navPropertyEntities.Add(np);
+                                }
                             }
                         }
                     }
@@ -1281,6 +1322,21 @@ namespace Tanneryd.BulkOperations.EF6
             }
         }
 
+        private static string[] GetPrimaryKeyMembers(Dictionary<string, TableColumnMapping> columnMappings)
+        {
+            dynamic declaringType = columnMappings
+                .Values
+                .First()
+                .TableColumn
+                .DeclaringType;
+
+            var primaryKeyMembers = new List<string>();
+            foreach (var keyMember in declaringType.KeyMembers)
+                primaryKeyMembers.Add(keyMember.ToString());
+
+            return primaryKeyMembers.ToArray();
+        }
+
         private static TableColumnMapping[] GetPrimaryKeyColumnMappings(DbContext ctx, Type t, Dictionary<Type, Mappings> mappingsByType)
         {
             if (!mappingsByType.ContainsKey(t))
@@ -1288,14 +1344,21 @@ namespace Tanneryd.BulkOperations.EF6
                 mappingsByType.Add(t, GetMappings(ctx, t));
             }
             var mappings = mappingsByType[t];
-
             var columnMappings = mappings.ColumnMappingByPropertyName;
-            dynamic declaringType = columnMappings
-                .Values
-                .First().TableColumn.DeclaringType;
-            var keyMembers = declaringType.KeyMembers;
+            return GetPrimaryKeyColumnMappings(columnMappings);
+
+        }
+
+        private static TableColumnMapping[] GetPrimaryKeyColumnMappings(Dictionary<string, TableColumnMapping> columnMappings)
+        {
+            var primaryKeyMembers = GetPrimaryKeyMembers(columnMappings);
+            return GetPrimaryKeyColumnMappings(columnMappings, primaryKeyMembers);
+        }
+
+        private static TableColumnMapping[] GetPrimaryKeyColumnMappings(Dictionary<string, TableColumnMapping> columnMappings, string[] primaryKeyMembers)
+        {
             var pkColumnMappings = columnMappings.Values
-                .Where(m => keyMembers.Contains(m.TableColumn.Name))
+                .Where(m => primaryKeyMembers.Contains(m.TableColumn.Name))
                 .ToArray();
             return pkColumnMappings;
         }
@@ -1344,14 +1407,9 @@ namespace Tanneryd.BulkOperations.EF6
             var table = new DataTable();
 
             // Check to see if the table has a primary key.
-            dynamic declaringType = columnMappings
-                .Values
-                .First().TableColumn.DeclaringType;
-            var keyMembers = declaringType.KeyMembers;
-            var pkColumnMappings = columnMappings.Values
-                .Where(m => keyMembers.Contains(m.TableColumn.Name))
-                .ToArray();
-
+            var primaryKeyMembers = GetPrimaryKeyMembers(columnMappings);
+            var pkColumnMappings = GetPrimaryKeyColumnMappings(columnMappings, primaryKeyMembers);
+            
             // We have no primary key/s. Just add it all.
             if (pkColumnMappings.Length == 0)
             {
@@ -1403,7 +1461,7 @@ namespace Tanneryd.BulkOperations.EF6
                     cmd.Transaction = transaction;
 
                     var nonPrimaryKeyColumnMappings = columnMappings.Values
-                        .Where(m => !keyMembers.Contains(m.TableColumn.Name))
+                        .Where(m => !primaryKeyMembers.Contains(m.TableColumn.Name))
                         .Where(m => !m.TableColumn.IsStoreGeneratedComputed)
                         .Where(m => !m.TableColumn.IsStoreGeneratedIdentity)
                         .ToArray();
@@ -1959,7 +2017,7 @@ namespace Tanneryd.BulkOperations.EF6
             return conn;
         }
 
-        private static TableName GetTableName(this DbContext ctx, Type t)
+        public static TableName GetTableName(this DbContext ctx, Type t)
         {
             var dbSet = ctx.Set(t);
             var sql = dbSet.ToString();
@@ -2234,6 +2292,12 @@ namespace Tanneryd.BulkOperations.EF6
         private static bool IsGuidProperty(dynamic p)
         {
             var isGuid = p.TypeName == "Guid" || p.TypeName == "uniqueidentifier";
+            return isGuid;
+        }
+
+        private static bool IsGuid(Type t)
+        {
+            var isGuid = (t == typeof(Guid) || t == typeof(Guid?));
             return isGuid;
         }
 

@@ -39,9 +39,11 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                     teams.Add(new Team {Id = Guid.NewGuid(), Name =$"Team #{i}"});
                 }
 
+                teams = teams.OrderBy(t => t.Name).ToList();
                 db.BulkInsertAll(new BulkInsertRequest<Team>
                 {
-                    Entities = teams
+                    Entities = teams,
+                    SortUsingClusteredIndex = false
                 });
 
                 for (int i = 10; i < 20; i++)
@@ -50,6 +52,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 }
 
                 var existingTeams = db.BulkSelectExisting<Team, Team>(new BulkSelectRequest<Team>(new []{"Id"}, teams));
+                existingTeams = existingTeams.OrderBy(t => t.Name).ToList();
                 Assert.AreEqual(10, existingTeams.Count);
                 for (int i = 0; i < 10; i++)
                 {

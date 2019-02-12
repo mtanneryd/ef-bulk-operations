@@ -15,7 +15,7 @@
  */
 namespace Tanneryd.BulkOperations.EF6.Model
 {
-    internal class TableName
+    public class TableName
     {
         public string Schema { get; set; }
         public string Name { get; set; }

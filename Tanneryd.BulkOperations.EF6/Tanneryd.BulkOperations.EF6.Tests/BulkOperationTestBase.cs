@@ -4,6 +4,7 @@ using System.Data.Entity;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Numbers;
+using Tanneryd.BulkOperations.EF6.Tests.DM.Teams.UsingUserGeneratedGuidKeys;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
 namespace Tanneryd.BulkOperations.EF6.Tests
@@ -17,15 +18,22 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         protected void InitializeTeamContext()
         {
             Database.SetInitializer(new DropCreateDatabaseIfModelChanges<UserGeneratedTeamContext>());
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<DbGeneratedTeamContext>());
         }
 
         protected void CleanupTeamContext()
         {
-            var db = new UserGeneratedTeamContext();
-            db.Players.RemoveRange(db.Players.ToArray());
-            db.Coaches.RemoveRange(db.Coaches.ToArray());
-            db.Teams.RemoveRange(db.Teams.ToArray());
-            db.SaveChanges();
+            var db1 = new UserGeneratedTeamContext();
+            db1.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[Player]");
+            db1.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[Coach]");
+            db1.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[Team]");
+            db1.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[CoachTeams]");
+
+            var db2 = new DbGeneratedTeamContext();
+            db2.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[Player]");
+            db2.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[Coach]");
+            db2.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[Team]");
+            db2.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[CoachTeams]");
         }
 
         #endregion
