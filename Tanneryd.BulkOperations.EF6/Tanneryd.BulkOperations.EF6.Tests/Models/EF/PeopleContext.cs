@@ -24,14 +24,18 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
     public class PeopleContext : DbContext
     {
         public DbSet<Person> People { get; set; }
+        public static DbModelBuilder ModelBuilder { get; private set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            #region Person
+            if (ModelBuilder==null)
+                ModelBuilder = modelBuilder;
 
+            #region Person
+           
             modelBuilder.Entity<Person>()
                 .ToTable("Person")
-                .HasKey(p => p.Id);
+                .HasKey<long>(p => p.Id);
             modelBuilder.Entity<Person>()
                 .Property(p => p.Id)
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);

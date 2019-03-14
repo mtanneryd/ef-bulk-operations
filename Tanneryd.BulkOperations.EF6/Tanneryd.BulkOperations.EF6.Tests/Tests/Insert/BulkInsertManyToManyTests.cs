@@ -8,7 +8,7 @@ using Tanneryd.BulkOperations.EF6.Tests.DM.Blog;
 using Tanneryd.BulkOperations.EF6.Tests.DM.School;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
-namespace Tanneryd.BulkOperations.EF6.Tests
+namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
 {
     [TestClass]
     public class BulkInsertManyToManyTests : BulkOperationTestBase
@@ -32,8 +32,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         }
 
         [TestMethod]
-        public void 
-            JoinTablesWithGuidKeysShouldBeProperlyInserted()
+        public void JoinTablesWithGuidKeysShouldBeProperlyInserted()
         {
             using (var db = new BlogContext())
             {
@@ -74,7 +73,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                     FirstName = "Mickey",
                     LastName = "Mouse",
                     HireDate = new DateTime(1928, 5, 15),
-                    OfficeAssignment = new OfficeAssignment {Location = "Room 1A"}
+                    OfficeAssignment = new OfficeAssignment { Location = "Room 1A" }
                 };
                 db.Instructors.Add(i1);
                 db.SaveChanges();
@@ -110,14 +109,14 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
                 var request = new BulkInsertRequest<Instructor>
                 {
-                    Entities = new[] {instructor}.ToList(),
+                    Entities = new[] { instructor }.ToList(),
                     Recursive = true,
                     AllowNotNullSelfReferences = false
                 };
                 db.BulkInsertAll(request);
 
-                
-                Assert.AreEqual(2, db.Instructors.SelectMany(i=>i.Courses).Count());
+
+                Assert.AreEqual(2, db.Instructors.SelectMany(i => i.Courses).Count());
             }
         }
 
@@ -210,7 +209,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 FirstName = "Mickey",
                 LastName = "Mouse",
                 HireDate = new DateTime(1928, 5, 15),
-                OfficeAssignment = new OfficeAssignment { Location = "Room 1A"}
+                OfficeAssignment = new OfficeAssignment { Location = "Room 1A" }
             };
             yield return new Instructor
             {

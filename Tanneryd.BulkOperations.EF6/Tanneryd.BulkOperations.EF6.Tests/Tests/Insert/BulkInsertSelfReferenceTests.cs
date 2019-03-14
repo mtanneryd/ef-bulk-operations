@@ -13,19 +13,18 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
+
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Tanneryd.BulkOperations.EF6;
 using Tanneryd.BulkOperations.EF6.Model;
-using Tanneryd.BulkOperations.EF6.Tests.DM;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Companies;
 using Tanneryd.BulkOperations.EF6.Tests.DM.People;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
-namespace Tanneryd.BulkOperations.EF6.Tests
+namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
 {
     /// <summary>
     /// These tests primarily assert that we can insert entities with NOT NULL
@@ -199,32 +198,6 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 Assert.AreEqual("John", actual.Employees.Single().Name);
             }
         }
-
-        //[TestMethod]
-        //public void AddingUser()
-        //{
-        //    var user = new User
-        //    {
-        //        UserName = "anna",
-        //        Password = "hemligt",
-        //        FirstName = "Anna",
-        //        LastName = "Andersson",
-        //        BirthDate = new DateTime(1980, 1, 1),
-        //    };
-            
-        //    using (var db = new PeopleContext())
-        //    {
-        //        var request = new BulkInsertRequest<User>
-        //        {
-        //            Entities = new List<User> { user },
-        //            Recursive = true,
-        //        };
-        //        db.BulkInsertAll(request);
-
-        //        var people = db.People.ToArray();
-        //        Assert.AreEqual(1, people.Length);
-        //    }
-        //}
 
         [TestMethod]
         public void AddingChildWithMother()

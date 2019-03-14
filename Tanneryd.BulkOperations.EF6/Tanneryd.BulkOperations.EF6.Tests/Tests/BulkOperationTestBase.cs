@@ -4,10 +4,9 @@ using System.Data.Entity;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Numbers;
-using Tanneryd.BulkOperations.EF6.Tests.DM.Teams.UsingUserGeneratedGuidKeys;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
-namespace Tanneryd.BulkOperations.EF6.Tests
+namespace Tanneryd.BulkOperations.EF6.Tests.Tests
 {
     [TestClass]
     public class BulkOperationTestBase

@@ -6,7 +6,7 @@ using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Numbers;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
-namespace Tanneryd.BulkOperations.EF6.Tests
+namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
 {
     [TestClass]
     public class BulkSelectTests : BulkOperationTestBase
@@ -15,12 +15,15 @@ namespace Tanneryd.BulkOperations.EF6.Tests
         public void Initialize()
         {
             InitializeNumberContext();
+            InitializePeopleContext();
+            CleanUp();
         }
 
         [TestCleanup]
         public void CleanUp()
         {
             CleanupNumberContext();
+            CleanupPeopleContext();
         }
 
         [TestMethod]
@@ -30,6 +33,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             {
                 var now = DateTime.Now;
 
+                // Save 200 numbers (1 to 200) to the database.
                 var numbers = GenerateNumbers(1, 200, now).ToArray();
                 db.BulkInsertAll(new BulkInsertRequest<Number>
                 {
@@ -37,7 +41,10 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                     Recursive = true
                 });
 
-                var nums = GenerateNumbers(50, 100, now).ToList();
+                // Create a list of 100 numbers with values 151 to 250
+                var nums = GenerateNumbers(151, 100, now).ToList();
+
+                // Numbers 151 to 200 from the database should be selected.
                 var existingNumbers = db.BulkSelect<Number, Number>(new BulkSelectRequest<Number>
                 {
                     Items = nums.ToArray(),
@@ -49,10 +56,12 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                             EntityPropertyName = "Value"
                         },
                     }
-                });
+                }).ToArray();
 
-                var expectedNumbers = numbers.Skip(49).Take(100).ToArray();
-                for (int i = 0; i < 100; i++)
+                Assert.AreEqual(existingNumbers.Length, 50);
+                var expectedNumbers = numbers.Skip(150).Take(50).ToArray();
+
+                for (int i = 0; i < 50; i++)
                 {
                     Assert.AreEqual(expectedNumbers[i].Id, existingNumbers[i].Id);
                     Assert.AreEqual(expectedNumbers[i].ParityId, existingNumbers[i].ParityId);
@@ -70,23 +79,23 @@ namespace Tanneryd.BulkOperations.EF6.Tests
             {
                 var now = DateTime.Now;
 
+                // Save 200 numbers (1 to 200) to the database.
                 var numbers = GenerateNumbers(1, 200, now).ToArray();
                 db.BulkInsertAll(new BulkInsertRequest<Number>
                 {
                     Entities = numbers,
                     Recursive = true
                 });
-                foreach (var number in numbers)
-                {
-                    Console.WriteLine($"{number.Id};{number.Value}");
-                }
 
-                var nums = GenerateNumbers(50, 100, now)
-                    .Select(n => new Num { Val = n.Value })
+                // Create a list of 100 numbers with values 151 to 250
+                var nums = GenerateNumbers(151, 100, now)
+                    .Select(n=> new Num { Val = n.Value})
                     .ToList();
+
+                // Numbers 151 to 200 from the database should be selected.
                 var existingNumbers = db.BulkSelect<Num, Number>(new BulkSelectRequest<Num>
                 {
-                    Items = nums,
+                    Items = nums.ToArray(),
                     KeyPropertyMappings = new[]
                     {
                         new KeyPropertyMapping
@@ -95,17 +104,19 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                             EntityPropertyName = "Value"
                         },
                     }
-                });
+                }).ToArray();
 
-                //var expectedNumbers = numbers.Skip(49).Take(100).ToArray();
-                //for (int i = 0; i < 100; i++)
-                //{
-                //    Assert.AreEqual(expectedNumbers[i].Id, existingNumbers[i].Id);
-                //    Assert.AreEqual(expectedNumbers[i].ParityId, existingNumbers[i].ParityId);
-                //    Assert.AreEqual(expectedNumbers[i].UpdatedAt.ToString(CultureInfo.InvariantCulture), existingNumbers[i].UpdatedAt.ToString(CultureInfo.InvariantCulture));
-                //    Assert.AreEqual(expectedNumbers[i].UpdatedBy, existingNumbers[i].UpdatedBy);
-                //    Assert.AreEqual(expectedNumbers[i].Value, existingNumbers[i].Value);
-                //}
+                Assert.AreEqual(existingNumbers.Length, 50);
+                var expectedNumbers = numbers.Skip(150).Take(50).ToArray();
+
+                for (int i = 0; i < 50; i++)
+                {
+                    Assert.AreEqual(expectedNumbers[i].Id, existingNumbers[i].Id);
+                    Assert.AreEqual(expectedNumbers[i].ParityId, existingNumbers[i].ParityId);
+                    Assert.AreEqual(expectedNumbers[i].UpdatedAt.ToString(CultureInfo.InvariantCulture), existingNumbers[i].UpdatedAt.ToString(CultureInfo.InvariantCulture));
+                    Assert.AreEqual(expectedNumbers[i].UpdatedBy, existingNumbers[i].UpdatedBy);
+                    Assert.AreEqual(expectedNumbers[i].Value, existingNumbers[i].Value);
+                }
             }
         }
 

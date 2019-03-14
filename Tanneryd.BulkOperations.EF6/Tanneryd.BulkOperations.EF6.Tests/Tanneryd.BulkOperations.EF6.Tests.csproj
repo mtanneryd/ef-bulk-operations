@@ -56,60 +56,60 @@
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BulkDeleteTests.cs" />
-    <Compile Include="BulkInsertManyToManyTests.cs" />
-    <Compile Include="BulkInsertMiscellaneousTests.cs" />
-    <Compile Include="BulkInsertTeamTests.cs" />
-    <Compile Include="BulkOperationTestBase.cs" />
-    <Compile Include="BulkSelectExistingTests.cs" />
-    <Compile Include="BulkSelectTests.cs" />
-    <Compile Include="BulkUpdateTests.cs" />
-    <Compile Include="DM\Blog\Blog.cs" />
-    <Compile Include="DM\Companies\Company.cs" />
-    <Compile Include="DM\Companies\Employee.cs" />
-    <Compile Include="DM\Levels\Level2.cs" />
-    <Compile Include="DM\Levels\Level3.cs" />
-    <Compile Include="DM\Logs\LogEntry.cs" />
-    <Compile Include="DM\Miscellaneous\Coordinate.cs" />
-    <Compile Include="DM\Miscellaneous\Point.cs" />
-    <Compile Include="DM\Miscellaneous\ReservedSqlKeyword.cs" />
-    <Compile Include="DM\Numbers\Composite.cs" />
-    <Compile Include="DM\Levels\Level1.cs" />
-    <Compile Include="DM\Numbers\Number.cs" />
-    <Compile Include="DM\Numbers\Parity.cs" />
-    <Compile Include="DM\People\Person.cs" />
-    <Compile Include="DM\Numbers\Prime.cs" />
-    <Compile Include="DM\People\User.cs" />
-    <Compile Include="DM\School\Course.cs" />
-    <Compile Include="DM\School\Department.cs" />
-    <Compile Include="DM\School\Instructor.cs" />
-    <Compile Include="DM\School\OfficeAssignment.cs" />
-    <Compile Include="DM\Teams\UsingDbGeneratedGuidKeys\Coach.cs" />
-    <Compile Include="DM\Teams\UsingDbGeneratedGuidKeys\Player.cs" />
-    <Compile Include="DM\Teams\UsingDbGeneratedGuidKeys\Team.cs" />
-    <Compile Include="DM\Teams\UsingUserGeneratedGuidKeys\Coach.cs" />
-    <Compile Include="DM\Teams\UsingUserGeneratedGuidKeys\Player.cs" />
-    <Compile Include="DM\Teams\UsingUserGeneratedGuidKeys\Team.cs" />
-    <Compile Include="EF\BlogContext.cs" />
-    <Compile Include="EF\LevelContext.cs" />
-    <Compile Include="EF\MiscellaneousContext.cs" />
-    <Compile Include="EF\NumberContext.cs" />
-    <Compile Include="EF\CompanyContext.cs" />
-    <Compile Include="EF\PeopleContext.cs" />
-    <Compile Include="BulkInsertSelfReferenceTests.cs" />
-    <Compile Include="BulkInsertOneToManyTests.cs" />
-    <Compile Include="EF\SchoolContext.cs" />
-    <Compile Include="EF\TeamContext.cs" />
+    <Compile Include="Tests\Delete\BulkDeleteTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertManyToManyTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertMiscellaneousTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertTeamTests.cs" />
+    <Compile Include="Tests\BulkOperationTestBase.cs" />
+    <Compile Include="Tests\Select\BulkSelectExistingTests.cs" />
+    <Compile Include="Tests\Select\BulkSelectTests.cs" />
+    <Compile Include="Tests\Update\BulkUpdateTests.cs" />
+    <Compile Include="Models\DM\Blog\Blog.cs" />
+    <Compile Include="Models\DM\Companies\Company.cs" />
+    <Compile Include="Models\DM\Companies\Employee.cs" />
+    <Compile Include="Models\DM\Levels\Level2.cs" />
+    <Compile Include="Models\DM\Levels\Level3.cs" />
+    <Compile Include="Models\DM\Logs\LogEntry.cs" />
+    <Compile Include="Models\DM\Miscellaneous\Coordinate.cs" />
+    <Compile Include="Models\DM\Miscellaneous\Point.cs" />
+    <Compile Include="Models\DM\Miscellaneous\ReservedSqlKeyword.cs" />
+    <Compile Include="Models\DM\Numbers\Composite.cs" />
+    <Compile Include="Models\DM\Levels\Level1.cs" />
+    <Compile Include="Models\DM\Numbers\Number.cs" />
+    <Compile Include="Models\DM\Numbers\Parity.cs" />
+    <Compile Include="Models\DM\People\Person.cs" />
+    <Compile Include="Models\DM\Numbers\Prime.cs" />
+    <Compile Include="Models\DM\People\User.cs" />
+    <Compile Include="Models\DM\School\Course.cs" />
+    <Compile Include="Models\DM\School\Department.cs" />
+    <Compile Include="Models\DM\School\Instructor.cs" />
+    <Compile Include="Models\DM\School\OfficeAssignment.cs" />
+    <Compile Include="Models\DM\Teams\UsingDbGeneratedGuidKeys\Coach.cs" />
+    <Compile Include="Models\DM\Teams\UsingDbGeneratedGuidKeys\Player.cs" />
+    <Compile Include="Models\DM\Teams\UsingDbGeneratedGuidKeys\Team.cs" />
+    <Compile Include="Models\DM\Teams\UsingUserGeneratedGuidKeys\Coach.cs" />
+    <Compile Include="Models\DM\Teams\UsingUserGeneratedGuidKeys\Player.cs" />
+    <Compile Include="Models\DM\Teams\UsingUserGeneratedGuidKeys\Team.cs" />
+    <Compile Include="Models\EF\BlogContext.cs" />
+    <Compile Include="Models\EF\LevelContext.cs" />
+    <Compile Include="Models\EF\MiscellaneousContext.cs" />
+    <Compile Include="Models\EF\NumberContext.cs" />
+    <Compile Include="Models\EF\CompanyContext.cs" />
+    <Compile Include="Models\EF\PeopleContext.cs" />
+    <Compile Include="Tests\Insert\BulkInsertSelfReferenceTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertOneToManyTests.cs" />
+    <Compile Include="Models\EF\SchoolContext.cs" />
+    <Compile Include="Models\EF\TeamContext.cs" />
     <Compile Include="ListExtensionTests.cs" />
-    <Compile Include="Migrations\201901131910265_InitialCreate.cs" />
-    <Compile Include="Migrations\201901131910265_InitialCreate.Designer.cs">
+    <Compile Include="Models\Migrations\201901131910265_InitialCreate.cs" />
+    <Compile Include="Models\Migrations\201901131910265_InitialCreate.Designer.cs">
       <DependentUpon>201901131910265_InitialCreate.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\201901131912134_AddComputedFullNameColumnToInstructor.cs" />
-    <Compile Include="Migrations\201901131912134_AddComputedFullNameColumnToInstructor.Designer.cs">
+    <Compile Include="Models\Migrations\201901131912134_AddComputedFullNameColumnToInstructor.cs" />
+    <Compile Include="Models\Migrations\201901131912134_AddComputedFullNameColumnToInstructor.Designer.cs">
       <DependentUpon>201901131912134_AddComputedFullNameColumnToInstructor.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="Models\Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -123,10 +123,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\201901131910265_InitialCreate.resx">
+    <EmbeddedResource Include="Models\Migrations\201901131910265_InitialCreate.resx">
       <DependentUpon>201901131910265_InitialCreate.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201901131912134_AddComputedFullNameColumnToInstructor.resx">
+    <EmbeddedResource Include="Models\Migrations\201901131912134_AddComputedFullNameColumnToInstructor.resx">
       <DependentUpon>201901131912134_AddComputedFullNameColumnToInstructor.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>

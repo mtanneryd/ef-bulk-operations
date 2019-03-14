@@ -8,7 +8,7 @@ using Tanneryd.BulkOperations.EF6.Tests.DM.Blog;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Numbers;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
-namespace Tanneryd.BulkOperations.EF6.Tests
+namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
 {
     [TestClass]
     public class BulkInsertOneToManyTests : BulkOperationTestBase

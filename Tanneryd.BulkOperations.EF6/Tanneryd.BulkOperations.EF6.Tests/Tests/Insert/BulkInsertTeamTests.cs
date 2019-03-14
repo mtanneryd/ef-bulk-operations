@@ -7,7 +7,7 @@ using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Teams.UsingUserGeneratedGuidKeys;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
-namespace Tanneryd.BulkOperations.EF6.Tests
+namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
 {
     [TestClass]
     public class BulkInsertTeamTests : BulkOperationTestBase
@@ -52,7 +52,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
                     coaches.Add(c);
                 }
-               
+
 
                 db.BulkInsertAll(new BulkInsertRequest<Coach>
                 {
@@ -85,7 +85,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
                 db.BulkInsertAll(new BulkInsertRequest<Team>
                 {
-                    Entities = new[] {team1}.ToList()
+                    Entities = new[] { team1 }.ToList()
                 });
 
 
@@ -93,7 +93,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
                 db.BulkInsertAll(new BulkInsertRequest<Team>
                 {
-                    Entities = new[] {team1}.ToList()
+                    Entities = new[] { team1 }.ToList()
                 });
 
                 Assert.AreEqual(1, db.Teams.Count());
@@ -113,7 +113,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
                 db.BulkInsertAll(new BulkInsertRequest<DM.Teams.UsingDbGeneratedGuidKeys.Team>
                 {
-                    Entities = new[] {team1}.ToList()
+                    Entities = new[] { team1 }.ToList()
                 });
 
 
@@ -121,7 +121,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests
 
                 db.BulkInsertAll(new BulkInsertRequest<DM.Teams.UsingDbGeneratedGuidKeys.Team>
                 {
-                    Entities = new[] {team1}.ToList()
+                    Entities = new[] { team1 }.ToList()
                 });
 
                 Assert.AreEqual(1, db.Teams.Count());

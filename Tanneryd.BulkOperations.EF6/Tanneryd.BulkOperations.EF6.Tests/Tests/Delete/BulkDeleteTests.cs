@@ -5,7 +5,7 @@ using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.Tests.DM.People;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
 
-namespace Tanneryd.BulkOperations.EF6.Tests
+namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Delete
 {
     [TestClass]
     public class BulkDeleteTests : BulkOperationTestBase
@@ -81,6 +81,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests
                 Assert.AreEqual(p4.Id, people[4].Id);
                 Assert.AreEqual(p5.Id, people[5].Id);
 
+                // Delete all children of p0 in the database 
+                // that are not in the Items list.
                 db.BulkDeleteNotExisting<Person, Person>(new BulkDeleteRequest<Person>(
                     new [] { new SqlCondition{ ColumnName = "MotherId", ColumnValue = p0.Id} }, 
                     new [] { "FirstName", "LastName"})
