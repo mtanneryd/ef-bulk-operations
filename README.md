@@ -127,6 +127,10 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
 }
 ```
 ## Release history
+##### 1.2.3 (2019-03-29)
+ * Bugfix: Join tables with Guid keys misbehaved.
+ * Added method BulkDeleteNotExisting
+
 ##### 1.2.2 (2018-12-01)
  * Bugfix: BulkSelect did not work properly with null columns.
  * Bugfix: Contexts using lazy loading and thus dynamic proxies did not work as expected.
