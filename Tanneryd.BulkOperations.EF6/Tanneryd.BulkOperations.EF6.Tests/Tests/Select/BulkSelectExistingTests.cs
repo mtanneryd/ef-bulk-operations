@@ -7,6 +7,7 @@ using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Numbers;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Teams.UsingUserGeneratedGuidKeys;
 using Tanneryd.BulkOperations.EF6.Tests.EF;
+using Tanneryd.BulkOperations.EF6.Tests.Models.DM.Prices;
 
 namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
 {
@@ -18,6 +19,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
         {
             InitializeNumberContext();
             InitializeTeamContext();
+            InitializePriceContext();
             CleanUp();
         }
 
@@ -26,6 +28,37 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
         {
             CleanupNumberContext();
             CleanupTeamContext();
+            CleanupPriceContext();
+        }
+
+        [TestMethod]
+        public void ZeroPriceShouldNotBeSelectedByNullPrice()
+        {
+            using (var db = new PriceContext())
+            {
+                db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 1), Name = "ERICB", Value = 80 });
+                db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 2), Name = "ERICB", Value = 81 });
+                db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 3), Name = "ERICB", Value = 82 });
+                db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 4), Name = "ERICB", Value = 0 });
+                db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 5), Name = "ERICB", Value = 86 });
+                db.SaveChanges();
+
+                var prices = new[]
+                {
+                    db.Prices.Add(new Price() {Date = new DateTime(2019, 1, 1), Name = "ERICB", Value = 80}),
+                    db.Prices.Add(new Price() {Date = new DateTime(2019, 1, 2), Name = "ERICB", Value = 81}),
+                    db.Prices.Add(new Price() {Date = new DateTime(2019, 1, 3), Name = "ERICB", Value = 82}),
+                    db.Prices.Add(new Price() {Date = new DateTime(2019, 1, 4), Name = "ERICB", Value = null}),
+                    db.Prices.Add(new Price() {Date = new DateTime(2019, 1, 5), Name = "ERICB", Value = 86})
+                };
+                var existing = db.BulkSelectExisting<Price, Price>(
+                    new BulkSelectRequest<Price>(new[] { "Date", "Name", "Value" }, prices));
+                Assert.AreEqual(4, existing.Count);
+                Assert.AreSame(prices[0], existing[0]);
+                Assert.AreSame(prices[1], existing[1]);
+                Assert.AreSame(prices[2], existing[2]);
+                Assert.AreSame(prices[4], existing[3]);
+            }
         }
 
         [TestMethod]
@@ -34,11 +67,11 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
             using (var db = new UserGeneratedTeamContext())
             {
                 var teams = new List<Team>();
-                
+
                 // Add ten teams to the database (Team 0 - Team 9)
                 for (int i = 0; i < 10; i++)
                 {
-                    teams.Add(new Team {Id = Guid.NewGuid(), Name =$"Team #{i}"});
+                    teams.Add(new Team { Id = Guid.NewGuid(), Name = $"Team #{i}" });
                 }
 
                 // Save the ten first teams to the database.
@@ -51,12 +84,12 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 // the list but not to the database.
                 for (int i = 10; i < 20; i++)
                 {
-                    teams.Add(new Team {Id = Guid.NewGuid(), Name =$"Team #{i}"});
+                    teams.Add(new Team { Id = Guid.NewGuid(), Name = $"Team #{i}" });
                 }
 
                 // The only teams we should get back out of the 20 teams (Team 0 - Team 19)
                 // are the first ten that we saved to the database.
-                var existingTeams = db.BulkSelectExisting<Team, Team>(new BulkSelectRequest<Team>(new []{"Id"}, teams));
+                var existingTeams = db.BulkSelectExisting<Team, Team>(new BulkSelectRequest<Team>(new[] { "Id" }, teams));
                 existingTeams = existingTeams.OrderBy(t => t.Name).ToList();
                 Assert.AreEqual(10, existingTeams.Count);
                 for (int i = 0; i < 10; i++)
@@ -77,7 +110,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 // Add ten teams to the database (Team 0 - Team 9)
                 for (int i = 0; i < 10; i++)
                 {
-                    teams.Add(new Team {Id = Guid.NewGuid(), Name =$"Team #{i}"});
+                    teams.Add(new Team { Id = Guid.NewGuid(), Name = $"Team #{i}" });
                 }
 
                 // Save the ten first teams to the database.
@@ -90,17 +123,17 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 // the list but not to the database.
                 for (int i = 10; i < 20; i++)
                 {
-                    teams.Add(new Team {Id = Guid.NewGuid(), Name =$"Team #{i}"});
+                    teams.Add(new Team { Id = Guid.NewGuid(), Name = $"Team #{i}" });
                 }
 
                 // The only teams we should get back out of the 20 teams (Team 0 - Team 19)
                 // are the last ten that we did not save to the database.
-                var existingTeams = db.BulkSelectNotExisting<Team, Team>(new BulkSelectRequest<Team>(new []{"Id"}, teams));
+                var existingTeams = db.BulkSelectNotExisting<Team, Team>(new BulkSelectRequest<Team>(new[] { "Id" }, teams));
                 Assert.AreEqual(10, existingTeams.Count);
                 for (int i = 0; i < 10; i++)
                 {
-                    Assert.AreEqual(teams[i+10].Id, existingTeams[i].Id);
-                    Assert.AreEqual(teams[i+10].Name, existingTeams[i].Name);
+                    Assert.AreEqual(teams[i + 10].Id, existingTeams[i].Id);
+                    Assert.AreEqual(teams[i + 10].Name, existingTeams[i].Name);
                 }
             }
         }
@@ -111,11 +144,11 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
             using (var db = new DbGeneratedTeamContext())
             {
                 var teams = new List<DM.Teams.UsingDbGeneratedGuidKeys.Team>();
-                
+
                 // Add ten teams to the database (Team 0 - Team 9)
                 for (int i = 0; i < 10; i++)
                 {
-                    teams.Add(new DM.Teams.UsingDbGeneratedGuidKeys.Team { Name =$"Team #{i}"});
+                    teams.Add(new DM.Teams.UsingDbGeneratedGuidKeys.Team { Name = $"Team #{i}" });
                 }
 
                 // Save the ten first teams to the database.
@@ -128,12 +161,12 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 // the list but not to the database.
                 for (int i = 10; i < 20; i++)
                 {
-                    teams.Add(new DM.Teams.UsingDbGeneratedGuidKeys.Team { Name =$"Team #{i}"});
+                    teams.Add(new DM.Teams.UsingDbGeneratedGuidKeys.Team { Name = $"Team #{i}" });
                 }
 
                 // The only teams we should get back out of the 20 teams (Team 0 - Team 19)
                 // are the first ten that we saved to the database.
-                var existingTeams = db.BulkSelectExisting<DM.Teams.UsingDbGeneratedGuidKeys.Team, DM.Teams.UsingDbGeneratedGuidKeys.Team>(new BulkSelectRequest<DM.Teams.UsingDbGeneratedGuidKeys.Team>(new []{"Id"}, teams));
+                var existingTeams = db.BulkSelectExisting<DM.Teams.UsingDbGeneratedGuidKeys.Team, DM.Teams.UsingDbGeneratedGuidKeys.Team>(new BulkSelectRequest<DM.Teams.UsingDbGeneratedGuidKeys.Team>(new[] { "Id" }, teams));
                 Assert.AreEqual(10, existingTeams.Count);
                 for (int i = 0; i < 10; i++)
                 {
@@ -153,7 +186,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 // Add ten teams to the database (Team 0 - Team 9)
                 for (int i = 0; i < 10; i++)
                 {
-                    teams.Add(new DM.Teams.UsingDbGeneratedGuidKeys.Team {Name =$"Team #{i}"});
+                    teams.Add(new DM.Teams.UsingDbGeneratedGuidKeys.Team { Name = $"Team #{i}" });
                 }
 
                 // Save the ten first teams to the database.
@@ -166,17 +199,17 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 // the list but not to the database.
                 for (int i = 10; i < 20; i++)
                 {
-                    teams.Add(new DM.Teams.UsingDbGeneratedGuidKeys.Team { Name =$"Team #{i}"});
+                    teams.Add(new DM.Teams.UsingDbGeneratedGuidKeys.Team { Name = $"Team #{i}" });
                 }
 
                 // The only teams we should get back out of the 20 teams (Team 0 - Team 19)
                 // are the last ten that we did not save to the database.
-                var existingTeams = db.BulkSelectNotExisting<DM.Teams.UsingDbGeneratedGuidKeys.Team, DM.Teams.UsingDbGeneratedGuidKeys.Team>(new BulkSelectRequest<DM.Teams.UsingDbGeneratedGuidKeys.Team>(new []{"Id"}, teams));
+                var existingTeams = db.BulkSelectNotExisting<DM.Teams.UsingDbGeneratedGuidKeys.Team, DM.Teams.UsingDbGeneratedGuidKeys.Team>(new BulkSelectRequest<DM.Teams.UsingDbGeneratedGuidKeys.Team>(new[] { "Id" }, teams));
                 Assert.AreEqual(10, existingTeams.Count);
                 for (int i = 0; i < 10; i++)
                 {
-                    Assert.AreEqual(teams[i+10].Id, existingTeams[i].Id);
-                    Assert.AreEqual(teams[i+10].Name, existingTeams[i].Name);
+                    Assert.AreEqual(teams[i + 10].Id, existingTeams[i].Id);
+                    Assert.AreEqual(teams[i + 10].Name, existingTeams[i].Name);
                 }
             }
         }
@@ -198,7 +231,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
 
                 // Create a list of 100 numbers with values 151 to 250
                 var nums = GenerateNumbers(151, 100, now)
-                    .Select(n =>  n.Value )
+                    .Select(n => n.Value)
                     .ToList();
 
                 // Numbers 151 to 200 out of 151 to 250 should be selected.
@@ -325,13 +358,13 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
 
                 // Numbers 151 to 200 out of 151 to 250 should be selected.
                 var request = typeof(BulkSelectRequest<>).MakeGenericType(typeof(Number));
-                var r = Activator.CreateInstance(request, new [] { "Value" }, numbers.ToList(), null);
+                var r = Activator.CreateInstance(request, new[] { "Value" }, numbers.ToList(), null);
 
                 Type ex = typeof(DbContextExtensions);
                 MethodInfo mi = ex.GetMethod("BulkSelectExisting");
-                MethodInfo miGeneric = mi.MakeGenericMethod(new[] {typeof(Number),typeof(Number)});
-                object[] args = {db, r};
-                var existingNumbers = (List<Number>) miGeneric.Invoke(null, args);
+                MethodInfo miGeneric = mi.MakeGenericMethod(new[] { typeof(Number), typeof(Number) });
+                object[] args = { db, r };
+                var existingNumbers = (List<Number>)miGeneric.Invoke(null, args);
 
                 Assert.AreEqual(50, existingNumbers.Count);
                 for (int i = 0; i < 50; i++)

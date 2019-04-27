@@ -804,7 +804,8 @@ namespace Tanneryd.BulkOperations.EF6
                     if (isGuid)
                         defaultValue = $@"'{Guid.Empty}'";
 
-                    return $"isnull(t0.[{c.TableColumn.Name}], {defaultValue}) = isnull(t1.[{c.TableColumn.Name}], {defaultValue})";
+                    //return $"isnull(t0.[{c.TableColumn.Name}], {defaultValue}) = isnull(t1.[{c.TableColumn.Name}], {defaultValue})";
+                    return $"([t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}] OR ([t0].[{c.TableColumn.Name}] IS NULL AND [t1].[{c.TableColumn.Name}] IS NULL))";
                 });
 
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);

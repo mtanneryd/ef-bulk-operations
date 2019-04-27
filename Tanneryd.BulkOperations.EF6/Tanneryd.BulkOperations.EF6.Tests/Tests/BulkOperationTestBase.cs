@@ -167,6 +167,22 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests
 
         #endregion
 
+        #region Prices
+
+        protected void InitializePriceContext()
+        {
+            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<PriceContext>());
+            CleanupPriceContext();
+        }
+
+        protected void CleanupPriceContext()
+        {
+            var db = new PriceContext();
+            db.Prices.RemoveRange(db.Prices.ToArray());
+            db.SaveChanges();
+        }
+
+        #endregion
         protected static IEnumerable<Number> GenerateNumbers(int start, int count, DateTime now)
         {
             Parity even = new Parity { Name = "Even", UpdatedAt = now, UpdatedBy = "Måns" };
