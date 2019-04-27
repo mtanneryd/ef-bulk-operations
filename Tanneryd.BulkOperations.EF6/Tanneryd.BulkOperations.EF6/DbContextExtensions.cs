@@ -798,13 +798,9 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var conditionStatements = keyMappings.Values.Select(c =>
                 {
+                    // TODO
+                    // the 'is null' checks are only relevant for nullable columns
                     var keyProperty = keyProperties.Single(p => p.Name == c.EntityProperty.Name);
-                    var isGuid = keyProperty.Type == typeof(Guid);
-                    var defaultValue = "0";
-                    if (isGuid)
-                        defaultValue = $@"'{Guid.Empty}'";
-
-                    //return $"isnull(t0.[{c.TableColumn.Name}], {defaultValue}) = isnull(t1.[{c.TableColumn.Name}], {defaultValue})";
                     return $"([t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}] OR ([t0].[{c.TableColumn.Name}] IS NULL AND [t1].[{c.TableColumn.Name}] IS NULL))";
                 });
 
