@@ -32,7 +32,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
         }
 
         [TestMethod]
-        public void ZeroPriceShouldNotBeSelectedByNullPrice()
+        public void ZeroShouldNotMatchNullWhenSelectExisting()
         {
             using (var db = new PriceContext())
             {
@@ -58,6 +58,33 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 Assert.AreSame(prices[1], existing[1]);
                 Assert.AreSame(prices[2], existing[2]);
                 Assert.AreSame(prices[4], existing[3]);
+            }
+        }
+
+        [TestMethod]
+        public void ZeroShouldNotMatchNullWhenSelectNotExisting()
+        {
+            using (var db = new PriceContext())
+            {
+                db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 1), Name = "ERICB", Value = 80 });
+                db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 2), Name = "ERICB", Value = 81 });
+                db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 3), Name = "ERICB", Value = 82 });
+                db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 4), Name = "ERICB", Value = 0 });
+                db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 5), Name = "ERICB", Value = 86 });
+                db.SaveChanges();
+
+                var prices = new[]
+                {
+                    db.Prices.Add(new Price() {Date = new DateTime(2019, 1, 1), Name = "ERICB", Value = 80}),
+                    db.Prices.Add(new Price() {Date = new DateTime(2019, 1, 2), Name = "ERICB", Value = 81}),
+                    db.Prices.Add(new Price() {Date = new DateTime(2019, 1, 3), Name = "ERICB", Value = 82}),
+                    db.Prices.Add(new Price() {Date = new DateTime(2019, 1, 4), Name = "ERICB", Value = null}),
+                    db.Prices.Add(new Price() {Date = new DateTime(2019, 1, 5), Name = "ERICB", Value = 86})
+                };
+                var existing = db.BulkSelectNotExisting<Price, Price>(
+                    new BulkSelectRequest<Price>(new[] { "Date", "Name", "Value" }, prices));
+                Assert.AreEqual(1, existing.Count);
+                Assert.AreSame(prices[3], existing[0]);
             }
         }
 

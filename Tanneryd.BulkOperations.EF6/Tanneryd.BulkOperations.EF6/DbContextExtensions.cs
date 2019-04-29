@@ -473,13 +473,11 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var conditionStatements = keyMappings.Values.Select(c =>
                 {
+                    // TODO
+                    // the 'is null' checks are only relevant for nullable columns
                     var keyProperty = keyProperties.Single(p => p.Name == c.EntityProperty.Name);
-                    var isGuid = keyProperty.Type == typeof(Guid);
-                    var defaultValue = "0";
-                    if (isGuid)
-                        defaultValue = $@"'{Guid.Empty}'";
+                    return $"([t1].[{c.TableColumn.Name}] = [t2].[{c.TableColumn.Name}] OR ([t1].[{c.TableColumn.Name}] IS NULL AND [t2].[{c.TableColumn.Name}] IS NULL))";
 
-                    return $"isnull(t1.[{c.TableColumn.Name}], {defaultValue}) = isnull(t2.[{c.TableColumn.Name}], {defaultValue})";
                 });
 
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
@@ -503,7 +501,7 @@ namespace Tanneryd.BulkOperations.EF6
                     }
                 }
 
-                //DropTempTable(conn, request.Transaction, tempTableName);
+                DropTempTable(conn, request.Transaction, tempTableName);
 
                 return existingEntities;
             }
@@ -587,7 +585,11 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var condStatements = request.SqlConditions.Select(c => $"[t0].[{c.ColumnName}] = {c.ColumnValue}");
                 var condStatementsSql = string.Join(" AND ", condStatements);
-                var conditionStatements = keyMappings.Values.Select(c => $"isnull(t0.[{c.TableColumn.Name}], 0) = isnull(t1.[{c.TableColumn.Name}], 0)");
+                var conditionStatements = keyMappings.Values.Select(c =>
+                {
+                    return $"isnull(t0.[{c.TableColumn.Name}], 0) = isnull(t1.[{c.TableColumn.Name}], 0)";
+                });
+
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                 var query = $@"DELETE {tableName.Fullname}
                                FROM  {tableName.Fullname} AS [t0]
