@@ -35,6 +35,11 @@ namespace Tanneryd.BulkOperations.EF6.Tests.DM.People
         public long? MotherId { get; set; }
         public Person Mother { get; set; }
 
+        // Made this up just so that we can run some tests
+        // that require a nullable column with a non-null
+        // default value.
+        public int? EmployeeNumber { get; set; }
+
         public ICollection<Person> Children { get; set; }
     }
 }

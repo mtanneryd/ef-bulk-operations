@@ -69,10 +69,10 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Delete
 
             using (var db = new PeopleContext())
             {
-                db.People.AddRange(new[] {p0, p1, p2, p3, p4, p5});
+                db.People.AddRange(new[] { p0, p1, p2, p3, p4, p5 });
                 db.SaveChanges();
 
-                var people = db.People.OrderBy(p=>p.FirstName).ToArray();
+                var people = db.People.OrderBy(p => p.FirstName).ToArray();
                 Assert.AreEqual(6, people.Length);
                 Assert.AreEqual(p0.Id, people[0].Id);
                 Assert.AreEqual(p1.Id, people[1].Id);
@@ -84,8 +84,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Delete
                 // Delete all children of p0 in the database 
                 // that are not in the Items list.
                 db.BulkDeleteNotExisting<Person, Person>(new BulkDeleteRequest<Person>(
-                    new [] { new SqlCondition{ ColumnName = "MotherId", ColumnValue = p0.Id} }, 
-                    new [] { "FirstName", "LastName"})
+                    new[] { new SqlCondition("MotherId", p0.Id) },
+                    new[] { "FirstName", "LastName" })
                 {
                     Items = new[] { p1, p3 }.ToList()
                 });
@@ -97,6 +97,67 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Delete
                 Assert.AreEqual(p2.Id, people[2].Id);
                 Assert.AreEqual(p3.Id, people[3].Id);
                 Assert.AreEqual(p4.Id, people[4].Id);
+            }
+        }
+
+        [TestMethod]
+        public void DeleteNotExistingEntities2()
+        {
+            var p0 = new Person
+            {
+                FirstName = "Angelica",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now
+            };
+            var p1 = new Person
+            {
+                FirstName = "Arvid",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now,
+                EmployeeNumber = 0,
+                Mother = p0
+            };
+            var p2 = new Person
+            {
+                FirstName = "Viktor",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now,
+                EmployeeNumber = 0,
+                Mother = p0
+            };
+
+            using (var db = new PeopleContext())
+            {
+                db.People.AddRange(new[] { p0, p1, p2 });
+                db.SaveChanges();
+
+                var people = db.People.OrderBy(p => p.FirstName).ToArray();
+                Assert.AreEqual(3, people.Length);
+                Assert.AreEqual(p0.Id, people[0].Id);
+                Assert.AreEqual(p1.Id, people[1].Id);
+                Assert.AreEqual(p2.Id, people[2].Id);
+
+                // Delete all children of p0 in the database 
+                // that are not in the Items list. Make sure
+                // that we can differentiate between null and
+                // column default values.
+                // Setting the EmployeeNumber values to null
+                // should make those two objects NOT match
+                // with the records in the database and thus
+                // only the mother record should be left after
+                // this operation.
+                p1.EmployeeNumber = null;
+                p2.EmployeeNumber = null;
+                db.BulkDeleteNotExisting<Person, Person>(new BulkDeleteRequest<Person>(
+                    new[] { new SqlCondition("MotherId", p0.Id) },
+                    new[] { "FirstName", "EmployeeNumber", "LastName" })
+                {
+                    Items = new[] { p1, p2 }.ToList()
+                });
+
+                people = db.People.OrderBy(p => p.FirstName).ToArray();
+                Assert.AreEqual(1, people.Length);
+                Assert.AreEqual(p0.Id, people[0].Id);
             }
         }
     }

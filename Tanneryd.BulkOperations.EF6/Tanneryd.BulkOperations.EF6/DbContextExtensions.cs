@@ -587,7 +587,7 @@ namespace Tanneryd.BulkOperations.EF6
                 var condStatementsSql = string.Join(" AND ", condStatements);
                 var conditionStatements = keyMappings.Values.Select(c =>
                 {
-                    return $"isnull(t0.[{c.TableColumn.Name}], 0) = isnull(t1.[{c.TableColumn.Name}], 0)";
+                    return $"([t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}] OR ([t0].[{c.TableColumn.Name}] IS NULL AND [t1].[{c.TableColumn.Name}] IS NULL))";
                 });
 
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);

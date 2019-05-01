@@ -43,6 +43,9 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
                 .Property(p => p.FirstName)
                 .IsRequired();
             modelBuilder.Entity<Person>()
+                .Property(p => p.EmployeeNumber)
+                .IsOptional();
+            modelBuilder.Entity<Person>()
                 .Property(p => p.LastName)
                 .IsRequired();
             modelBuilder.Entity<Person>()
