@@ -14,7 +14,7 @@
     <copyright>Copyright 2017-2019</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>Bugfixes: Join tables with Guid keys misbehaved.</releaseNotes>
+    <releaseNotes>Bugfixes: Issue #16 - BulkInsert is not thread safety.</releaseNotes>
 
   </metadata>
 </package>

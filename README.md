@@ -127,6 +127,9 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
 }
 ```
 ## Release history
+##### 1.2.4 (2019-05-26)
+ * Bugfix: Issue #16 - BulkInsert is not thread safety.
+
 ##### 1.2.3 (2019-03-29)
  * Bugfix: Join tables with Guid keys misbehaved.
  * Added method BulkDeleteNotExisting
