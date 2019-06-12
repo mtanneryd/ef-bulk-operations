@@ -14,7 +14,7 @@
     <copyright>Copyright 2017-2019</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>Bugfixes: Issue #16 - BulkInsert is not thread safety.</releaseNotes>
+    <releaseNotes>Bugfix: Issue #18 - Bug When Parsing Table Names.</releaseNotes>
 
   </metadata>
 </package>

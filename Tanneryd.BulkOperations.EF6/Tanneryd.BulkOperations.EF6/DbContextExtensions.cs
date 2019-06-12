@@ -255,7 +255,7 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
                     var connection = GetSqlConnection(ctx);
-                    var cmd = new SqlCommand(query, connection, request.Transaction);
+                    var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -265,7 +265,7 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
                     var connection = GetSqlConnection(ctx);
-                    var cmd = new SqlCommand(query, connection, request.Transaction);
+                    var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -312,7 +312,7 @@ namespace Tanneryd.BulkOperations.EF6
                         INTO {tempTableName}
                         FROM {tableName.Fullname}
                         WHERE 1=0";
-            var cmd = new SqlCommand(query, connection, transaction);
+            var cmd = CreateSqlCommand(query, connection, transaction, TimeSpan.FromSeconds(30));
             cmd.ExecuteNonQuery();
 
             return tempTableName;
@@ -330,7 +330,7 @@ namespace Tanneryd.BulkOperations.EF6
             string tempTableName)
         {
             var cmdFooter = $@"IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}";
-            var cmd = new SqlCommand(cmdFooter, connection, transaction);
+            var cmd = CreateSqlCommand(cmdFooter, connection, transaction, TimeSpan.FromSeconds(30));
             cmd.ExecuteNonQuery();
         }
 
@@ -488,8 +488,7 @@ namespace Tanneryd.BulkOperations.EF6
                                FROM {tempTableName} AS [t1]
                                INNER JOIN {tableName.Fullname} AS [t2] ON {conditionStatementsSql}";
 
-                var cmd = new SqlCommand(query, conn, request.Transaction);
-                cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
+                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                 var existingEntities = new List<T1>();
                 using (var sqlDataReader = cmd.ExecuteReader())
@@ -600,10 +599,7 @@ namespace Tanneryd.BulkOperations.EF6
                                 WHERE {conditionStatementsSql}
                                )";
 
-                var cmd = new SqlCommand(query, conn, request.Transaction)
-                {
-                    CommandTimeout = (int)request.CommandTimeout.TotalSeconds
-                };
+                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
                 cmd.ExecuteNonQuery();
 
                 DropTempTable(conn, request.Transaction, tempTableName);
@@ -695,10 +691,7 @@ namespace Tanneryd.BulkOperations.EF6
                                INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}
                                ORDER BY [t1].rowno ASC";
 
-                var cmd = new SqlCommand(query, conn, request.Transaction)
-                {
-                    CommandTimeout = (int)request.CommandTimeout.TotalSeconds
-                };
+                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                 var selectedEntities = new List<T2>();
                 using (var sqlDataReader = cmd.ExecuteReader())
@@ -811,10 +804,7 @@ namespace Tanneryd.BulkOperations.EF6
                                FROM {tempTableName} AS [t0]
                                INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
 
-                var cmd = new SqlCommand(query, conn, request.Transaction)
-                {
-                    CommandTimeout = (int)request.CommandTimeout.TotalSeconds
-                };
+                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                 var existingEntities = new List<T1>();
 
@@ -908,8 +898,7 @@ namespace Tanneryd.BulkOperations.EF6
                                  FROM {tableName.Fullname} AS t0
                                  INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
                                 ";
-                var cmd = new SqlCommand(cmdBody, conn, transaction);
-                cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
+                var cmd = CreateSqlCommand(cmdBody, conn, transaction, request.CommandTimeout);
                 rowsAffected += cmd.ExecuteNonQuery();
 
                 if (request.InsertIfNew)
@@ -928,7 +917,7 @@ namespace Tanneryd.BulkOperations.EF6
                              FROM {tempTableName} AS t0
                              INNER JOIN {tableName.Fullname} AS t1 ON {conditionStatementsSql}            
                             ";
-                    cmd = new SqlCommand(cmdBody, conn, transaction);
+                    cmd = CreateSqlCommand(cmdBody, conn, transaction, request.CommandTimeout);
                     cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
                     rowsAffected += cmd.ExecuteNonQuery();
                 }
@@ -1593,7 +1582,7 @@ namespace Tanneryd.BulkOperations.EF6
                                 WHERE {conditionStatementsSql}
                              )
                                 ";
-                cmd = new SqlCommand(cmdBody, conn, transaction) { CommandTimeout = (int)commandTimeout.TotalSeconds };
+                cmd = CreateSqlCommand(cmdBody, conn, transaction, commandTimeout);
                 rowsAffected += cmd.ExecuteNonQuery();
 
                 //
@@ -2007,12 +1996,11 @@ namespace Tanneryd.BulkOperations.EF6
                     INNER JOIN sys.tables t ON ind.object_id = t.object_id
                     WHERE t.name = '{tableName}' AND ind.type_desc = 'CLUSTERED'
                     ORDER BY ic.index_column_id;";
-            var cmd = new SqlCommand(query, connection, sqlTransaction);
+            var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
 
             string[] clusteredColumns = null;
             using (var reader = cmd.ExecuteReader())
             {
-
                 clusteredColumns = (
                         from IDataRecord r in reader
                         select (string)r[0])
@@ -2100,14 +2088,14 @@ namespace Tanneryd.BulkOperations.EF6
         private static void EnableIdentityInsert(string tableName, SqlConnection conn, SqlTransaction sqlTransaction)
         {
             var query = $@"SET IDENTITY_INSERT {tableName} ON";
-            var cmd = new SqlCommand(query, conn, sqlTransaction);
+            var cmd = CreateSqlCommand(query, conn, sqlTransaction, TimeSpan.FromSeconds(30));
             cmd.ExecuteNonQuery();
         }
 
         private static void DisableIdentityInsert(string tableName, SqlConnection conn, SqlTransaction sqlTransaction)
         {
             var query = $@"SET IDENTITY_INSERT {tableName} OFF";
-            var cmd = new SqlCommand(query, conn, sqlTransaction);
+            var cmd = CreateSqlCommand(query, conn, sqlTransaction, TimeSpan.FromSeconds(30));
             cmd.ExecuteNonQuery();
         }
 
@@ -2180,7 +2168,7 @@ namespace Tanneryd.BulkOperations.EF6
         {
             var dbSet = ctx.Set(t);
             var sql = dbSet.ToString();
-            var regex = new Regex(@"FROM (?<table>.*) AS");
+            var regex = new Regex(@"FROM\s+(?<table>.*)\s+AS");
             var match = regex.Match(sql);
             var name = match.Groups["table"].Value;
 
@@ -2197,7 +2185,7 @@ namespace Tanneryd.BulkOperations.EF6
                 return new TableName { Schema = "dbo", Name = m.Groups[1].Value };
             }
 
-            throw new ArgumentException($"Failed to parse tablename {name}. Bulk operation failed.");
+            throw new ArgumentException($"Failed to parse table name {name}. Bulk operation failed.");
         }
 
         private static IEnumerable<TableColumnMapping> GetTableColumnMappings(ICollection<PropertyMapping> properties, bool isIncludedFromComplexType)
@@ -2496,6 +2484,16 @@ namespace Tanneryd.BulkOperations.EF6
             }
         }
 
+        private static SqlCommand CreateSqlCommand(
+            string query, 
+            SqlConnection connection,
+            SqlTransaction transaction,
+            TimeSpan timeout)
+        {
+            var cmd = new SqlCommand(query, connection, transaction);
+            cmd.CommandTimeout = (int)timeout.TotalSeconds;
+            return cmd;
+        }
         #endregion
     }
 }
