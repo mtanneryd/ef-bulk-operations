@@ -481,7 +481,7 @@ namespace Tanneryd.BulkOperations.EF6
                 });
 
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                var query = $@"SELECT [t0].[rowno] 
+                var query = $@"SELECT DISTINCT [t0].[rowno] 
                                FROM {tempTableName} AS [t0]
                                EXCEPT
                                SELECT [t1].[rowno] 
@@ -800,7 +800,7 @@ namespace Tanneryd.BulkOperations.EF6
                 });
 
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                var query = $@"SELECT [t0].[rowno]
+                var query = $@"SELECT DISTINCT [t0].[rowno]
                                FROM {tempTableName} AS [t0]
                                INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
 
