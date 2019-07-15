@@ -14,9 +14,10 @@ namespace Tanneryd.BulkOperations.EF6
 
         public static object[] ToArray(this IList list, Type elementType)
         {
-            var convertMethod = typeof(ListExtensions).GetMethod("ConvertToArray", BindingFlags.Static | BindingFlags.Public, null, new [] { typeof(IList)}, null);
+            var convertMethod = typeof(ListExtensions).GetMethod("ConvertToArray",
+                BindingFlags.Static | BindingFlags.Public, null, new[] {typeof(IList)}, null);
             var genericMethod = convertMethod.MakeGenericMethod(elementType);
-            return (object[])genericMethod.Invoke(null, new object[] {list});
+            return (object[]) genericMethod.Invoke(null, new object[] {list});
         }
     }
 }

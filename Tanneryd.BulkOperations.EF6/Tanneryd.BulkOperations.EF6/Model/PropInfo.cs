@@ -34,7 +34,6 @@ namespace Tanneryd.BulkOperations.EF6.Model
 
     internal class ExpandoBulkPropertyInfo : BulkPropertyInfo
     {
-
     }
 
     //internal class PropInfo

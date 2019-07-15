@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 namespace Tanneryd.BulkOperations.EF6.Model
 {
     internal class ForeignKeyRelation
@@ -21,6 +22,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
         /// This is the primary key property
         /// </summary>
         public string FromProperty { get; set; }
+
         /// <summary>
         /// This is the foreign key property
         /// </summary>

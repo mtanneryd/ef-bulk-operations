@@ -35,6 +35,5 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public SqlTransaction Transaction { get; set; }
         public bool InsertIfNew { get; set; }
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(30);
-
     }
 }

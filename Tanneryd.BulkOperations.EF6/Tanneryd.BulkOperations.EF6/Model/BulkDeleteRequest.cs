@@ -15,8 +15,8 @@ namespace Tanneryd.BulkOperations.EF6.Model
 
         public BulkDeleteRequest(
             SqlCondition[] sqlConditions,
-            string[] keyPropertyNames, 
-            IList<T> items = null, 
+            string[] keyPropertyNames,
+            IList<T> items = null,
             SqlTransaction transaction = null)
         {
             SqlConditions = sqlConditions;
@@ -24,6 +24,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
             Items = items;
             Transaction = transaction;
         }
+
         public BulkDeleteRequest()
         {
             KeyPropertyMappings = new KeyPropertyMapping[0];

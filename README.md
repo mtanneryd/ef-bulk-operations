@@ -127,6 +127,11 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
 }
 ```
 ## Release history
+##### 1.2.5 (2019-07-15)
+ * Bugfix: Issue #18 - Bug when parsing table names.
+ * Bugfix: Sorting on a clustered index did not work for tables with schemas.
+ * Bugfix: BulkSelectExisting and BulkSelectNotExisting sometimes returned duplicates.
+
 ##### 1.2.4 (2019-05-26)
  * Bugfix: Issue #16 - BulkInsert is not thread safety.
 
@@ -142,7 +147,7 @@ public static IList<T1> BulkSelectExisting<T1,T2>(
 
 ## Built With
 
-* Visual Studio 2017
+* Visual Studio 2019
 * .NET Framework 4.5
 * Entity Framework 6.2.0
 

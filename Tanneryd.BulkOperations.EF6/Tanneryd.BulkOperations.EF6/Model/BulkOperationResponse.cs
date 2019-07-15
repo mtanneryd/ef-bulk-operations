@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,29 +29,39 @@ namespace Tanneryd.BulkOperations.EF6.Model
 
     public class BulkInsertResponse : BulkOperationResponse
     {
-        public List<Tuple<Type, BulkInsertStatistics>> BulkInsertStatistics { get; set; } = new List<Tuple<Type, BulkInsertStatistics>>();
+        public List<Tuple<Type, BulkInsertStatistics>> BulkInsertStatistics { get; set; } =
+            new List<Tuple<Type, BulkInsertStatistics>>();
+
         public List<string> TablesWithNoCheckConstraints { get; set; } = new List<string>();
+        public TimeSpan? TimeElapsedDuringUpdateStatistics { get; set; }
+        public TimeSpan? TimeElapsedDuringSorting { get; set; }
 
         public string[] Report()
         {
             var report = new List<string>();
+            if (TimeElapsedDuringUpdateStatistics.HasValue)
+                report.Add(
+                    $@"BulkOperations - UPDATE STATISTICS executed in {TimeElapsedDuringUpdateStatistics.Value.TotalSeconds:f0} seconds.");
+            if (TimeElapsedDuringSorting.HasValue)
+                report.Add(
+                    $@"BulkOperations - Sorted columns in {TimeElapsedDuringSorting.Value.TotalSeconds:f0} seconds.");
             foreach (var r in AffectedRows)
             {
-                report.Add($"{r.Item2} rows affected for {r.Item1.Name}");
+                report.Add($"BulkOperations - {r.Item2} rows affected for {r.Item1.Name}");
             }
 
             foreach (var stat in BulkInsertStatistics)
             {
-                report.Add($"{stat.Item1.Name} - BulkCopy={stat.Item2.TimeElapsedDuringBulkCopy.TotalSeconds}, InsertInto={stat.Item2.TimeElapsedDuringInsertInto.TotalSeconds}");
+                report.Add(
+                    $"BulkOperations - {stat.Item1.Name} - BulkCopy={stat.Item2.TimeElapsedDuringBulkCopy.TotalSeconds}, InsertInto={stat.Item2.TimeElapsedDuringInsertInto.TotalSeconds}");
             }
 
-
-            
             return report.ToArray();
         }
     }
 
-    public struct BulkInsertStatistics {
+    public struct BulkInsertStatistics
+    {
         public TimeSpan TimeElapsedDuringBulkCopy { get; set; }
         public TimeSpan TimeElapsedDuringInsertInto { get; set; }
     }

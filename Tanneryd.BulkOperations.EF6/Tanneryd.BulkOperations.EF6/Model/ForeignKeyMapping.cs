@@ -36,6 +36,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
         {
             ForeignKeyRelations = new ForeignKeyRelation[0];
         }
+
         public BuiltInTypeKind BuiltInTypeKind { get; set; }
         public string NavigationPropertyName { get; set; }
         public string FromType { get; set; }

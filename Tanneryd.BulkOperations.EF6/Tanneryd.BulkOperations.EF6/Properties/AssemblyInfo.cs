@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Reflection;
 
 [assembly: AssemblyVersion("1.2.5")]
 [assembly: AssemblyFileVersion("1.2.5")]
-[assembly: AssemblyInformationalVersion("1.2.5-beta2")]
+[assembly: AssemblyInformationalVersion("1.2.5")]

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -29,6 +30,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
             Items = items;
             Transaction = transaction;
         }
+
         public IList<T> Items { get; set; }
         public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
         public SqlTransaction Transaction { get; set; }
