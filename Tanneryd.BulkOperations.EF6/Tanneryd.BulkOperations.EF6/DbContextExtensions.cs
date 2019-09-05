@@ -270,7 +270,7 @@ namespace Tanneryd.BulkOperations.EF6
                     s0.Start();
                     var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
                     var connection = GetSqlConnection(ctx);
-                    var cmd = new SqlCommand(query, connection, request.Transaction);
+                    var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
                     cmd.ExecuteNonQuery();
                     s0.Stop();
                     response.TimeElapsedDuringUpdateStatistics = s0.Elapsed;
@@ -282,7 +282,7 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
                     var connection = GetSqlConnection(ctx);
-                    var cmd = new SqlCommand(query, connection, request.Transaction);
+                    var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -302,7 +302,7 @@ namespace Tanneryd.BulkOperations.EF6
             s0.Start();
             var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
             var connection = GetSqlConnection(ctx);
-            var cmd = new SqlCommand(query, connection);
+            var cmd = CreateSqlCommand(query, connection, null, TimeSpan.FromMinutes(15));
             cmd.ExecuteNonQuery();
             s0.Stop();
             response.TimeElapsedDuringUpdateStatistics = s0.Elapsed;
@@ -346,7 +346,7 @@ namespace Tanneryd.BulkOperations.EF6
                         INTO {tempTableName}
                         FROM {tableName.Fullname}
                         WHERE 1=0";
-            var cmd = new SqlCommand(query, connection, transaction);
+            var cmd = CreateSqlCommand(query, connection, transaction, TimeSpan.FromSeconds(30));
             cmd.ExecuteNonQuery();
 
             return tempTableName;
@@ -363,8 +363,8 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction,
             string tempTableName)
         {
-            var cmdFooter = $@"IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}";
-            var cmd = new SqlCommand(cmdFooter, connection, transaction);
+            var cmdFooter = $@"DROP TABLE IF EXISTS {tempTableName}";
+            var cmd = CreateSqlCommand(cmdFooter, connection, transaction, TimeSpan.FromSeconds(30));
             cmd.ExecuteNonQuery();
         }
 
@@ -526,8 +526,7 @@ namespace Tanneryd.BulkOperations.EF6
                                FROM {tempTableName} AS [t1]
                                INNER JOIN {tableName.Fullname} AS [t2] ON {conditionStatementsSql}";
 
-                var cmd = new SqlCommand(query, conn, request.Transaction);
-                cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
+                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                 var existingEntities = new List<T1>();
                 using (var sqlDataReader = cmd.ExecuteReader())
@@ -638,10 +637,7 @@ namespace Tanneryd.BulkOperations.EF6
                                 WHERE {conditionStatementsSql}
                                )";
 
-                var cmd = new SqlCommand(query, conn, request.Transaction)
-                {
-                    CommandTimeout = (int)request.CommandTimeout.TotalSeconds
-                };
+                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
                 cmd.ExecuteNonQuery();
 
                 DropTempTable(conn, request.Transaction, tempTableName);
@@ -737,10 +733,7 @@ namespace Tanneryd.BulkOperations.EF6
                                INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}
                                ORDER BY [t1].rowno ASC";
 
-                var cmd = new SqlCommand(query, conn, request.Transaction)
-                {
-                    CommandTimeout = (int)request.CommandTimeout.TotalSeconds
-                };
+                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                 var selectedEntities = new List<T2>();
                 using (var sqlDataReader = cmd.ExecuteReader())
@@ -857,10 +850,7 @@ namespace Tanneryd.BulkOperations.EF6
                                FROM {tempTableName} AS [t0]
                                INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
 
-                var cmd = new SqlCommand(query, conn, request.Transaction)
-                {
-                    CommandTimeout = (int)request.CommandTimeout.TotalSeconds
-                };
+                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                 var existingEntities = new List<T1>();
 
@@ -959,8 +949,7 @@ namespace Tanneryd.BulkOperations.EF6
                                  FROM {tableName.Fullname} AS t0
                                  INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
                                 ";
-                var cmd = new SqlCommand(cmdBody, conn, transaction);
-                cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
+                var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout);
                 rowsAffected += cmd.ExecuteNonQuery();
 
                 if (request.InsertIfNew)
@@ -979,8 +968,7 @@ namespace Tanneryd.BulkOperations.EF6
                              FROM {tempTableName} AS t0
                              INNER JOIN {tableName.Fullname} AS t1 ON {conditionStatementsSql}            
                             ";
-                    cmd = new SqlCommand(cmdBody, conn, transaction);
-                    cmd.CommandTimeout = (int)request.CommandTimeout.TotalSeconds;
+                    cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout);
                     rowsAffected += cmd.ExecuteNonQuery();
                 }
 
@@ -1504,7 +1492,7 @@ namespace Tanneryd.BulkOperations.EF6
                                     WHERE {conditionStatementsSql}
                                  )
                                     ";
-                var cmd = new SqlCommand(cmdBody, conn, transaction) { CommandTimeout = (int)commandTimeout.TotalSeconds };
+                var cmd = CreateSqlCommand(cmdBody, conn, transaction, commandTimeout);
                 rowsAffected += cmd.ExecuteNonQuery();
 
                 //
@@ -1605,84 +1593,6 @@ namespace Tanneryd.BulkOperations.EF6
             }
 
             response.AffectedRows.Add(new Tuple<Type, long>(t, rowsAffected));
-
-            #region obsolete code
-
-            //// We have a single primary key that is not a  
-            //// foreign key and not database generated.
-            //else if (pkColumnMappings.Length == 1
-            //         && !pkColumnMappings[0].IsForeignKey)
-            //{
-            //    var bulkCopy = CreateBulkCopy(
-            //        table,
-            //        properties,
-            //        columnMappings,
-            //        conn,
-            //        transaction,
-            //        tableName.Fullname,
-            //        SqlBulkCopyOptions.Default,
-            //        IncludeRowNumber.No);
-
-            //    var notExistingEntities = BulkSelectNotExisting(ctx, t, entities, pkColumnMappings, transaction);
-
-            //    AddEntitiesToTable(table, notExistingEntities, properties, t, IncludeRowNumber.No);
-            //    rowsAffected += notExistingEntities.Count;
-
-            //    var s = new Stopwatch();
-            //    s.Start();
-            //    bulkCopy.WriteToServer(table.CreateDataReader());
-            //    s.Stop();
-            //    var stats = new BulkInsertStatistics
-            //    {
-            //        TimeElapsedDuringBulkCopy = s.Elapsed
-            //    };
-            //    response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
-            //}
-            //// We have a composite primary key where at least 
-            //// one key component is not a foreign key.
-            //else
-            //{
-            //    var nonPrimaryKeyColumnMappings = columnMappings
-            //        .Values
-            //        .Except(pkColumnMappings)
-            //        .ToArray();
-            //    var tempTableName = FillTempTable(
-            //        conn,
-            //        entities,
-            //        tableName,
-            //        columnMappings,
-            //        pkColumnMappings,
-            //        nonPrimaryKeyColumnMappings,
-            //        transaction);
-
-            //    var conditionStatements =
-            //        pkColumnMappings.Select(c => $"[t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}]");
-            //    var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-
-            //    string listOfPrimaryKeyColumns = string.Join(",",
-            //        pkColumnMappings.Select(c => $"[{c.TableColumn.Name}]"));
-            //    string listOfColumns = string.Join(",",
-            //        pkColumnMappings.Concat(nonPrimaryKeyColumnMappings).Select(c => $"[{c.TableColumn.Name}]"));
-
-            //    var cmdBody = $@"INSERT INTO {tableName.Fullname} ({listOfColumns})
-            //                 SELECT {listOfColumns} 
-            //                 FROM {tempTableName} AS [t0]
-            //                 WHERE NOT EXISTS (
-            //                    SELECT {listOfPrimaryKeyColumns}
-            //                    FROM {tableName.Fullname} AS [t1]
-            //                    WHERE {conditionStatementsSql}
-            //                 )
-            //                    ";
-            //    var cmd = new SqlCommand(cmdBody, conn, transaction) { CommandTimeout = (int)commandTimeout.TotalSeconds };
-            //    rowsAffected += cmd.ExecuteNonQuery();
-
-            //    //
-            //    // Clean up. Delete the temp table.
-            //    //
-            //    DropTempTable(conn, transaction, tempTableName);
-            //}
-
-            #endregion
         }
 
         /// <summary>
@@ -2024,7 +1934,7 @@ namespace Tanneryd.BulkOperations.EF6
                     INNER JOIN sys.tables t ON ind.object_id = t.object_id
                     WHERE t.name = '{tableName}' AND ind.type_desc = 'CLUSTERED'
                     ORDER BY ic.index_column_id;";
-            var cmd = new SqlCommand(query, connection, sqlTransaction);
+            var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
 
             string[] clusteredColumns = null;
             using (var reader = cmd.ExecuteReader())
@@ -2119,14 +2029,14 @@ namespace Tanneryd.BulkOperations.EF6
         private static void EnableIdentityInsert(string tableName, SqlConnection conn, SqlTransaction sqlTransaction)
         {
             var query = $@"SET IDENTITY_INSERT {tableName} ON";
-            var cmd = new SqlCommand(query, conn, sqlTransaction);
+            var cmd = CreateSqlCommand(query, conn, sqlTransaction, TimeSpan.FromSeconds(30));
             cmd.ExecuteNonQuery();
         }
 
         private static void DisableIdentityInsert(string tableName, SqlConnection conn, SqlTransaction sqlTransaction)
         {
             var query = $@"SET IDENTITY_INSERT {tableName} OFF";
-            var cmd = new SqlCommand(query, conn, sqlTransaction);
+            var cmd = CreateSqlCommand(query, conn, sqlTransaction, TimeSpan.FromSeconds(30));
             cmd.ExecuteNonQuery();
         }
 
@@ -2521,6 +2431,16 @@ namespace Tanneryd.BulkOperations.EF6
             }
         }
 
+        private static SqlCommand CreateSqlCommand(
+            string query,
+            SqlConnection connection,
+            SqlTransaction transaction,
+            TimeSpan timeout)
+        {
+            var cmd = new SqlCommand(query, connection, transaction);
+            cmd.CommandTimeout = (int)timeout.TotalSeconds;
+            return cmd;
+        }
         #endregion
     }
 }
