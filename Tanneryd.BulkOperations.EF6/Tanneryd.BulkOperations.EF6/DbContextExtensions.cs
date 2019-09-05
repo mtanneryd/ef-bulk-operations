@@ -295,6 +295,11 @@ namespace Tanneryd.BulkOperations.EF6
 
         public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx)
         {
+            return UpdateStatistics<T>(ctx, TimeSpan.FromMinutes(15));
+        }
+
+        public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx, TimeSpan timeout)
+        {
             var response = new BulkInsertResponse();
             var tableName = GetTableName(ctx, typeof(T));
 
@@ -302,7 +307,7 @@ namespace Tanneryd.BulkOperations.EF6
             s0.Start();
             var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
             var connection = GetSqlConnection(ctx);
-            var cmd = CreateSqlCommand(query, connection, null, TimeSpan.FromMinutes(15));
+            var cmd = CreateSqlCommand(query, connection, null, timeout);
             cmd.ExecuteNonQuery();
             s0.Stop();
             response.TimeElapsedDuringUpdateStatistics = s0.Elapsed;
@@ -340,7 +345,7 @@ namespace Tanneryd.BulkOperations.EF6
             var guid = Guid.NewGuid().ToString("N");
             var tempTableName = $"tempdb..#{guid}";
             var query = $@"   
-                        IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
+                        DROP TABLE IF EXISTS {tempTableName}
 
                         SELECT {selectClause}
                         INTO {tempTableName}
