@@ -14,7 +14,7 @@
     <copyright>Copyright 2017-2019</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>Bugfix: Issue #18 - Bug When Parsing Table Names. Sorting on a clustered index did not work for tables with schemas.</releaseNotes>
+    <releaseNotes>Minor refactorings and a fix concerning table name parsing.</releaseNotes>
 
   </metadata>
 </package>

@@ -48,7 +48,18 @@ namespace Tanneryd.BulkOperations.EF6
         #region Public API
 
         /// <summary>
+        /// The bulk delete request contains a SqlCondition. It has
+        /// a list of column name/column value pairs and will be used
+        /// to build an AND where clause. This method will delete any
+        /// rows in the database that matches this SQL condition unless
+        /// it also matches one of the supplied entities according to
+        /// the key selector used.
         ///
+        /// !!! IMPORTANT !!!
+        /// MAKE SURE THAT YOU FULLY UNDERSTAND THIS LOGIC
+        /// BEFORE USING THE BULK DELETE METHOD SO THAT YOU
+        /// DO NOT END UP WITH AN EMPTY DATABASE.
+        /// 
         /// </summary>
         /// <typeparam name="T1"></typeparam>
         /// <typeparam name="T2"></typeparam>
@@ -2114,7 +2125,7 @@ namespace Tanneryd.BulkOperations.EF6
         {
             var dbSet = ctx.Set(t);
             var sql = dbSet.ToString();
-            var regex = new Regex(@"FROM (?<table>.*) AS");
+            var regex = new Regex(@"FROM\s*(?<table>.*?)\s*AS");
             var match = regex.Match(sql);
             var name = match.Groups["table"].Value;
 

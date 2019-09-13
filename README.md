@@ -122,9 +122,35 @@ public class KeyPropertyMapping
 public static IList<T1> BulkSelectExisting<T1,T2>(
     this DbContext ctx,
     BulkSelectRequest<T1> request)
-{
-    return DoBulkSelectExisting<T1, T2>(ctx, request);
-}
+```
+
+#### Delete
+
+##### DeleteExisting
+
+##### DeleteNotExisting
+```
+        /// <summary>
+        /// The bulk delete request contains a SqlCondition. It has
+        /// a list of column name/column value pairs and will be used
+        /// to build an AND where clause. This method will delete any
+        /// rows in the database that matches this SQL condition unless
+        /// it also matches one of the supplied entities according to
+        /// the key selector used.
+        ///
+        /// !!! IMPORTANT !!!
+        /// MAKE SURE THAT YOU FULLY UNDERSTAND THIS LOGIC
+        /// BEFORE USING THE BULK DELETE METHOD SO THAT YOU
+        /// DO NOT END UP WITH AN EMPTY DATABASE.
+        /// 
+        /// </summary>
+        /// <typeparam name="T1"></typeparam>
+        /// <typeparam name="T2"></typeparam>
+        /// <param name="ctx"></param>
+        /// <param name="request"></param>
+        public static void BulkDeleteNotExisting<T1, T2>(
+            this DbContext ctx,
+            BulkDeleteRequest<T1> request)
 ```
 ## Release history
 ##### 1.2.5 (2019-07-15)
