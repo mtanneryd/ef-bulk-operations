@@ -183,6 +183,10 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
+##### 1.2.7 (2019-09-13)
+ * Bugfix: Issue #18 - Bug when parsing table names. (not completely fixed in 1.2.5)
+ * Added documentation for BulkDeleteNotExisting
+
 ##### 1.2.5 (2019-07-15)
  * Bugfix: Issue #18 - Bug when parsing table names.
  * Bugfix: Sorting on a clustered index did not work for tables with schemas.
