@@ -356,7 +356,7 @@ namespace Tanneryd.BulkOperations.EF6
             var guid = Guid.NewGuid().ToString("N");
             var tempTableName = $"tempdb..#{guid}";
             var query = $@"   
-                        DROP TABLE IF EXISTS {tempTableName}
+                        IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
 
                         SELECT {selectClause}
                         INTO {tempTableName}
@@ -379,7 +379,7 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction,
             string tempTableName)
         {
-            var cmdFooter = $@"DROP TABLE IF EXISTS {tempTableName}";
+            var cmdFooter = $@"IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}";
             var cmd = CreateSqlCommand(cmdFooter, connection, transaction, TimeSpan.FromSeconds(30));
             cmd.ExecuteNonQuery();
         }
