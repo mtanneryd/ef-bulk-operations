@@ -2125,7 +2125,7 @@ namespace Tanneryd.BulkOperations.EF6
         {
             var dbSet = ctx.Set(t);
             var sql = dbSet.ToString();
-            var regex = new Regex(@"FROM\s(?<table>[\[\w@$#_\. \]]*)\sAS\s\[\w+\]$");
+            var regex = new Regex(@"FROM (?<table>[\[\w@$#_\. \]]+) AS \[\w+\]$");
             var match = regex.Match(sql);
             var name = match.Groups["table"].Value;
 
