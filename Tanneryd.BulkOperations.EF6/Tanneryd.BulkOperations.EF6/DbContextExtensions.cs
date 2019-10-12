@@ -47,6 +47,14 @@ namespace Tanneryd.BulkOperations.EF6
 
         #region Public API
 
+        public static void DeleteAllExecutionPlansFromCache(this DbContext ctx, SqlTransaction sqlTransaction)
+        {
+            var query = $@"DBCC FREEPROCCACHE WITH NO_INFOMSGS";
+            var connection = GetSqlConnection(ctx);
+            var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
+            cmd.ExecuteNonQuery();
+        }
+
         /// <summary>
         /// The bulk delete request contains a SqlCondition. It has
         /// a list of column name/column value pairs and will be used
