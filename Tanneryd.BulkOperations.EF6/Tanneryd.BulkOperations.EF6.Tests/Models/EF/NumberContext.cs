@@ -13,7 +13,6 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
 using Tanneryd.BulkOperations.EF6.Tests.DM.Numbers;

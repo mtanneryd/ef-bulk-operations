@@ -13,16 +13,17 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-namespace Tanneryd.BulkOperations.EF6.Tests.DM.Miscellaneous
+using System.Collections.Generic;
+
+namespace Tanneryd.BulkOperations.EF6.Tests.Models.DM.Report
 {
-    public class Point
+    public class Period
     {
-        public int XCoordinateId { get; set; }
-        public Coordinate XCoordinate { get; set; }
-        public int YCoordinateId { get; set; }
-        public Coordinate YCoordinate { get; set; }
+        // Primary key
+        public int PeriodID { get; set; }
+        public string Name { get; set; }
 
-        public double Value { get; set; }
-
+        public virtual ICollection<SummaryReportFROMTableASExtent> SummaryReports { get; set; }
+        public virtual ICollection<DetailReportWithFROM> DetailReports { get; set; }
     }
 }

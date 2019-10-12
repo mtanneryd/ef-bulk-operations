@@ -56,8 +56,13 @@
     <Reference Include="System.Data" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DbContextExtensionsTests.cs" />
     <Compile Include="Models\DM\Prices\Price.cs" />
+    <Compile Include="Models\DM\Report\DetailReport.cs" />
+    <Compile Include="Models\DM\Report\Period.cs" />
+    <Compile Include="Models\DM\Report\SummaryReport.cs" />
     <Compile Include="Models\EF\PriceContext.cs" />
+    <Compile Include="Models\EF\ReportContext.cs" />
     <Compile Include="Tests\Delete\BulkDeleteTests.cs" />
     <Compile Include="Tests\Insert\BulkInsertManyToManyTests.cs" />
     <Compile Include="Tests\Insert\BulkInsertMiscellaneousTests.cs" />
