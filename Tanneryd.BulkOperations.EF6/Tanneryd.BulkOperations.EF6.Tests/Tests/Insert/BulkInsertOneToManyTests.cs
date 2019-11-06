@@ -71,9 +71,9 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var req = new BulkInsertRequest<Blog>
                 {
                     Entities = new[] { blog }.ToList(),
-                    AllowNotNullSelfReferences = false,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No,
                     SortUsingClusteredIndex = true,
-                    Recursive = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 };
                 var response = db.BulkInsertAll(req);
                 var posts = db.Posts
@@ -112,9 +112,9 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var req = new BulkInsertRequest<Post>
                 {
                     Entities = new[] { firstPost, secondPost }.ToList(),
-                    AllowNotNullSelfReferences = false,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No,
                     SortUsingClusteredIndex = true,
-                    Recursive = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 };
                 var response = db.BulkInsertAll(req);
                 var posts = db.Posts
@@ -175,7 +175,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var request = new BulkInsertRequest<Number>
                 {
                     Entities = numbers,
-                    Recursive = true,
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
                 };
                 db.BulkInsertAll(request);
 

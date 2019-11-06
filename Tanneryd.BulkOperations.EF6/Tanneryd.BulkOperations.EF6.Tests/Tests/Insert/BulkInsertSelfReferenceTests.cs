@@ -73,8 +73,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                     var request = new BulkInsertRequest<Employee>
                     {
                         Entities = new List<Employee> { john, adam },
-                        Recursive = true,
-                        AllowNotNullSelfReferences = true
+                        EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                        AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
                     };
                     db.BulkInsertAll(request);
                 }
@@ -115,8 +115,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var request = new BulkInsertRequest<Employee>
                 {
                     Entities = new List<Employee> { john, adam },
-                    Recursive = true,
-                    AllowNotNullSelfReferences = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
                 };
                 db.BulkInsertAll(request);
 
@@ -155,8 +155,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var request = new BulkInsertRequest<Company>
                 {
                     Entities = new List<Company> { employer },
-                    Recursive = true,
-                    AllowNotNullSelfReferences = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
                 };
                 db.BulkInsertAll(request);
 
@@ -187,8 +187,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var request = new BulkInsertRequest<Employee>
                 {
                     Entities = new List<Employee> { employee },
-                    Recursive = true,
-                    AllowNotNullSelfReferences = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
                 };
                 db.BulkInsertAll(request);
 
@@ -220,7 +220,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var request = new BulkInsertRequest<Person>
                 {
                     Entities = new List<Person> { child },
-                    Recursive = true,
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
                 };
                 db.BulkInsertAll(request);
 
@@ -251,7 +251,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var request = new BulkInsertRequest<Person>
                 {
                     Entities = new List<Person> { mother },
-                    Recursive = true,
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
                 };
                 db.BulkInsertAll(request);
 

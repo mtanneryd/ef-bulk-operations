@@ -24,10 +24,18 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
         public DbSet<ReservedSqlKeyword> ReservedSqlKeywords { get; set; }
         public DbSet<Coordinate> Coordinates { get; set; }
         public DbSet<Point> Points { get; set; }
+        public DbSet<EmptyTable> EmptyTables { get; set; }
 
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<EmptyTable>()
+                .ToTable("EmptyTable")
+                .HasKey(p => p.Id);
+            modelBuilder.Entity<EmptyTable>()
+                .Property(p => p.Id)
+                .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+
             modelBuilder.Entity<ReservedSqlKeyword>()
                 .ToTable("ReservedSqlKeyword")
                 .HasKey(p => p.Id);

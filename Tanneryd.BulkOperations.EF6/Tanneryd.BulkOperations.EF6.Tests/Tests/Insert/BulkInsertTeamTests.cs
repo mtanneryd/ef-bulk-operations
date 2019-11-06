@@ -72,7 +72,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 db.BulkInsertAll(new BulkInsertRequest<Coach>
                 {
                     Entities = coaches,
-                    Recursive = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 });
 
                 var actual = db.Coaches

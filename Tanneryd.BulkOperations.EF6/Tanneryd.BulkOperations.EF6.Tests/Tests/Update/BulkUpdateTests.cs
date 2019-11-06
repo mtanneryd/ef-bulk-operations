@@ -59,9 +59,9 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Update
                 var req = new BulkInsertRequest<Blog>
                 {
                     Entities = new[] { blog }.ToList(),
-                    AllowNotNullSelfReferences = false,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No,
                     SortUsingClusteredIndex = true,
-                    Recursive = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 };
                 var response = db.BulkInsertAll(req);
 

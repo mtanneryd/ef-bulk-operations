@@ -57,6 +57,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DbContextExtensionsTests.cs" />
+    <Compile Include="Models\DM\Miscellaneous\EmptyTable.cs" />
     <Compile Include="Models\DM\Prices\Price.cs" />
     <Compile Include="Models\DM\Report\DetailReport.cs" />
     <Compile Include="Models\DM\Report\Period.cs" />

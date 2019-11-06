@@ -268,7 +268,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 db.BulkInsertAll(new BulkInsertRequest<Number>
                 {
                     Entities = numbers,
-                    Recursive = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 });
 
                 // Create a list of 100 numbers with values 151 to 250
@@ -310,7 +310,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 db.BulkInsertAll(new BulkInsertRequest<Number>
                 {
                     Entities = numbers,
-                    Recursive = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 });
 
                 // Create a list of 100 numbers with values 151 to 250
@@ -352,7 +352,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 db.BulkInsertAll(new BulkInsertRequest<Number>
                 {
                     Entities = numbers,
-                    Recursive = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 });
 
                 // Create a list of 100 numbers with values 151 to 250
@@ -392,7 +392,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 db.BulkInsertAll(new BulkInsertRequest<Number>
                 {
                     Entities = numbers,
-                    Recursive = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 });
 
                 // Create a list of 100 numbers with values 151 to 250

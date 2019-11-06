@@ -65,9 +65,9 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var req = new BulkInsertRequest<Post>
                 {
                     Entities = new[] { firstPost }.ToList(),
-                    AllowNotNullSelfReferences = false,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No,
                     SortUsingClusteredIndex = true,
-                    Recursive = true
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 };
                 var response = db.BulkInsertAll(req);
                 var posts = db.Posts
@@ -125,8 +125,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var request = new BulkInsertRequest<Instructor>
                 {
                     Entities = new[] { instructor }.ToList(),
-                    Recursive = true,
-                    AllowNotNullSelfReferences = false
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No
                 };
                 db.BulkInsertAll(request);
 
@@ -155,8 +155,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var request = new BulkInsertRequest<Instructor>
                 {
                     Entities = instructors.ToList(),
-                    Recursive = true,
-                    AllowNotNullSelfReferences = false
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No
                 };
                 db.BulkInsertAll(request);
                 var dbInstructors = db.Instructors
@@ -193,8 +193,8 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var request = new BulkInsertRequest<Course>
                 {
                     Entities = courses.ToList(),
-                    Recursive = true,
-                    AllowNotNullSelfReferences = false
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No
                 };
                 db.BulkInsertAll(request);
 

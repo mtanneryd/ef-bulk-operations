@@ -14,6 +14,7 @@
 * limitations under the License.
 */
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
@@ -51,6 +52,32 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
             CleanupMiscellaneousContext();
             CleanupTeamContext();
             CleanupPeopleContext();
+        }
+
+        [TestMethod]
+        public void FillingUpTableWithPrimaryKeyColumnOnlyShouldBePossible()
+        {
+            using (var db = new MiscellaneousContext())
+            {
+                var entities = new List<EmptyTable>();
+                for (int i = 0; i < 1000; i++)
+                {
+                    entities.Add(new EmptyTable());
+                }
+
+                var request = new BulkInsertRequest<EmptyTable>
+                {
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No,
+                    EnableRecursiveInsert = EnableRecursiveInsert.NoButRetrieveGeneratedPrimaryKeys,
+                    Entities = entities
+                };
+
+                db.BulkInsertAll(request);
+                for (int i = 0; i < 1000; i++)
+                {
+                    Console.WriteLine(entities[i].Id);
+                }
+            }
         }
 
         [TestMethod]
@@ -119,7 +146,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
                 var request = new BulkInsertRequest<Prime>
                 {
                     Entities = primes,
-                    Recursive = true,
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
                 };
                 db.BulkInsertAll(request);
 

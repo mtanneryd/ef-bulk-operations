@@ -138,7 +138,7 @@ namespace Tanneryd.BulkOperations.EF6
             TableColumnMapping[] pkColumnMappings, SqlTransaction sqlTransaction)
         {
             var request = typeof(BulkSelectRequest<>).MakeGenericType(t);
-            var keyPropertyNames = pkColumnMappings.Select(m => m.TableColumn.Name).ToArray();
+            var keyPropertyNames = pkColumnMappings.Select(m => m.EntityProperty.Name).ToArray();
             var r = Activator.CreateInstance(request, keyPropertyNames, entities.ToArray(t), sqlTransaction);
             Type ex = typeof(DbContextExtensions);
             MethodInfo mi = ex.GetMethod("BulkSelectNotExisting");
@@ -216,7 +216,7 @@ namespace Tanneryd.BulkOperations.EF6
             {
                 Entities = entities,
                 Transaction = transaction,
-                Recursive = recursive,
+                EnableRecursiveInsert = recursive ? EnableRecursiveInsert.Yes : EnableRecursiveInsert.NoButRetrieveGeneratedPrimaryKeys,
             };
             return BulkInsertAll(ctx, request);
         }
@@ -249,7 +249,8 @@ namespace Tanneryd.BulkOperations.EF6
 
             try
             {
-                var t = typeof(T);
+                // NOTE(Ossian): Had to change from typeof(T) to the below to accept IList<object> being passed to BulkInsertAll
+                var t = request.Entities.First().GetType();
                 var tableName = GetTableName(ctx, t);
                 var mappingsByType = new Dictionary<Type, Mappings>();
                 if (request.SortUsingClusteredIndex)
@@ -261,6 +262,7 @@ namespace Tanneryd.BulkOperations.EF6
                     s0.Start();
                     var clusteredIndexColumns = GetClusteredIndexColumns(
                         ctx,
+                        tableName.Schema,
                         tableName.Name,
                         request.Transaction,
                         mappings);
@@ -276,7 +278,7 @@ namespace Tanneryd.BulkOperations.EF6
                     ctx,
                     request.Entities.Cast<dynamic>().ToList(),
                     request.Transaction,
-                    request.Recursive,
+                    request.EnableRecursiveInsert,
                     request.AllowNotNullSelfReferences,
                     request.CommandTimeout,
                     new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
@@ -1022,8 +1024,8 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             IList<dynamic> entities,
             SqlTransaction sqlTransaction,
-            bool recursive,
-            bool allowNotNullSelfReferences,
+            EnableRecursiveInsert enableRecursiveInsert,
+            AllowNotNullSelfReferences allowNotNullSelfReferences,
             TimeSpan commandTimeout,
             Dictionary<object, object> savedEntities,
             Dictionary<Type, Mappings> mappingsByType,
@@ -1046,7 +1048,7 @@ namespace Tanneryd.BulkOperations.EF6
             // entities should be persisted and their primary key values copied
             // to the foreign keys in these entities.
             //
-            if (recursive)
+            if (enableRecursiveInsert == EnableRecursiveInsert.Yes)
             {
                 //Trace.TraceInformation($"DoBulkInsertAll - ToForeignKeyMappings - {t.ToString()}");
                 foreach (var fkMapping in mappings.ToForeignKeyMappings)
@@ -1115,7 +1117,7 @@ namespace Tanneryd.BulkOperations.EF6
                         ctx,
                         navProperties.ToList(),
                         sqlTransaction,
-                        recursive,
+                        enableRecursiveInsert,
                         allowNotNullSelfReferences,
                         commandTimeout,
                         savedEntities,
@@ -1148,7 +1150,7 @@ namespace Tanneryd.BulkOperations.EF6
                 savedEntities.Add(entity, entity);
             }
 
-            DoBulkCopy(ctx, validEntities, t, mappings, sqlTransaction, allowNotNullSelfReferences, commandTimeout,
+            DoBulkCopy(ctx, validEntities, t, mappings, sqlTransaction, allowNotNullSelfReferences, enableRecursiveInsert, commandTimeout,
                 response);
 
             //
@@ -1157,7 +1159,7 @@ namespace Tanneryd.BulkOperations.EF6
             // the children and then save the children. When we have self references we need
             // to handle that with care.
             //
-            if (recursive)
+            if (enableRecursiveInsert == EnableRecursiveInsert.Yes)
             {
                 var fkMappings =
                     mappings.FromForeignKeyMappings.Concat(
@@ -1248,7 +1250,7 @@ namespace Tanneryd.BulkOperations.EF6
                         DoBulkInsertAll(ctx,
                             notExistingNavProperties.ToArray(navPropertyType),
                             sqlTransaction,
-                            recursive,
+                            enableRecursiveInsert,
                             allowNotNullSelfReferences,
                             commandTimeout,
                             savedEntities,
@@ -1338,6 +1340,7 @@ namespace Tanneryd.BulkOperations.EF6
                                 expandoMappings,
                                 sqlTransaction,
                                 allowNotNullSelfReferences,
+                                enableRecursiveInsert,
                                 commandTimeout,
                                 response);
                         }
@@ -1346,7 +1349,7 @@ namespace Tanneryd.BulkOperations.EF6
                                 ctx,
                                 navPropertyEntities.ToArray(),
                                 sqlTransaction,
-                                recursive,
+                                enableRecursiveInsert,
                                 allowNotNullSelfReferences,
                                 commandTimeout,
                                 savedEntities,
@@ -1407,7 +1410,8 @@ namespace Tanneryd.BulkOperations.EF6
             Type t,
             Mappings mappings,
             SqlTransaction transaction,
-            bool allowNotNullSelfReferences,
+            AllowNotNullSelfReferences allowNotNullSelfReferences,
+            EnableRecursiveInsert enableRecursiveInsert,
             TimeSpan commandTimeout,
             BulkInsertResponse response)
         {
@@ -1458,7 +1462,7 @@ namespace Tanneryd.BulkOperations.EF6
             //     identify them by looking at the entity type which 
             //     for these tables always is ExpandoObject.
             //
-            // (3) The table has a single column primary key that is
+            // (3a) The table has a single column primary key that is
             //     generated or computed by the database. In these
             //     cases we need to perform some black magic in order
             //     to reliably retrieve these primary key values and
@@ -1467,6 +1471,13 @@ namespace Tanneryd.BulkOperations.EF6
             //     easy. We simply look at the primary key property
             //     and if it has no value the entity is a new one and
             //     it should be written to the database table.
+            // (3b) The table has a single column primary key that is
+            //     generated or computed by the database but we are not
+            //     interested in recursively inserting entities and we
+            //     do not care about retrieving generated primary key
+            //     values. So, we can save some time by simply doing
+            //     a direct bulk copy without the previously mentioned
+            //     black magic.
             //
             // (4) In all other cases we use bulk copy directly to the
             //     target table (so no black magic required) but
@@ -1531,61 +1542,93 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var newEntities = SelectNewEntities(entities, pkProperty, t);
 
-                //
-                // Save new entities to the database table making sure that the entities
-                // are updated with their generated or computed primary key.
-                //
-                if (newEntities.Count > 0)
+                if (enableRecursiveInsert == EnableRecursiveInsert.NoAndIgnoreGeneratedPrimaryKeys)
                 {
-                    var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name).ToArray();
-                    var tempTableName =
-                        CreateTempTable(conn, transaction, tableName, allColumnNames, IncludeRowNumber.Yes);
-
-                    var bulkCopy = CreateBulkCopy(
-                        table,
-                        properties,
-                        columnMappings,
-                        conn,
-                        transaction,
-                        tempTableName,
-                        SqlBulkCopyOptions.Default,
-                        IncludeRowNumber.Yes);
-
-                    AddEntitiesToTable(table, newEntities, properties, t, IncludeRowNumber.Yes);
-
-                    var s = new Stopwatch();
-                    s.Start();
-                    bulkCopy.WriteToServer(table.CreateDataReader());
-                    s.Stop();
-                    var stats = new BulkInsertStatistics
+                    if (newEntities.Count > 0)
                     {
-                        TimeElapsedDuringBulkCopy = s.Elapsed
-                    };
+                        var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name).ToArray();
+                        var bulkCopy = CreateBulkCopy(
+                            table,
+                            properties,
+                            columnMappings,
+                            conn,
+                            transaction,
+                            tableName.Fullname,
+                            SqlBulkCopyOptions.Default,
+                            IncludeRowNumber.No);
 
-                    var pkColumnType = Type.GetType(pkColumn.PrimitiveType.ClrEquivalentType.FullName);
+                        AddEntitiesToTable(table, newEntities, properties, t, IncludeRowNumber.No);
+                        rowsAffected += newEntities.Count;
 
-                    var nonPrimaryKeyColumnMappings = columnMappings.Values
-                        .Where(m => !primaryKeyMembers.Contains(m.TableColumn.Name))
-                        .Where(m => !m.TableColumn.IsStoreGeneratedComputed)
-                        .Where(m => !m.TableColumn.IsStoreGeneratedIdentity)
-                        .ToArray();
+                        var s = new Stopwatch();
+                        s.Start();
+                        bulkCopy.WriteToServer(table.CreateDataReader());
+                        s.Stop();
+                        var stats = new BulkInsertStatistics
+                        {
+                            TimeElapsedDuringBulkCopy = s.Elapsed
+                        };
+                        response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
+                    }
+                }
+                else
+                {
+                    //
+                    // Save new entities to the database table making sure that the entities
+                    // are updated with their generated or computed primary key.
+                    //
+                    if (newEntities.Count > 0)
+                    {
+                        var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name).ToArray();
+                        var tempTableName =
+                            CreateTempTable(conn, transaction, tableName, allColumnNames, IncludeRowNumber.Yes);
 
-                    rowsAffected += SelectIntoUsingOutputClause(
-                        conn,
-                        transaction,
-                        tableName,
-                        pkColumnType,
-                        allowNotNullSelfReferences,
-                        response,
-                        nonPrimaryKeyColumnMappings,
-                        pkColumn,
-                        tempTableName,
-                        s,
-                        stats,
-                        newEntities,
-                        pkProperty,
-                        hasComplexProperties,
-                        t);
+                        var bulkCopy = CreateBulkCopy(
+                            table,
+                            properties,
+                            columnMappings,
+                            conn,
+                            transaction,
+                            tempTableName,
+                            SqlBulkCopyOptions.Default,
+                            IncludeRowNumber.Yes);
+
+                        AddEntitiesToTable(table, newEntities, properties, t, IncludeRowNumber.Yes);
+
+                        var s = new Stopwatch();
+                        s.Start();
+                        bulkCopy.WriteToServer(table.CreateDataReader());
+                        s.Stop();
+                        var stats = new BulkInsertStatistics
+                        {
+                            TimeElapsedDuringBulkCopy = s.Elapsed
+                        };
+
+                        var pkColumnType = Type.GetType(pkColumn.PrimitiveType.ClrEquivalentType.FullName);
+
+                        var nonPrimaryKeyColumnMappings = columnMappings.Values
+                            .Where(m => !primaryKeyMembers.Contains(m.TableColumn.Name))
+                            .Where(m => !m.TableColumn.IsStoreGeneratedComputed)
+                            .Where(m => !m.TableColumn.IsStoreGeneratedIdentity)
+                            .ToArray();
+
+                        rowsAffected += SelectIntoUsingOutputClause(
+                            conn,
+                            transaction,
+                            tableName,
+                            pkColumnType,
+                            allowNotNullSelfReferences,
+                            response,
+                            nonPrimaryKeyColumnMappings,
+                            pkColumn,
+                            tempTableName,
+                            s,
+                            stats,
+                            newEntities,
+                            pkProperty,
+                            hasComplexProperties,
+                            t);
+                    }
                 }
             }
             else
@@ -1638,7 +1681,7 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction,
             TableName tableName,
             Type pkColumnType,
-            bool allowNotNullSelfReferences,
+            AllowNotNullSelfReferences allowNotNullSelfReferences,
             BulkInsertResponse response,
             TableColumnMapping[] nonPrimaryKeyColumnMappings,
             EdmProperty pkColumn,
@@ -1672,7 +1715,7 @@ namespace Tanneryd.BulkOperations.EF6
             var nextId = identcurrent + (count > 0 ? identIncrement : 0);
 
             string query;
-            if (allowNotNullSelfReferences)
+            if (allowNotNullSelfReferences == AllowNotNullSelfReferences.Yes)
             {
                 query = $"ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL";
                 cmd.CommandText = query;
@@ -1737,7 +1780,7 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction,
             TableName tableName,
             Type pkColumnType,
-            bool allowNotNullSelfReferences,
+            AllowNotNullSelfReferences allowNotNullSelfReferences,
             BulkInsertResponse response,
             TableColumnMapping[] nonPrimaryKeyColumnMappings,
             EdmProperty pkColumn,
@@ -1754,7 +1797,7 @@ namespace Tanneryd.BulkOperations.EF6
             cmd.Transaction = transaction;
 
             string query;
-            if (allowNotNullSelfReferences)
+            if (allowNotNullSelfReferences == AllowNotNullSelfReferences.Yes)
             {
                 query = $"ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL";
                 cmd.CommandText = query;
@@ -1762,8 +1805,10 @@ namespace Tanneryd.BulkOperations.EF6
                 response.TablesWithNoCheckConstraints.Add(tableName.Fullname);
             }
 
-            var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => $"[{p.TableColumn.Name}]"));
-            query = $@"  
+            if (nonPrimaryKeyColumnMappings.Any())
+            {
+                var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => $"[{p.TableColumn.Name}]"));
+                query = $@"  
                         MERGE {tableName.Fullname}
                         USING 
                             (SELECT {columnNames}, rowno
@@ -1775,6 +1820,22 @@ namespace Tanneryd.BulkOperations.EF6
                         OUTPUT t.rowno,
                                inserted.[{pkColumn.Name}]; 
                                  ";
+            }
+            else
+            {
+                query = query = $@"  
+                        MERGE {tableName.Fullname}
+                        USING 
+                            (SELECT rowno
+                             FROM   {tempTableName}) t (rowno)
+                        ON 1 = 0
+                        WHEN NOT MATCHED THEN
+                        INSERT DEFAULT VALUES
+                        OUTPUT t.rowno,
+                               inserted.[{pkColumn.Name}]; 
+                                 ";
+            }
+
             cmd.CommandText = query;
             s.Restart();
             object[] ids = null;
@@ -1944,6 +2005,7 @@ namespace Tanneryd.BulkOperations.EF6
 
         private static string[] GetClusteredIndexColumns(
             DbContext ctx,
+            string schema,
             string tableName,
             SqlTransaction sqlTransaction,
             Mappings mappings)
@@ -1956,8 +2018,15 @@ namespace Tanneryd.BulkOperations.EF6
                     INNER JOIN sys.index_columns ic ON ind.object_id = ic.object_id and ind.index_id = ic.index_id
                     INNER JOIN sys.columns col ON ic.object_id = col.object_id and ic.column_id = col.column_id
                     INNER JOIN sys.tables t ON ind.object_id = t.object_id
-                    WHERE t.name = '{tableName}' AND ind.type_desc = 'CLUSTERED'
-                    ORDER BY ic.index_column_id;";
+                    WHERE t.name = '{tableName}' AND ind.type_desc = 'CLUSTERED'";
+
+            if (!string.IsNullOrEmpty(schema))
+            {
+                query += $" AND SCHEMA_NAME(t.schema_id) = '{schema}'";
+            }
+
+            query += " ORDER BY ic.index_column_id;";
+
             var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
 
             string[] clusteredColumns = null;
