@@ -183,6 +183,10 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
+##### 1.3.0 (2019-12-21)
+ * Bugfix: More fixes related to parsing table names in some very specific situations.
+ * Added support for the recompile option and for deleting the query plan cache.
+
 ##### 1.2.7 (2019-09-13)
  * Bugfix: Issue #18 - Bug when parsing table names. (not completely fixed in 1.2.5)
  * Added documentation for BulkDeleteNotExisting
