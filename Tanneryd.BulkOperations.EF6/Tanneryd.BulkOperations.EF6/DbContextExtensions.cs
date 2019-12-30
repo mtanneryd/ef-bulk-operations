@@ -2202,24 +2202,34 @@ namespace Tanneryd.BulkOperations.EF6
         {
             var dbSet = ctx.Set(t);
             var sql = dbSet.ToString();
-            var regex = new Regex(@"FROM (?<table>[\[\w@$#_\. \]]+) AS \[\w+\]$");
+            return ParseTableName(sql);
+        }
+
+        public static TableName ParseTableName(string sql)
+        {
+            var pattern = @"FROM\s+\[(?<schema>[\w@$#_\. ]+)\]\.\[(?<table>[\w@$#_\. ]+)\]";
+            var regex = new Regex(pattern);
             var match = regex.Match(sql);
-            var name = match.Groups["table"].Value;
-
-            var n = name.Replace("[", "").Replace("]", "");
-            var m = Regex.Match(n, @"(.*)\.(.*)");
-            if (m.Success)
+           
+            if (match.Success)
             {
-                return new TableName { Schema = m.Groups[1].Value, Name = m.Groups[2].Value };
+                var schema = match.Groups["schema"].Value;
+                var table = match.Groups["table"].Value;
+
+                return new TableName { Schema = schema, Name = table };
             }
 
-            m = Regex.Match(n, @"(.*)");
-            if (m.Success)
+            pattern = @"FROM\s+\[(?<table>[\w@$#_\. ]+)\]";
+            regex = new Regex(pattern);
+            match = regex.Match(sql);
+
+            if (match.Success)
             {
-                return new TableName { Schema = "dbo", Name = m.Groups[1].Value };
+                var table = match.Groups["table"].Value;
+                return new TableName { Schema = "dbo", Name = table };
             }
 
-            throw new ArgumentException($"Failed to parse tablename {name}. Bulk operation failed.");
+            throw new ArgumentException($"Failed to parse table name from {sql}. Bulk operation failed.");
         }
 
         private static IEnumerable<TableColumnMapping> GetTableColumnMappings(ICollection<PropertyMapping> properties,
