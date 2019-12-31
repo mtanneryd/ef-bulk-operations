@@ -14,7 +14,7 @@
     <copyright>Copyright 2017-2019</copyright>
     <tags>EF EntityFramework EF6 bulkinsert bulkupdate SQL bulk insert update Entity Framework ORM SqlBulkCopy</tags>
 
-    <releaseNotes>Breaking changes cuased by renamed properties in BulkInsertRequest. Added support for direct bulkcopy when not recursively inserting entities into tables with a generated primary key.</releaseNotes>
+    <releaseNotes>Yet another attempt to fix bugs in table name parsing.</releaseNotes>
 
   </metadata>
 </package>
