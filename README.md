@@ -182,7 +182,14 @@ NOT IMPLEMENTED
             this DbContext ctx,
             BulkDeleteRequest<T1> request)
 ```
+## Planned Releases
+##### 1.4.0 
+ * Adding support for multiple targets, .NET and .NET Standard
+
 ## Release history
+##### 1.3.1 (2020-01-02)
+ * Bugfix: Yet another fix for table name parsing
+
 ##### 1.3.0 (2019-12-21)
  * Bugfix: More fixes related to parsing table names in some very specific situations.
  * Added support for the recompile option and for deleting the query plan cache.
