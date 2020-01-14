@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.1;net45</TargetFrameworks>
+    <Version>1.4.0-experimental</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <PackageId>Tanneryd.BulkOperations.EF6</PackageId>
+    <Authors>Måns Tånneryd</Authors>
+    <Company>Tånneryd IT AB</Company>
+    <Product>Tanneryd.BulkOperations.EF6</Product>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="nuget_api.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EntityFramework" Version="6.4.0" />
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+  </ItemGroup>
+
+</Project>
