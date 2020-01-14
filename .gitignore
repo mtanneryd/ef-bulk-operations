@@ -1,4 +1,4 @@
-﻿################################################################################
+################################################################################
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
@@ -18,3 +18,4 @@
 *.nupkg
 *.user
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.Tests/EF/StebbingContext.cs
+Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NetStd/nuget_api.txt
