@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Tanneryd.BulkOperations.EF6.NetStd\Tanneryd.BulkOperations.EF6.NetStd.csproj" />
+    <ProjectReference Include="..\Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.csproj" />
   </ItemGroup>
 
 </Project>
