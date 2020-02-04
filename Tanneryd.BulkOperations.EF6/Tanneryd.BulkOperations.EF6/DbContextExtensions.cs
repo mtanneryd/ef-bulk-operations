@@ -487,7 +487,7 @@ namespace Tanneryd.BulkOperations.EF6.NetStd
             }
 
             var keyMappings = columnMappings.Values
-                .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.TableColumn.Name))
+                .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.EntityProperty.Name))
                 .ToDictionary(m => m.EntityProperty.Name, m => m);
 
             if (keyMappings.Any())
