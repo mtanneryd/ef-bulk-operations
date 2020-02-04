@@ -416,5 +416,42 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Select
                 }
             }
         }
+
+        [TestMethod]
+        public void NonExistingEntitiesWithDifferentColumnNameShouldBeSelected()
+        {
+            using (var db = new NumberContext())
+            {
+                // Save 200 numbers (1 to 200) to the database.
+                var firstParity = new Parity() { Name = "Parity#1", UpdatedAt = DateTime.Now, UpdatedBy = "Me" };
+                var secondParity = new Parity() { Name = "Parity#2", UpdatedAt = DateTime.Now, UpdatedBy = "Me" };
+                db.BulkInsertAll(new BulkInsertRequest<Parity>
+                {
+                    Entities = new List<Parity> { firstParity, secondParity },
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes
+                });
+
+                var thirdParyity = new Parity() { Name = "Parity#3", UpdatedAt = DateTime.Now, UpdatedBy = "Me" };
+
+                var parities = new List<Parity>();
+                parities.AddRange(db.Parities.ToArray());
+                parities.Add(thirdParyity);
+
+                List<Parity> nonExistingParity = db.BulkSelectNotExisting<Parity, Parity>(new BulkSelectRequest<Parity>()
+                {
+                    Items = new List<Parity> { firstParity, secondParity, thirdParyity },
+                    KeyPropertyMappings = new[]
+                    {
+                        new KeyPropertyMapping
+                        {
+                            ItemPropertyName = "Id",
+                            EntityPropertyName = "Id"
+                        },
+                    }
+                }).ToList();
+
+                Assert.AreEqual(1, nonExistingParity.Count);
+            }
+        }
     }
 }
