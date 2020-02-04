@@ -27,6 +27,26 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests
     public class BulkOperationTestBase
 
     {
+        #region Invoice
+
+        protected void InitializeInvoiceContext()
+        {
+            Database.SetInitializer(new DropCreateDatabaseAlways<InvoiceContext>());
+        }
+
+        protected void CleanupInvoiceContext()
+        {
+            var db = new InvoiceContext();
+            db.BatchInvoiceItems.RemoveRange(db.BatchInvoiceItems.ToArray());
+            db.InvoiceItems.RemoveRange(db.InvoiceItems.ToArray());
+            db.Invoices.RemoveRange(db.Invoices.ToArray());
+            db.Journals.RemoveRange(db.Journals.ToArray());
+            db.BatchInvoices.RemoveRange(db.BatchInvoices.ToArray());
+            db.SaveChanges();
+        }
+
+        #endregion
+
         #region Teams
 
         protected void InitializeTeamContext()
