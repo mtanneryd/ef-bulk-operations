@@ -1443,8 +1443,10 @@ namespace Tanneryd.BulkOperations.EF6.NetStd
             }
 
             // Ignore all properties that we have no mappings for.
+            // hzaharadnik: Ignore all computed columns
             var properties = GetProperties(entities[0])
-                .Where(p => columnMappings.ContainsKey(p.Name)).ToArray();
+                .Where(p => columnMappings.ContainsKey(p.Name))
+                .Where(p => !columnMappings[p.Name].TableColumn.IsStoreGeneratedComputed).ToArray();
 
             var table = new DataTable();
 
