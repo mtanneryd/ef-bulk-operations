@@ -57,7 +57,7 @@ namespace Tanneryd.BulkOperations.EF6.Tests.Tests.Insert
 
                 foreach(var journal in db.Journals.ToList())
                 {
-                    var invoice = new Invoice() { Id = Guid.NewGuid() };
+                    var invoice = new Invoice() { Id = Guid.NewGuid(), Gross = 10, Net = 3 };
                     invoice.Journals.Add(new InvoiceItem() { JournalId = journal.Id });
                     batchInvoice.Invoices.Add(new BatchInvoiceItem() { Id = Guid.NewGuid(), Invoice = invoice });
                 }
