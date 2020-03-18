@@ -1,4 +1,4 @@
-namespace Tanneryd.BulkOperations.EF6.Tests.Migrations
+namespace Tanneryd.BulkOperations.EF6.Tests.Migrations.School
 {
     using System;
     using System.Data.Entity;

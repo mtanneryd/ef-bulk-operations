@@ -26,6 +26,9 @@ namespace Tanneryd.BulkOperations.EF6.Tests.DM.Invoice
             Journals = new HashSet<InvoiceItem>();
         }
         public Guid Id { get; set; }
+        public decimal Net { get; set; }
+        public decimal Gross { get; set; }
+        public decimal Tax { get; private set; }
         public ICollection<BatchInvoiceItem> BatchInvoices { get; set; }
         public ICollection<InvoiceItem> Journals { get; set; }
     }

@@ -65,6 +65,9 @@ namespace Tanneryd.BulkOperations.EF6.Tests.EF
                 .HasMany(b => b.Journals)
                 .WithRequired(p => p.Invoice)
                 .HasForeignKey(p => p.InvoiceId);
+            modelBuilder.Entity<Invoice>()
+                .Property(b => b.Tax)
+                .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Computed);
 
             modelBuilder.Entity<BatchInvoice>()
                 .ToTable("BatchInvoice")
