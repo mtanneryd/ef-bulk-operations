@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Migrations_new\**" />
+    <Compile Remove="Migrations_\**" />
+    <Compile Remove="Models\Migrations_\**" />
+    <EmbeddedResource Remove="Migrations_new\**" />
+    <EmbeddedResource Remove="Migrations_\**" />
+    <EmbeddedResource Remove="Models\Migrations_\**" />
+    <None Remove="Migrations_new\**" />
+    <None Remove="Migrations_\**" />
+    <None Remove="Models\Migrations_\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EntityFramework" Version="6.4.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="2.1.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="2.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.csproj" />
+  </ItemGroup>
+
+</Project>

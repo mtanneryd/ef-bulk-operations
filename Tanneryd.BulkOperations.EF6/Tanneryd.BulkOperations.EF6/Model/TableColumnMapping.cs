@@ -16,7 +16,7 @@
 
 using System.Data.Entity.Core.Metadata.Edm;
 
-namespace Tanneryd.BulkOperations.EF6.NetStd.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
     /// <summary>
     /// This class is used to map an entity property

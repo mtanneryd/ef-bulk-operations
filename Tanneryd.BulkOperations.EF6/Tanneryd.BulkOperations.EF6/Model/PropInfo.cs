@@ -17,7 +17,7 @@
 using System;
 using System.Reflection;
 
-namespace Tanneryd.BulkOperations.EF6.NetStd.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
     internal class BulkPropertyInfo
     {

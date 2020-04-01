@@ -2,7 +2,7 @@
 using System.Data.Common;
 using System.Data.Entity.Infrastructure.Interception;
 
-namespace Tanneryd.BulkOperations.EF6.NetStd
+namespace Tanneryd.BulkOperations.EF6
 {
     public class OptionRecompileInterceptor : DbCommandInterceptor, IDisposable
     {

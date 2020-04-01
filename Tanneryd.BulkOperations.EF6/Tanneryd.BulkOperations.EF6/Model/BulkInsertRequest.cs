@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 
-namespace Tanneryd.BulkOperations.EF6.NetStd.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
     public class BulkInsertRequest<T>
     {

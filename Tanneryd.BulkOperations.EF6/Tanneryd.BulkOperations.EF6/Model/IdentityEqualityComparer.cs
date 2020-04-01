@@ -17,7 +17,7 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
-namespace Tanneryd.BulkOperations.EF6.NetStd.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
     internal class IdentityEqualityComparer<T> : IEqualityComparer<T> where T : class
     {

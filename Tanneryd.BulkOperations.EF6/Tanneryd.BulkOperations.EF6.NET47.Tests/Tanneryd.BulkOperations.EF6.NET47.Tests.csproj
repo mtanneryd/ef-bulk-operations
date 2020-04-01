@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.props" Condition="Exists('..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.props')" />
+  <Import Project="..\packages\Microsoft.NET.Test.Sdk.16.5.0\build\net40\Microsoft.NET.Test.Sdk.props" Condition="Exists('..\packages\Microsoft.NET.Test.Sdk.16.5.0\build\net40\Microsoft.NET.Test.Sdk.props')" />
+  <Import Project="..\packages\Microsoft.CodeCoverage.16.5.0\build\netstandard1.0\Microsoft.CodeCoverage.props" Condition="Exists('..\packages\Microsoft.CodeCoverage.16.5.0\build\netstandard1.0\Microsoft.CodeCoverage.props')" />
+  <Import Project="..\packages\EntityFramework.6.4.0\build\EntityFramework.props" Condition="Exists('..\packages\EntityFramework.6.4.0\build\EntityFramework.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{106E6908-3E9D-4B2B-A2DB-3A281DC57A4A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Tanneryd.BulkOperations.EF6.NET47.Tests</RootNamespace>
+    <AssemblyName>Tanneryd.BulkOperations.EF6.NET47.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.4.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.4.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.CodeCoverage.Shim, Version=15.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.CodeCoverage.16.5.0\lib\net45\Microsoft.VisualStudio.CodeCoverage.Shim.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\MSTest.TestFramework.2.1.1\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\MSTest.TestFramework.2.1.1\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Migrations\InvoiceContext\202004012125232_InitialMigration.cs" />
+    <Compile Include="Migrations\InvoiceContext\202004012125232_InitialMigration.designer.cs" />
+    <Compile Include="Migrations\InvoiceContext\Configuration.cs" />
+    <Compile Include="Migrations\SchoolContext\202004012104360_InitialMigration.cs" />
+    <Compile Include="Migrations\SchoolContext\202004012104360_InitialMigration.designer.cs" />
+    <Compile Include="Migrations\SchoolContext\Configuration.cs" />
+    <Compile Include="Models\DM\Blog\Blog.cs" />
+    <Compile Include="Models\DM\Companies\Company.cs" />
+    <Compile Include="Models\DM\Companies\Employee.cs" />
+    <Compile Include="Models\DM\Invoice\Invoice.cs" />
+    <Compile Include="Models\DM\Levels\Level1.cs" />
+    <Compile Include="Models\DM\Levels\Level2.cs" />
+    <Compile Include="Models\DM\Levels\Level3.cs" />
+    <Compile Include="Models\DM\Logs\LogEntry.cs" />
+    <Compile Include="Models\DM\Miscellaneous\Coordinate.cs" />
+    <Compile Include="Models\DM\Miscellaneous\EmptyTable.cs" />
+    <Compile Include="Models\DM\Miscellaneous\Point.cs" />
+    <Compile Include="Models\DM\Miscellaneous\ReservedSqlKeyword.cs" />
+    <Compile Include="Models\DM\Numbers\Composite.cs" />
+    <Compile Include="Models\DM\Numbers\Number.cs" />
+    <Compile Include="Models\DM\Numbers\Parity.cs" />
+    <Compile Include="Models\DM\Numbers\Prime.cs" />
+    <Compile Include="Models\DM\People\Person.cs" />
+    <Compile Include="Models\DM\People\User.cs" />
+    <Compile Include="Models\DM\Prices\Price.cs" />
+    <Compile Include="Models\DM\Report\DetailReport.cs" />
+    <Compile Include="Models\DM\Report\Period.cs" />
+    <Compile Include="Models\DM\Report\SummaryReport.cs" />
+    <Compile Include="Models\DM\School\Course.cs" />
+    <Compile Include="Models\DM\School\Department.cs" />
+    <Compile Include="Models\DM\School\Instructor.cs" />
+    <Compile Include="Models\DM\School\OfficeAssignment.cs" />
+    <Compile Include="Models\DM\Teams\UsingDbGeneratedGuidKeys\Coach.cs" />
+    <Compile Include="Models\DM\Teams\UsingDbGeneratedGuidKeys\Player.cs" />
+    <Compile Include="Models\DM\Teams\UsingDbGeneratedGuidKeys\Team.cs" />
+    <Compile Include="Models\DM\Teams\UsingUserGeneratedGuidKeys\Coach.cs" />
+    <Compile Include="Models\DM\Teams\UsingUserGeneratedGuidKeys\Player.cs" />
+    <Compile Include="Models\DM\Teams\UsingUserGeneratedGuidKeys\Team.cs" />
+    <Compile Include="Models\EF\BlogContext.cs" />
+    <Compile Include="Models\EF\CompanyContext.cs" />
+    <Compile Include="Models\EF\InvoiceContext.cs" />
+    <Compile Include="Models\EF\LevelContext.cs" />
+    <Compile Include="Models\EF\MiscellaneousContext.cs" />
+    <Compile Include="Models\EF\NumberContext.cs" />
+    <Compile Include="Models\EF\PeopleContext.cs" />
+    <Compile Include="Models\EF\PriceContext.cs" />
+    <Compile Include="Models\EF\ReportContext.cs" />
+    <Compile Include="Models\EF\SchoolContext.cs" />
+    <Compile Include="Models\EF\TeamContext.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tests\BulkOperationTestBase.cs" />
+    <Compile Include="Tests\Delete\BulkDeleteTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertComputedColumns.cs" />
+    <Compile Include="Tests\Insert\BulkInsertManyToManyTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertMiscellaneousTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertOneToManyTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertSelfReferenceTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertTeamTests.cs" />
+    <Compile Include="Tests\Select\BulkSelectExistingTests.cs" />
+    <Compile Include="Tests\Select\BulkSelectTests.cs" />
+    <Compile Include="Tests\Update\BulkUpdateTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.csproj">
+      <Project>{d6cde382-b0ff-4ad5-aa0e-78c706ccd0e0}</Project>
+      <Name>Tanneryd.BulkOperations.EF6</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\InvoiceContext\202004012125232_InitialMigration.resx">
+      <DependentUpon>202004012125232_InitialMigration.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\SchoolContext\202004012104360_InitialMigration.resx">
+      <DependentUpon>202004012104360_InitialMigration.cs</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\EntityFramework.6.4.0\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.0\build\EntityFramework.props'))" />
+    <Error Condition="!Exists('..\packages\EntityFramework.6.4.0\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.0\build\EntityFramework.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeCoverage.16.5.0\build\netstandard1.0\Microsoft.CodeCoverage.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeCoverage.16.5.0\build\netstandard1.0\Microsoft.CodeCoverage.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.CodeCoverage.16.5.0\build\netstandard1.0\Microsoft.CodeCoverage.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeCoverage.16.5.0\build\netstandard1.0\Microsoft.CodeCoverage.targets'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.NET.Test.Sdk.16.5.0\build\net40\Microsoft.NET.Test.Sdk.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NET.Test.Sdk.16.5.0\build\net40\Microsoft.NET.Test.Sdk.props'))" />
+    <Error Condition="!Exists('..\packages\Microsoft.NET.Test.Sdk.16.5.0\build\net40\Microsoft.NET.Test.Sdk.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.NET.Test.Sdk.16.5.0\build\net40\Microsoft.NET.Test.Sdk.targets'))" />
+    <Error Condition="!Exists('..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.props'))" />
+    <Error Condition="!Exists('..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.targets'))" />
+  </Target>
+  <Import Project="..\packages\EntityFramework.6.4.0\build\EntityFramework.targets" Condition="Exists('..\packages\EntityFramework.6.4.0\build\EntityFramework.targets')" />
+  <Import Project="..\packages\Microsoft.CodeCoverage.16.5.0\build\netstandard1.0\Microsoft.CodeCoverage.targets" Condition="Exists('..\packages\Microsoft.CodeCoverage.16.5.0\build\netstandard1.0\Microsoft.CodeCoverage.targets')" />
+  <Import Project="..\packages\Microsoft.NET.Test.Sdk.16.5.0\build\net40\Microsoft.NET.Test.Sdk.targets" Condition="Exists('..\packages\Microsoft.NET.Test.Sdk.16.5.0\build\net40\Microsoft.NET.Test.Sdk.targets')" />
+  <Import Project="..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.targets" Condition="Exists('..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.targets')" />
+</Project>

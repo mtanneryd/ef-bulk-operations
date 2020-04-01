@@ -183,6 +183,10 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
+##### 1.4.0 (2020-04-01)
+ * The package now targets both .netstd and .net45 
+ * Fixed a bug when using computed columns in tables without identity primary keys (reported and resolved by https://github.com/hzahradnik)
+
 ##### 1.3.0 (2019-12-21)
  * Bugfix: More fixes related to parsing table names in some very specific situations.
  * Added support for the recompile option and for deleting the query plan cache.

@@ -17,7 +17,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Tanneryd.BulkOperations.EF6.NetStd.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
     public class BulkOperationResponse
     {

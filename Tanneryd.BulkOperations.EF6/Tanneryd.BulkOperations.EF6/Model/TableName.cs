@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Tanneryd.BulkOperations.EF6.NetStd.Model
+namespace Tanneryd.BulkOperations.EF6.Model
 {
     public class TableName
     {

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Linq;
 using System.Reflection;
 
-namespace Tanneryd.BulkOperations.EF6.NetStd
+namespace Tanneryd.BulkOperations.EF6
 {
     public static class ListExtensions
     {

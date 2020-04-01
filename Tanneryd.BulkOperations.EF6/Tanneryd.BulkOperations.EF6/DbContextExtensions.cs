@@ -29,9 +29,9 @@ using System.Dynamic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using Tanneryd.BulkOperations.EF6.NetStd.Model;
+using Tanneryd.BulkOperations.EF6.Model;
 
-namespace Tanneryd.BulkOperations.EF6.NetStd
+namespace Tanneryd.BulkOperations.EF6
 {
     public static class DbContextExtensions
     {
@@ -487,7 +487,7 @@ namespace Tanneryd.BulkOperations.EF6.NetStd
             }
 
             var keyMappings = columnMappings.Values
-                .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.TableColumn.Name))
+                .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.EntityProperty.Name))
                 .ToDictionary(m => m.EntityProperty.Name, m => m);
 
             if (keyMappings.Any())
@@ -1444,7 +1444,8 @@ namespace Tanneryd.BulkOperations.EF6.NetStd
 
             // Ignore all properties that we have no mappings for.
             var properties = GetProperties(entities[0])
-                .Where(p => columnMappings.ContainsKey(p.Name)).ToArray();
+                .Where(p => columnMappings.ContainsKey(p.Name))
+                .ToArray();
 
             var table = new DataTable();
 
@@ -2293,6 +2294,7 @@ namespace Tanneryd.BulkOperations.EF6.NetStd
                 propertyMappings
                     .Where(p => p is ScalarPropertyMapping)
                     .Cast<ScalarPropertyMapping>()
+                    .Where(m=>!m.Column.IsStoreGeneratedComputed)
                     .Select(p => new TableColumnMapping
                     {
                         EntityProperty = p.Property,

@@ -7,10 +7,8 @@
 /Tanneryd.BulkOperations.EF6/packages
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/bin
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/obj
-/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.Tests/bin
-/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.Tests/obj
-/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NetStd/bin
-/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NetStd/obj
+/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET47.Tests/bin
+/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET47.Tests/obj
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NetCore.Tests/bin
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NetCore.Tests/obj
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/nuget_api.txt
