@@ -1,0 +1,104 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+    <Schema Namespace="DbModel.Store" Alias="Self" Provider="System.Data.SqlClient" ProviderManifestToken="2012" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+  <EntityContainer Name="DbModelStoreContainer">
+    <EntitySet Name="Log" EntityType="DbModel.Store.Log" store:Type="Tables" Schema="dbo" />
+  </EntityContainer>
+  <EntityType Name="Log">
+    <Key>
+      <PropertyRef Name="Id" />
+    </Key>
+    <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+    <Property Name="Date" Type="datetime" Nullable="false" />
+    <Property Name="Thread" Type="nvarchar" Nullable="false" MaxLength="255" />
+    <Property Name="Level" Type="nvarchar" Nullable="false" MaxLength="50" />
+    <Property Name="Logger" Type="nvarchar" Nullable="false" MaxLength="255" />
+    <Property Name="Message" Type="nvarchar" Nullable="false" MaxLength="4000" />
+    <Property Name="Exception" Type="nvarchar" Nullable="true" MaxLength="2000" />
+    <Property Name="EntityId" Type="uniqueidentifier" Nullable="true" />
+    <Property Name="EntityLogicalName" Type="nvarchar" Nullable="true" MaxLength="100" />
+    <Property Name="ConfigId" Type="bigint" Nullable="false" />
+    <Property Name="SdkMessage" Type="nvarchar" Nullable="true" MaxLength="20" />
+    <Property Name="CrmUser" Type="uniqueidentifier" Nullable="true" />
+    <Property Name="CorrelationId" Type="uniqueidentifier" Nullable="true" />
+    <Property Name="OrganizationId" Type="uniqueidentifier" Nullable="true" />
+  </EntityType>
+</Schema></edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema xmlns="http://schemas.microsoft.com/ado/2009/11/edm" xmlns:cg="http://schemas.microsoft.com/ado/2006/04/codegeneration" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" Namespace="DbModel" Alias="Self" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" annotation:UseStrongSpatialTypes="false">
+        <EntityContainer Name="DbModelContainer" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="Log" EntityType="DbModel.LogItem" />
+        </EntityContainer>
+        <EntityType Name="LogItem" >
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Date" Type="DateTime" Nullable="false" />
+          <Property Name="Thread" Type="String" Nullable="false" MaxLength="255" />
+          <Property Name="Level" Type="String" Nullable="false" MaxLength="50" />
+          <Property Name="Logger" Type="String" Nullable="false" MaxLength="255" />
+          <Property Name="Message" Type="String" Nullable="false" MaxLength="4000" />
+          <Property Name="Exception" Type="String" MaxLength="2000" Nullable="true" />
+          <Property Name="EntityId" Type="Guid" Nullable="true" />
+          <Property Name="EntityLogicalName" Type="String" Nullable="true" MaxLength="100" />
+          <Property Name="ConfigId" Type="Int64" Nullable="false" />
+          <Property Name="SdkMessage" Type="String" Nullable="true" MaxLength="20" />
+          <Property Name="CrmUser" Type="Guid" Nullable="true" />
+          <Property Name="CorrelationId" Type="Guid" Nullable="true" />
+          <Property Name="OrganizationId" Type="Guid" Nullable="true" />
+        </EntityType>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+    <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+  <EntityContainerMapping StorageEntityContainer="DbModelStoreContainer" CdmEntityContainer="DbModelContainer">
+    <EntitySetMapping Name="Log">
+      <EntityTypeMapping TypeName="IsTypeOf(DbModel.LogItem)">
+        <MappingFragment StoreEntitySet="Log">
+          <ScalarProperty Name="Id" ColumnName="Id" />
+          <ScalarProperty Name="Date" ColumnName="Date" />
+          <ScalarProperty Name="Thread" ColumnName="Thread" />
+          <ScalarProperty Name="Level" ColumnName="Level" />
+          <ScalarProperty Name="Logger" ColumnName="Logger" />
+          <ScalarProperty Name="Message" ColumnName="Message" />
+          <ScalarProperty Name="Exception" ColumnName="Exception" />
+          <ScalarProperty Name="EntityId" ColumnName="EntityId" />
+          <ScalarProperty Name="EntityLogicalName" ColumnName="EntityLogicalName" />
+          <ScalarProperty Name="ConfigId" ColumnName="ConfigId" />
+          <ScalarProperty Name="SdkMessage" ColumnName="SdkMessage" />
+          <ScalarProperty Name="CrmUser" ColumnName="CrmUser" />
+          <ScalarProperty Name="CorrelationId" ColumnName="CorrelationId" />
+          <ScalarProperty Name="OrganizationId" ColumnName="OrganizationId" />
+        </MappingFragment>
+      </EntityTypeMapping>
+    </EntitySetMapping>
+  </EntityContainerMapping>
+</Mapping></edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <edmx:Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </edmx:Connection>
+    <edmx:Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="True" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+        <DesignerProperty Name="UseLegacyProvider" Value="False" />
+      </DesignerInfoPropertySet>
+    </edmx:Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

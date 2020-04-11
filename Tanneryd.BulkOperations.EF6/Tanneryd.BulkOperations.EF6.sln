@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tanneryd.BulkOperations.EF6
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tanneryd.BulkOperations.EF6.Tests", "Tanneryd.BulkOperations.EF6.Tests\Tanneryd.BulkOperations.EF6.Tests.csproj", "{82605BC1-B02B-4ED6-94E0-864D673BAEE9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "issue-31-reproduction", "issue-31-reproduction\issue-31-reproduction.csproj", "{815A6214-68DF-48E0-8DC8-3446AB939634}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{82605BC1-B02B-4ED6-94E0-864D673BAEE9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{82605BC1-B02B-4ED6-94E0-864D673BAEE9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{82605BC1-B02B-4ED6-94E0-864D673BAEE9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{815A6214-68DF-48E0-8DC8-3446AB939634}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{815A6214-68DF-48E0-8DC8-3446AB939634}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{815A6214-68DF-48E0-8DC8-3446AB939634}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{815A6214-68DF-48E0-8DC8-3446AB939634}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
