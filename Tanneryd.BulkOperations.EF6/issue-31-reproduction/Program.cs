@@ -14,8 +14,8 @@ namespace issue_31_reproduction
 			try
 			{
 				string dbName = "issue31repro";
-				//string dataSource = "(localdb)\\MSSQLLocalDB";
-				string dataSource = "localhost\\SQLEXPRESS";
+				string dataSource = "(localdb)\\MSSQLLocalDB";
+				//string dataSource = "localhost\\SQLEXPRESS";
 
 				string connStrFormat = $"Data Source={dataSource};Initial Catalog={{0}};Integrated Security=True;Connect Timeout=30;Encrypt=False;TrustServerCertificate=False;ApplicationIntent=ReadWrite;MultiSubnetFailover=False";
 				EnsureLocalDb(connStrFormat, dbName);
