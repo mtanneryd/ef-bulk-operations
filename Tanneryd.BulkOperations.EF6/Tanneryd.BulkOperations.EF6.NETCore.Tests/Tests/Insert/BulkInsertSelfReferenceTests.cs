@@ -37,15 +37,14 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Insert
         [TestInitialize]
         public void Initialize()
         {
-            InitializeCompanyContext();
-            InitializePeopleContext();
+            InitializeUnitTestContext();
+            CleanUp();
         }
 
         [TestCleanup]
         public void CleanUp()
         {
-            CleanupCompanyContext();
-            CleanupPeopleContext();
+            CleanupUnitTestContext();
         }
 
         [TestMethod]
@@ -68,7 +67,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Insert
                     Name = "Adam",
                     Employer = employer
                 };
-                using (var db = new CompanyContext())
+                using (var db = new UnitTestContext())
                 {
                     var request = new BulkInsertRequest<Employee>
                     {
@@ -82,7 +81,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Insert
             catch (System.Data.SqlClient.SqlException e)
             {
                 var expectedMessage =
-                    @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF.CompanyContext"", table ""dbo.Company"", column 'Id'.";
+                    @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF.UnitTestContext"", table ""dbo.Company"", column 'Id'.";
                 Assert.AreEqual(expectedMessage, e.Message);
                 throw;
             }
@@ -112,7 +111,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Insert
                 Name = "Adam",
                 Employer = employer
             };
-            using (var db = new CompanyContext())
+            using (var db = new UnitTestContext())
             {
                 var request = new BulkInsertRequest<Employee>
                 {
@@ -152,7 +151,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Insert
             employer.ParentCompany = employer;
             employer.Employees.Add(employee);
 
-            using (var db = new CompanyContext())
+            using (var db = new UnitTestContext())
             {
                 var request = new BulkInsertRequest<Company>
                 {
@@ -184,7 +183,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Insert
             employer.ParentCompany = employer;
             employee.Employer = employer;
 
-            using (var db = new CompanyContext())
+            using (var db = new UnitTestContext())
             {
                 var request = new BulkInsertRequest<Employee>
                 {
@@ -217,7 +216,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Insert
                 BirthDate = new DateTime(2018, 1, 1),
                 Mother = mother,
             };
-            using (var db = new PeopleContext())
+            using (var db = new UnitTestContext())
             {
                 var request = new BulkInsertRequest<Person>
                 {
@@ -248,7 +247,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Insert
             };
             mother.Children.Add(child);
 
-            using (var db = new PeopleContext())
+            using (var db = new UnitTestContext())
             {
                 var request = new BulkInsertRequest<Person>
                 {

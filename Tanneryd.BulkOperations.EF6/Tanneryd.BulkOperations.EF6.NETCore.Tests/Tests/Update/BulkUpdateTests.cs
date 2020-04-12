@@ -29,20 +29,20 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Update
         [TestInitialize]
         public void Initialize()
         {
-            CleanupBlogContext();
-            InitializeBlogContext();
+            InitializeUnitTestContext();
+            CleanUp();
         }
 
         [TestCleanup]
         public void CleanUp()
         {
-            CleanupBlogContext();
+            CleanupUnitTestContext();
         }
 
         [TestMethod]
         public void ModifiedEntityShouldBeUpdated()
         {
-            using (var db = new BlogContext())
+            using (var db = new UnitTestContext())
             {
                 var blog = new Blog { Name = "My Blog" };
                 var firstPost = new Post

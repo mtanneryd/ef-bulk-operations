@@ -11,7 +11,6 @@
         {
             AutomaticMigrationsEnabled = false;
             MigrationsDirectory = @"Migrations";
-            ContextKey = "Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF.UnitTestContext";
         }
 
         protected override void Seed(Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF.UnitTestContext context)

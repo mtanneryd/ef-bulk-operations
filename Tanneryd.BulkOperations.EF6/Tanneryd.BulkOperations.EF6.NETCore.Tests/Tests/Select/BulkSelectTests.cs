@@ -30,22 +30,20 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Select
         [TestInitialize]
         public void Initialize()
         {
-            InitializeNumberContext();
-            InitializePeopleContext();
+            InitializeUnitTestContext();
             CleanUp();
         }
 
         [TestCleanup]
         public void CleanUp()
         {
-            CleanupNumberContext();
-            CleanupPeopleContext();
+            CleanupUnitTestContext();
         }
 
         [TestMethod]
         public void ExistingEntitiesShouldBeSelectedOnSingleKeyUsingSimpleType()
         {
-            using (var db = new NumberContext())
+            using (var db = new UnitTestContext())
             {
                 var now = DateTime.Now;
 
@@ -91,7 +89,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Select
         [TestMethod]
         public void ExistingEntitiesShouldBeSelectedOnSingleKey()
         {
-            using (var db = new NumberContext())
+            using (var db = new UnitTestContext())
             {
                 var now = DateTime.Now;
 

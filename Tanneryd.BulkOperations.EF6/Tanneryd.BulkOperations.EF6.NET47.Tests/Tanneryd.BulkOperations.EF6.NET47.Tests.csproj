@@ -63,13 +63,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Migrations\202004121106488_InitialCreate.cs" />
-    <Compile Include="Migrations\202004121106488_InitialCreate.designer.cs">
-      <DependentUpon>202004121106488_InitialCreate.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\202004121120331_InitialMigration.cs" />
-    <Compile Include="Migrations\202004121120331_InitialMigration.designer.cs">
-      <DependentUpon>202004121120331_InitialMigration.cs</DependentUpon>
+    <Compile Include="Migrations\202004121947295_InitialMigration.cs" />
+    <Compile Include="Migrations\202004121947295_InitialMigration.designer.cs">
+      <DependentUpon>202004121947295_InitialMigration.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\DM\Blog\Blog.cs" />
@@ -130,11 +126,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\202004121106488_InitialCreate.resx">
-      <DependentUpon>202004121106488_InitialCreate.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\202004121120331_InitialMigration.resx">
-      <DependentUpon>202004121120331_InitialMigration.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202004121947295_InitialMigration.resx">
+      <DependentUpon>202004121947295_InitialMigration.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

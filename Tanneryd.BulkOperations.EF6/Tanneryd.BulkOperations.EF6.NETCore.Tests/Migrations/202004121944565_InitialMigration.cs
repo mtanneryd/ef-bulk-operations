@@ -1,9 +1,9 @@
-﻿namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Migrations
+﻿namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Migrations
 {
     using System;
     using System.Data.Entity.Migrations;
     
-    public partial class InitialCreate : DbMigration
+    public partial class InitialMigration : DbMigration
     {
         public override void Up()
         {
@@ -39,7 +39,6 @@
                         //Tax = c.Decimal(nullable: false, precision: 18, scale: 2),
                     })
                 .PrimaryKey(t => t.PrimaryKey);
-
             // This replaces the out commented line for Tax in the create table above.
             Sql("ALTER TABLE dbo.Invoice ADD Tax AS (Gross - Net) PERSISTED NOT NULL");
 
@@ -304,7 +303,6 @@
                         HireDate = c.DateTime(nullable: false),
                     })
                 .PrimaryKey(t => t.InstructorID);
-            
             // This replaces the out commented line for FullName in the create table above.
             Sql("ALTER TABLE dbo.Instructor ADD FullName AS (FirstName + ' ' + LastName) PERSISTED NOT NULL");
 
@@ -341,7 +339,7 @@
                     })
                 .PrimaryKey(t => t.ReportID)
                 .ForeignKey("[Some.Complex_Schema Name].Period", t => t.PeriodID, cascadeDelete: true)
-                .ForeignKey("dbo.SummaryReportFROMTableASExtents", t => t.SummaryReportID)
+                .ForeignKey("dbo.SummaryReportFROMTableASExtent", t => t.SummaryReportID)
                 .Index(t => t.PeriodID)
                 .Index(t => t.SummaryReportID);
             
@@ -355,7 +353,7 @@
                 .PrimaryKey(t => t.PeriodID);
             
             CreateTable(
-                "dbo.SummaryReportFROMTableASExtents",
+                "dbo.SummaryReportFROMTableASExtent",
                 c => new
                     {
                         ReportID = c.Int(nullable: false, identity: true),
@@ -496,9 +494,9 @@
         public override void Down()
         {
             DropForeignKey("dbo.Person", "MotherId", "dbo.Person");
-            DropForeignKey("[In # Some.Complex_Schema @Name].SELECT WORSE FROM NAMES AS Extent1", "SummaryReportID", "dbo.SummaryReportFROMTableASExtents");
+            DropForeignKey("[In # Some.Complex_Schema @Name].SELECT WORSE FROM NAMES AS Extent1", "SummaryReportID", "dbo.SummaryReportFROMTableASExtent");
             DropForeignKey("[In # Some.Complex_Schema @Name].SELECT WORSE FROM NAMES AS Extent1", "PeriodID", "[Some.Complex_Schema Name].Period");
-            DropForeignKey("dbo.SummaryReportFROMTableASExtents", "PeriodID", "[Some.Complex_Schema Name].Period");
+            DropForeignKey("dbo.SummaryReportFROMTableASExtent", "PeriodID", "[Some.Complex_Schema Name].Period");
             DropForeignKey("dbo.CourseInstructor", "InstructorID", "dbo.Instructor");
             DropForeignKey("dbo.CourseInstructor", "CourseID", "dbo.Course");
             DropForeignKey("dbo.OfficeAssignment", "InstructorID", "dbo.Instructor");
@@ -537,7 +535,7 @@
             DropIndex("dbo.VisitorPosts", new[] { "PostId" });
             DropIndex("dbo.VisitorPosts", new[] { "VisitorId" });
             DropIndex("dbo.Person", new[] { "MotherId" });
-            DropIndex("dbo.SummaryReportFROMTableASExtents", new[] { "PeriodID" });
+            DropIndex("dbo.SummaryReportFROMTableASExtent", new[] { "PeriodID" });
             DropIndex("[In # Some.Complex_Schema @Name].SELECT WORSE FROM NAMES AS Extent1", new[] { "SummaryReportID" });
             DropIndex("[In # Some.Complex_Schema @Name].SELECT WORSE FROM NAMES AS Extent1", new[] { "PeriodID" });
             DropIndex("dbo.OfficeAssignment", new[] { "InstructorID" });
@@ -567,7 +565,7 @@
             DropTable("dbo.Person");
             DropTable("dbo.Level1");
             DropTable("dbo.EmptyTable");
-            DropTable("dbo.SummaryReportFROMTableASExtents");
+            DropTable("dbo.SummaryReportFROMTableASExtent");
             DropTable("[Some.Complex_Schema Name].Period");
             DropTable("[In # Some.Complex_Schema @Name].SELECT WORSE FROM NAMES AS Extent1");
             DropTable("dbo.OfficeAssignment");

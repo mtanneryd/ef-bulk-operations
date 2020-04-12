@@ -37,7 +37,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests
         [TestMethod]
         public void SchoolTableNames()
         {
-            using (var ctx = new SchoolContext())
+            using (var ctx = new UnitTestContext())
             {
                 var tableName = ctx.GetTableName(typeof(Course));
                 Assert.AreEqual("dbo", tableName.Schema);
@@ -60,7 +60,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests
         [TestMethod]
         public void ReportTableNames()
         {
-            using (var ctx = new ReportContext())
+            using (var ctx = new UnitTestContext())
             {
                 var tableName = ctx.GetTableName(typeof(Period));
                 Assert.AreEqual("Some.Complex_Schema Name", tableName.Schema);

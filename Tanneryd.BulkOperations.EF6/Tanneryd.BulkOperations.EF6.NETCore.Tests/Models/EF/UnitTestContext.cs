@@ -1,17 +1,17 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Blog;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Companies;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Invoice;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Levels;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Miscellaneous;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Numbers;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.People;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Prices;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Report;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.School;
+using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Blog;
+using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Companies;
+using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Invoice;
+using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Levels;
+using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Miscellaneous;
+using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Numbers;
+using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.People;
+using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Prices;
+using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Report;
+using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.School;
 
-namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF
+namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF
 {
     public class UnitTestContext : DbContext
     {
