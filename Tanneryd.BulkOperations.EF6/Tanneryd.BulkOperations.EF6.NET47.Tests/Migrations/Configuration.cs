@@ -1,19 +1,20 @@
-﻿namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Migrations.InvoiceContext
+﻿namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Migrations
 {
     using System;
     using System.Data.Entity;
     using System.Data.Entity.Migrations;
     using System.Linq;
 
-    internal sealed class Configuration : DbMigrationsConfiguration<Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF.InvoiceContext>
+    internal sealed class Configuration : DbMigrationsConfiguration<Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF.UnitTestContext>
     {
         public Configuration()
         {
             AutomaticMigrationsEnabled = false;
-            MigrationsDirectory = @".\Migrations\InvoiceContext";
+            MigrationsDirectory = @"Migrations";
+            ContextKey = "Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF.UnitTestContext";
         }
 
-        protected override void Seed(Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF.InvoiceContext context)
+        protected override void Seed(Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF.UnitTestContext context)
         {
             //  This method will be called after migrating to the latest version.
 

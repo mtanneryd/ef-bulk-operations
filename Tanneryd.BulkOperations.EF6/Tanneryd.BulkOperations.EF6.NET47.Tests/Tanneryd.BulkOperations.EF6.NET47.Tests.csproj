@@ -63,12 +63,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Migrations\InvoiceContext\202004012125232_InitialMigration.cs" />
-    <Compile Include="Migrations\InvoiceContext\202004012125232_InitialMigration.designer.cs" />
-    <Compile Include="Migrations\InvoiceContext\Configuration.cs" />
-    <Compile Include="Migrations\SchoolContext\202004012104360_InitialMigration.cs" />
-    <Compile Include="Migrations\SchoolContext\202004012104360_InitialMigration.designer.cs" />
-    <Compile Include="Migrations\SchoolContext\Configuration.cs" />
+    <Compile Include="Migrations\202004121106488_InitialCreate.cs" />
+    <Compile Include="Migrations\202004121106488_InitialCreate.designer.cs">
+      <DependentUpon>202004121106488_InitialCreate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202004121120331_InitialMigration.cs" />
+    <Compile Include="Migrations\202004121120331_InitialMigration.designer.cs">
+      <DependentUpon>202004121120331_InitialMigration.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\DM\Blog\Blog.cs" />
     <Compile Include="Models\DM\Companies\Company.cs" />
     <Compile Include="Models\DM\Companies\Employee.cs" />
@@ -101,21 +104,12 @@
     <Compile Include="Models\DM\Teams\UsingUserGeneratedGuidKeys\Coach.cs" />
     <Compile Include="Models\DM\Teams\UsingUserGeneratedGuidKeys\Player.cs" />
     <Compile Include="Models\DM\Teams\UsingUserGeneratedGuidKeys\Team.cs" />
-    <Compile Include="Models\EF\BlogContext.cs" />
-    <Compile Include="Models\EF\CompanyContext.cs" />
-    <Compile Include="Models\EF\InvoiceContext.cs" />
-    <Compile Include="Models\EF\LevelContext.cs" />
-    <Compile Include="Models\EF\MiscellaneousContext.cs" />
-    <Compile Include="Models\EF\NumberContext.cs" />
-    <Compile Include="Models\EF\PeopleContext.cs" />
-    <Compile Include="Models\EF\PriceContext.cs" />
-    <Compile Include="Models\EF\ReportContext.cs" />
-    <Compile Include="Models\EF\SchoolContext.cs" />
-    <Compile Include="Models\EF\TeamContext.cs" />
+    <Compile Include="Models\EF\UnitTestContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tests\BulkOperationTestBase.cs" />
     <Compile Include="Tests\Delete\BulkDeleteTests.cs" />
     <Compile Include="Tests\Insert\BulkInsertComputedColumns.cs" />
+    <Compile Include="Tests\Insert\BulkInsertGitIssuesTests.cs" />
     <Compile Include="Tests\Insert\BulkInsertManyToManyTests.cs" />
     <Compile Include="Tests\Insert\BulkInsertMiscellaneousTests.cs" />
     <Compile Include="Tests\Insert\BulkInsertOneToManyTests.cs" />
@@ -136,11 +130,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\InvoiceContext\202004012125232_InitialMigration.resx">
-      <DependentUpon>202004012125232_InitialMigration.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202004121106488_InitialCreate.resx">
+      <DependentUpon>202004121106488_InitialCreate.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\SchoolContext\202004012104360_InitialMigration.resx">
-      <DependentUpon>202004012104360_InitialMigration.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202004121120331_InitialMigration.resx">
+      <DependentUpon>202004121120331_InitialMigration.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

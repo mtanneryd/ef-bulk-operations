@@ -29,14 +29,14 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Delete
         [TestInitialize]
         public void Initialize()
         {
-            CleanupPeopleContext();
-            InitializePeopleContext();
+            InitializeUnitTestContext();
+            CleanUp();
         }
 
         [TestCleanup]
         public void CleanUp()
         {
-            CleanupPeopleContext();
+            CleanupUnitTestContext();
         }
 
         [TestMethod]
@@ -83,7 +83,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Delete
                 Mother = p0
             };
 
-            using (var db = new PeopleContext())
+            using (var db = new UnitTestContext())
             {
                 db.People.AddRange(new[] { p0, p1, p2, p3, p4, p5 });
                 db.SaveChanges();
@@ -142,7 +142,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Delete
                 Mother = p0
             };
 
-            using (var db = new PeopleContext())
+            using (var db = new UnitTestContext())
             {
                 db.People.AddRange(new[] { p0, p1, p2 });
                 db.SaveChanges();

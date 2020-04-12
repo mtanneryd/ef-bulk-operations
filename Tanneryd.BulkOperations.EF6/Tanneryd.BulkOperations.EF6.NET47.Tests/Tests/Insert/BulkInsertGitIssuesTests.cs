@@ -1,0 +1,53 @@
+﻿using System;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Tanneryd.BulkOperations.EF6.Model;
+using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Miscellaneous;
+using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Prices;
+using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF;
+
+namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
+{
+    [TestClass]
+    public class BulkInsertGitIssuesTests : BulkOperationTestBase
+    {
+        [TestInitialize]
+        public void Initialize()
+        {
+            InitializeUnitTestContext();
+            CleanUp();
+        }
+
+        [TestCleanup]
+        public void CleanUp()
+        {
+            CleanupUnitTestContext();
+        }
+
+        [TestMethod]
+        public void BulkInsertIntoTableWithoutNavPropertiesShouldWork()
+        {
+            using (var db = new UnitTestContext())
+            {
+                var entities = new List<Price>
+                {
+                    new Price() {Date = new DateTime(2019, 1, 1), Name = "ERICB", Value = 80},
+                    new Price() {Date = new DateTime(2019, 1, 2), Name = "ERICB", Value = 81},
+                    new Price() {Date = new DateTime(2019, 1, 3), Name = "ERICB", Value = 82},
+                    new Price() {Date = new DateTime(2019, 1, 4), Name = "ERICB", Value = 0},
+                    new Price() {Date = new DateTime(2019, 1, 5), Name = "ERICB", Value = 86}
+                };
+
+
+                var request = new BulkInsertRequest<Price>
+                {
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No,
+                    EnableRecursiveInsert = EnableRecursiveInsert.NoButRetrieveGeneratedPrimaryKeys,
+                    Entities = entities.ToArray()
+                };
+
+                db.BulkInsertAll(request);
+            }
+        }
+    }
+}

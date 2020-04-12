@@ -33,24 +33,20 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
         [TestInitialize]
         public void Initialize()
         {
-            InitializeNumberContext();
-            InitializeTeamContext();
-            InitializePriceContext();
+            InitializeUnitTestContext();
             CleanUp();
         }
 
         [TestCleanup]
         public void CleanUp()
         {
-            CleanupNumberContext();
-            CleanupTeamContext();
-            CleanupPriceContext();
+            CleanupUnitTestContext();
         }
 
         [TestMethod]
         public void ZeroShouldNotMatchNullWhenSelectExisting()
         {
-            using (var db = new PriceContext())
+            using (var db = new UnitTestContext())
             {
                 db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 1), Name = "ERICB", Value = 80 });
                 db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 2), Name = "ERICB", Value = 81 });
@@ -80,7 +76,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
         [TestMethod]
         public void ZeroShouldNotMatchNullWhenSelectNotExisting()
         {
-            using (var db = new PriceContext())
+            using (var db = new UnitTestContext())
             {
                 db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 1), Name = "ERICB", Value = 80 });
                 db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 2), Name = "ERICB", Value = 81 });
@@ -107,18 +103,18 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
         [TestMethod]
         public void SelectExistingFromTableWithUserGeneratedGuidAsPrimaryKey()
         {
-            using (var db = new UserGeneratedTeamContext())
+            using (var db = new UnitTestContext())
             {
-                var teams = new List<Team>();
+                var teams = new List<TeamUsingUserGeneratedGuidKey>();
 
                 // Add ten teams to the database (Team 0 - Team 9)
                 for (int i = 0; i < 10; i++)
                 {
-                    teams.Add(new Team { Id = Guid.NewGuid(), Name = $"Team #{i}" });
+                    teams.Add(new TeamUsingUserGeneratedGuidKey() { Id = Guid.NewGuid(), Name = $"Team #{i}" });
                 }
 
                 // Save the ten first teams to the database.
-                db.BulkInsertAll(new BulkInsertRequest<Team>
+                db.BulkInsertAll(new BulkInsertRequest<TeamUsingUserGeneratedGuidKey>
                 {
                     Entities = teams,
                 });
@@ -127,12 +123,12 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
                 // the list but not to the database.
                 for (int i = 10; i < 20; i++)
                 {
-                    teams.Add(new Team { Id = Guid.NewGuid(), Name = $"Team #{i}" });
+                    teams.Add(new TeamUsingUserGeneratedGuidKey() { Id = Guid.NewGuid(), Name = $"Team #{i}" });
                 }
 
                 // The only teams we should get back out of the 20 teams (Team 0 - Team 19)
                 // are the first ten that we saved to the database.
-                var existingTeams = db.BulkSelectExisting<Team, Team>(new BulkSelectRequest<Team>(new[] { "Id" }, teams));
+                var existingTeams = db.BulkSelectExisting<TeamUsingUserGeneratedGuidKey, TeamUsingUserGeneratedGuidKey>(new BulkSelectRequest<TeamUsingUserGeneratedGuidKey>(new[] { "Id" }, teams));
                 existingTeams = existingTeams.OrderBy(t => t.Name).ToList();
                 Assert.AreEqual(10, existingTeams.Count);
                 for (int i = 0; i < 10; i++)
@@ -146,18 +142,18 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
         [TestMethod]
         public void SelectNotExistingFromTableWithUserGeneratedGuidAsPrimaryKeyShouldWork()
         {
-            using (var db = new UserGeneratedTeamContext())
+            using (var db = new UnitTestContext())
             {
-                var teams = new List<Team>();
+                var teams = new List<TeamUsingUserGeneratedGuidKey>();
 
                 // Add ten teams to the database (Team 0 - Team 9)
                 for (int i = 0; i < 10; i++)
                 {
-                    teams.Add(new Team { Id = Guid.NewGuid(), Name = $"Team #{i}" });
+                    teams.Add(new TeamUsingUserGeneratedGuidKey() { Id = Guid.NewGuid(), Name = $"Team #{i}" });
                 }
 
                 // Save the ten first teams to the database.
-                db.BulkInsertAll(new BulkInsertRequest<Team>
+                db.BulkInsertAll(new BulkInsertRequest<TeamUsingUserGeneratedGuidKey>
                 {
                     Entities = teams
                 });
@@ -166,12 +162,12 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
                 // the list but not to the database.
                 for (int i = 10; i < 20; i++)
                 {
-                    teams.Add(new Team { Id = Guid.NewGuid(), Name = $"Team #{i}" });
+                    teams.Add(new TeamUsingUserGeneratedGuidKey() { Id = Guid.NewGuid(), Name = $"Team #{i}" });
                 }
 
                 // The only teams we should get back out of the 20 teams (Team 0 - Team 19)
                 // are the last ten that we did not save to the database.
-                var existingTeams = db.BulkSelectNotExisting<Team, Team>(new BulkSelectRequest<Team>(new[] { "Id" }, teams));
+                var existingTeams = db.BulkSelectNotExisting<TeamUsingUserGeneratedGuidKey, TeamUsingUserGeneratedGuidKey>(new BulkSelectRequest<TeamUsingUserGeneratedGuidKey>(new[] { "Id" }, teams));
                 Assert.AreEqual(10, existingTeams.Count);
                 for (int i = 0; i < 10; i++)
                 {
@@ -184,18 +180,18 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
         [TestMethod]
         public void SelectExistingFromTableWithDbGeneratedGuidAsPrimaryKeyShouldWork()
         {
-            using (var db = new DbGeneratedTeamContext())
+            using (var db = new UnitTestContext())
             {
-                var teams = new List<Models.DM.Teams.UsingDbGeneratedGuidKeys.Team>();
+                var teams = new List<Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>();
 
                 // Add ten teams to the database (Team 0 - Team 9)
                 for (int i = 0; i < 10; i++)
                 {
-                    teams.Add(new Models.DM.Teams.UsingDbGeneratedGuidKeys.Team { Name = $"Team #{i}" });
+                    teams.Add(new Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey() { Name = $"Team #{i}" });
                 }
 
                 // Save the ten first teams to the database.
-                db.BulkInsertAll(new BulkInsertRequest<Models.DM.Teams.UsingDbGeneratedGuidKeys.Team>
+                db.BulkInsertAll(new BulkInsertRequest<Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>
                 {
                     Entities = teams
                 });
@@ -204,12 +200,12 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
                 // the list but not to the database.
                 for (int i = 10; i < 20; i++)
                 {
-                    teams.Add(new Models.DM.Teams.UsingDbGeneratedGuidKeys.Team { Name = $"Team #{i}" });
+                    teams.Add(new Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey { Name = $"Team #{i}" });
                 }
 
                 // The only teams we should get back out of the 20 teams (Team 0 - Team 19)
                 // are the first ten that we saved to the database.
-                var existingTeams = db.BulkSelectExisting<Models.DM.Teams.UsingDbGeneratedGuidKeys.Team, Models.DM.Teams.UsingDbGeneratedGuidKeys.Team>(new BulkSelectRequest<Models.DM.Teams.UsingDbGeneratedGuidKeys.Team>(new[] { "Id" }, teams));
+                var existingTeams = db.BulkSelectExisting<Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey, Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>(new BulkSelectRequest<Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>(new[] { "Id" }, teams));
                 Assert.AreEqual(10, existingTeams.Count);
                 for (int i = 0; i < 10; i++)
                 {
@@ -222,18 +218,18 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
         [TestMethod]
         public void SelectNotExistingFromTableWithDbGeneratedGuidAsPrimaryKeyShouldWork()
         {
-            using (var db = new DbGeneratedTeamContext())
+            using (var db = new UnitTestContext())
             {
-                var teams = new List<Models.DM.Teams.UsingDbGeneratedGuidKeys.Team>();
+                var teams = new List<Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>();
 
                 // Add ten teams to the database (Team 0 - Team 9)
                 for (int i = 0; i < 10; i++)
                 {
-                    teams.Add(new Models.DM.Teams.UsingDbGeneratedGuidKeys.Team { Name = $"Team #{i}" });
+                    teams.Add(new Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey { Name = $"Team #{i}" });
                 }
 
                 // Save the ten first teams to the database.
-                db.BulkInsertAll(new BulkInsertRequest<Models.DM.Teams.UsingDbGeneratedGuidKeys.Team>
+                db.BulkInsertAll(new BulkInsertRequest<Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>
                 {
                     Entities = teams
                 });
@@ -242,12 +238,12 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
                 // the list but not to the database.
                 for (int i = 10; i < 20; i++)
                 {
-                    teams.Add(new Models.DM.Teams.UsingDbGeneratedGuidKeys.Team { Name = $"Team #{i}" });
+                    teams.Add(new Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey { Name = $"Team #{i}" });
                 }
 
                 // The only teams we should get back out of the 20 teams (Team 0 - Team 19)
                 // are the last ten that we did not save to the database.
-                var existingTeams = db.BulkSelectNotExisting<Models.DM.Teams.UsingDbGeneratedGuidKeys.Team, Models.DM.Teams.UsingDbGeneratedGuidKeys.Team>(new BulkSelectRequest<Models.DM.Teams.UsingDbGeneratedGuidKeys.Team>(new[] { "Id" }, teams));
+                var existingTeams = db.BulkSelectNotExisting<Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey, Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>(new BulkSelectRequest<Models.DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>(new[] { "Id" }, teams));
                 Assert.AreEqual(10, existingTeams.Count);
                 for (int i = 0; i < 10; i++)
                 {
@@ -260,7 +256,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
         [TestMethod]
         public void PrimitiveTypeValuesMatchingExistingEntitiesShouldBeSelected()
         {
-            using (var db = new NumberContext())
+            using (var db = new UnitTestContext())
             {
                 var now = DateTime.Now;
 
@@ -302,7 +298,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
         [TestMethod]
         public void EntitiesOfDifferentTypeMatchingExistingEntitiesShouldBeSelected()
         {
-            using (var db = new NumberContext())
+            using (var db = new UnitTestContext())
             {
                 var now = DateTime.Now;
 
@@ -344,7 +340,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
         [TestMethod]
         public void EntitiesOfSameTypeMatchingExistingEntitiesShouldBeSelected()
         {
-            using (var db = new NumberContext())
+            using (var db = new UnitTestContext())
             {
                 var now = DateTime.Now;
 
@@ -384,7 +380,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
         [TestMethod]
         public void ExistingEntitiesShouldBeSelectedUsingRuntimeTypes()
         {
-            using (var db = new NumberContext())
+            using (var db = new UnitTestContext())
             {
                 var now = DateTime.Now;
 

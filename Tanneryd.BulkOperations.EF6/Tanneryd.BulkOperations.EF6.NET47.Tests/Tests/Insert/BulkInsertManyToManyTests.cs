@@ -32,25 +32,20 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestInitialize]
         public void Initialize()
         {
-            InitializeSchoolContext();
-            InitializeBlogContext();
-            InitializeTeamContext();
-            CleanUp(); // make sure we start from scratch, previous tests might have been aborted before cleanup
-
+            InitializeUnitTestContext();
+            CleanUp();
         }
 
         [TestCleanup]
         public void CleanUp()
         {
-            CleanupSchoolContext();
-            CleanupBlogContext();
-            CleanupTeamContext();
+            CleanupUnitTestContext();
         }
 
         [TestMethod]
         public void JoinTablesWithGuidKeysShouldBeProperlyInserted()
         {
-            using (var db = new BlogContext())
+            using (var db = new UnitTestContext())
             {
                 var blog = new Blog { Name = "My Blog" };
                 var firstPost = new Post
@@ -82,7 +77,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void StackOverflowTest()
         {
-            using (var db = new SchoolContext())
+            using (var db = new UnitTestContext())
             {
                 var i1 = new Instructor
                 {
@@ -143,7 +138,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void InstructorsWithMulitpleCoursesShouldBeBulkInserted()
         {
-            using (var db = new SchoolContext())
+            using (var db = new UnitTestContext())
             {
                 var instructors = GetInstructors().ToArray();
                 var courses = GetCourses().ToArray();
@@ -182,7 +177,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void CoursesWithSingleInstructorShouldBeBulkInserted()
         {
-            using (var db = new SchoolContext())
+            using (var db = new UnitTestContext())
             {
                 var instructors = GetInstructors().ToArray();
                 var courses = GetCourses().ToArray();

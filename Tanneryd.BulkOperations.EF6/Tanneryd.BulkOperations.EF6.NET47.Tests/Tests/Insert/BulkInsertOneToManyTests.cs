@@ -32,15 +32,14 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestInitialize]
         public void Initialize()
         {
-            InitializeNumberContext();
-            InitializeBlogContext();
+            InitializeUnitTestContext();
+            CleanUp();
         }
 
         [TestCleanup]
         public void CleanUp()
         {
-            CleanupNumberContext();
-            CleanupBlogContext();
+            CleanupUnitTestContext();
         }
 
         #region BlogContext
@@ -54,7 +53,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void OneToManyWithGuidPrimaryKeyInsertingTheTopEntity()
         {
-            using (var db = new BlogContext())
+            using (var db = new UnitTestContext())
             {
                 var blog = new Blog { Name = "My Blog" };
                 var firstPost = new Post
@@ -95,7 +94,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void OneToManyWithGuidPrimaryKeyInsertingTheChildEntities()
         {
-            using (var db = new BlogContext())
+            using (var db = new UnitTestContext())
             {
                 var blog = new Blog { Name = "My Blog" };
                 var firstPost = new Post
@@ -137,7 +136,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void OneToManyWhereTheOneAlreadyExists()
         {
-            using (var db = new NumberContext())
+            using (var db = new UnitTestContext())
             {
                 var now = DateTime.Now;
 
@@ -168,7 +167,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void OneToManyWhereAllIsNew()
         {
-            using (var db = new NumberContext())
+            using (var db = new UnitTestContext())
             {
                 var now = DateTime.Now;
 

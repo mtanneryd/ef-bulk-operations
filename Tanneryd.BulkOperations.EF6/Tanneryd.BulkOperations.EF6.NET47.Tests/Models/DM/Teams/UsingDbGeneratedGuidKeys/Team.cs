@@ -19,11 +19,11 @@ using System.Collections.Generic;
 
 namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Teams.UsingDbGeneratedGuidKeys
 {
-    public class Team
+    public class TeamUsingDbGeneratedGuidKey
     {
         public Guid Id { get; set; }
         public string Name { get; set; }
 
-        public ICollection<Player> Players { get; set; }
+        public ICollection<PlayerUsingDbGeneratedGuidKey> Players { get; set; }
     }
 }

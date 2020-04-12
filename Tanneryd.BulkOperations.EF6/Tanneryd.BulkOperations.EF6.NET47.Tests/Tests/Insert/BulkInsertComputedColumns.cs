@@ -14,23 +14,20 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestInitialize]
         public void Initialize()
         {
-            InitializeInvoiceContext();
-            InitializeSchoolContext();
-            CleanUp(); // make sure we start from scratch, previous tests might have been aborted before cleanup
-
+            InitializeUnitTestContext();
+            CleanUp();
         }
 
         [TestCleanup]
         public void CleanUp()
         {
-            CleanupInvoiceContext();
-            CleanupSchoolContext();
+            CleanupUnitTestContext();
         }
 
         [TestMethod]
         public void InsertEntityWithComputedColumnInTableWithIdentityPrimaryKeyShouldWork()
         {
-            using (var db = new SchoolContext())
+            using (var db = new UnitTestContext())
             {
                 var instructor = new Instructor
                 {
@@ -46,7 +43,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void InsertEntityWithComputedColumnInTableWithUserGeneratedPrimaryKeyShouldWork()
         {
-            using (var db = new InvoiceContext())
+            using (var db = new UnitTestContext())
             {
                 for(int i = 0; i < 10; i++)
                 {

@@ -33,33 +33,20 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestInitialize]
         public void Initialize()
         {
-            InitializeSchoolContext();
-            InitializeNumberContext();
-            InitializeLevelContext();
-            InitializeBlogContext();
-            InitializeMiscellaneousContext();
-            InitializeTeamContext();
-            InitializePeopleContext();
+            InitializeUnitTestContext();
             CleanUp();
         }
 
         [TestCleanup]
         public void CleanUp()
         {
-            CleanupSchoolContext();
-            CleanupNumberContext();
-            CleanupLevelContext();
-            CleanupBlogContext();
-            CleanupMiscellaneousContext();
-            CleanupTeamContext();
-            CleanupPeopleContext();
+            CleanupUnitTestContext();
         }
-
 
         [TestMethod]
         public void FillingUpTableWithPrimaryKeyColumnOnlyShouldBePossible()
         {
-            using (var db = new MiscellaneousContext())
+            using (var db = new UnitTestContext())
             {
                 var entities = new List<EmptyTable>();
                 for (int i = 0; i < 1000; i++)
@@ -75,17 +62,17 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
                 };
 
                 db.BulkInsertAll(request);
-                for (int i = 0; i < 1000; i++)
-                {
-                    Console.WriteLine(entities[i].Id);
-                }
+                //for (int i = 0; i < 1000; i++)
+                //{
+                //    Console.WriteLine(entities[i].Id);
+                //}
             }
         }
 
         [TestMethod]
         public void AlreadyExistingEntityWithIdentityKeyShouldNotBeInserted()
         {
-            using (var db = new PeopleContext())
+            using (var db = new UnitTestContext())
             {
                 var p = new Person
                 {
@@ -115,7 +102,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void PrimaryKeyColumnMappedToPropertyWithDifferentNameShouldBeAllowed()
         {
-            using (var db = new NumberContext())
+            using (var db = new UnitTestContext())
             {
                 var now = DateTime.Now;
 
@@ -137,7 +124,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void EntityHierarchyShouldBeInserted()
         {
-            using (var db = new NumberContext())
+            using (var db = new UnitTestContext())
             {
                 var now = DateTime.Now;
 
@@ -167,7 +154,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void ComplexTypesShouldBeInserted()
         {
-            using (var db = new LevelContext())
+            using (var db = new UnitTestContext())
             {
                 // The level entities are used to test EF complex types.
                 var expectedLevels = new[]
@@ -201,7 +188,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void RowWithReservedSqlKeywordAsColumnNameShouldBeInserted()
         {
-            using (var db = new MiscellaneousContext())
+            using (var db = new UnitTestContext())
             {
                 var e = new ReservedSqlKeyword
                 {
@@ -216,7 +203,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         [TestMethod]
         public void RowWithCompositePrimaryKeyShouldBeInserted()
         {
-            using (var db = new MiscellaneousContext())
+            using (var db = new UnitTestContext())
             {
                 var x = new Coordinate
                 {
