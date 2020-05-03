@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Miscellaneous;
+using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Logs;
 using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Prices;
 using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF;
 
@@ -47,6 +48,180 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
                 };
 
                 db.BulkInsertAll(request);
+            }
+        }
+
+        [TestMethod]
+        public void BulkInsertingEntitiesUsingTablePerHierarchyShouldWorkWhenIgnoringGeneratedPrimaryKeys()
+        {
+           using (var db = new UnitTestContext())
+            {
+                var warnings = new []
+                {
+                    new LogWarning
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my warning message 1",
+                        Recommendation = "my recommendation 1",
+                        Id = 0,
+                    },
+                    new LogWarning
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my warning message 2",
+                        Id = 0,
+                    },
+                    new LogWarning
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my warning message 3",
+                        Id = 0,
+                    }
+                };
+
+                var request1 = new BulkInsertRequest<LogWarning>
+                {
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No,
+                    EnableRecursiveInsert = EnableRecursiveInsert.NoAndIgnoreGeneratedPrimaryKeys,
+                    Entities = warnings
+                };
+
+                db.BulkInsertAll(request1);
+
+                var dbWarnings = db.LogWarnings
+                    .OrderBy(item=>item.Message)
+                    .ToArray();
+                Assert.AreEqual(3, dbWarnings.Length);
+                Assert.AreEqual("my warning message 1", dbWarnings[0].Message);
+                Assert.AreEqual("my warning message 2", dbWarnings[1].Message);
+                Assert.AreEqual("my warning message 3", dbWarnings[2].Message);
+
+                var errors = new []
+                {
+                    new LogError
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my error message 1",
+                        Severity = 1,
+                        Id = 0,
+                    },
+                    new LogError
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my error message 2",
+                        Severity = 7,
+                        Id = 0,
+                    },
+                    new LogError
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my error message 3",
+                        Id = 0,
+                    }
+                };
+
+                var request2 = new BulkInsertRequest<LogError>
+                {
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No,
+                    EnableRecursiveInsert = EnableRecursiveInsert.NoAndIgnoreGeneratedPrimaryKeys,
+                    Entities = errors
+                };
+                db.BulkInsertAll(request2);
+
+                var dbErrors = db.LogErrors
+                    .OrderBy(item=>item.Message)
+                    .ToArray();
+                Assert.AreEqual(3, dbErrors.Length);
+                Assert.AreEqual("my error message 1", dbErrors[0].Message);
+                Assert.AreEqual("my error message 2", dbErrors[1].Message);
+                Assert.AreEqual("my error message 3", dbErrors[2].Message);
+            }
+        }
+
+        [TestMethod]
+        public void BulkInsertingEntitiesUsingTablePerHierarchyShouldWorkWhenNotIgnoringGeneratedPrimaryKeys()
+        {
+            using (var db = new UnitTestContext())
+            {
+                var warnings = new []
+                {
+                    new LogWarning
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my warning message 1",
+                        Recommendation = "my recommendation 1",
+                        Id = 0,
+                    },
+                    new LogWarning
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my warning message 2",
+                        Id = 0,
+                    },
+                    new LogWarning
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my warning message 3",
+                        Id = 0,
+                    }
+                };
+
+                var request1 = new BulkInsertRequest<LogWarning>
+                {
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No,
+                    EnableRecursiveInsert = EnableRecursiveInsert.NoButRetrieveGeneratedPrimaryKeys,
+                    Entities = warnings
+                };
+
+                db.BulkInsertAll(request1);
+
+                var dbWarnings = db.LogWarnings
+                    .OrderBy(item=>item.Message)
+                    .ToArray();
+                Assert.AreEqual(3, dbWarnings.Length);
+                Assert.AreEqual("my warning message 1", dbWarnings[0].Message);
+                Assert.AreEqual("my warning message 2", dbWarnings[1].Message);
+                Assert.AreEqual("my warning message 3", dbWarnings[2].Message);
+
+                var errors = new []
+                {
+                    new LogError
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my error message 1",
+                        Severity = 1,
+                        Id = 0,
+                    },
+                    new LogError
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my error message 2",
+                        Severity = 7,
+                        Id = 0,
+                    },
+                    new LogError
+                    {
+                        Timestamp = DateTime.Now,
+                        Message = "my error message 3",
+                        Id = 0,
+                    }
+                };
+
+                var request2 = new BulkInsertRequest<LogError>
+                {
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No,
+                    EnableRecursiveInsert = EnableRecursiveInsert.NoButRetrieveGeneratedPrimaryKeys,
+                    Entities = errors
+                };
+                db.BulkInsertAll(request2);
+
+                var dbErrors = db.LogErrors
+                    .OrderBy(item=>item.Message)
+                    .ToArray();
+                Assert.AreEqual(3, dbErrors.Length);
+                Assert.AreEqual("my error message 1", dbErrors[0].Message);
+                Assert.AreEqual("my error message 2", dbErrors[1].Message);
+                Assert.AreEqual("my error message 3", dbErrors[2].Message);
             }
         }
     }

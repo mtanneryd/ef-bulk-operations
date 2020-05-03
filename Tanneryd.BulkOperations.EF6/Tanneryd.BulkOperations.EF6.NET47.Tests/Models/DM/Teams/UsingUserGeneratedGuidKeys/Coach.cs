@@ -19,16 +19,16 @@ using System.Collections.Generic;
 
 namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Teams.UsingUserGeneratedGuidKeys
 {
-    public class CoachUsingUserGeneratedGuidKey
+    public class CoachWithUserGeneratedGuidKey
     {
-        public CoachUsingUserGeneratedGuidKey()
+        public CoachWithUserGeneratedGuidKey()
         {
-            Teams = new HashSet<TeamUsingUserGeneratedGuidKey>();
+            Teams = new HashSet<TeamWithUserGeneratedGuidKey>();
         }
         public Guid Id { get; set; }
         public string Firstname { get; set; }
         public string Lastname { get; set; }
 
-        public ICollection<TeamUsingUserGeneratedGuidKey> Teams { get; set; }
+        public ICollection<TeamWithUserGeneratedGuidKey> Teams { get; set; }
     }
 }

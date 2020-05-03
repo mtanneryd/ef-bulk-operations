@@ -388,6 +388,19 @@
                 .PrimaryKey(t => t.Id);
             
             CreateTable(
+                "dbo.LogItem",
+                c => new
+                    {
+                        Id = c.Int(nullable: false, identity: true),
+                        Message = c.String(),
+                        Timestamp = c.DateTime(nullable: false),
+                        Severity = c.Int(),
+                        Recommendation = c.String(),
+                        LogType = c.String(maxLength: 128),
+                    })
+                .PrimaryKey(t => t.Id);
+            
+            CreateTable(
                 "dbo.Person",
                 c => new
                     {
@@ -563,6 +576,7 @@
             DropTable("dbo.ReservedSqlKeyword");
             DropTable("dbo.Price");
             DropTable("dbo.Person");
+            DropTable("dbo.LogItem");
             DropTable("dbo.Level1");
             DropTable("dbo.EmptyTable");
             DropTable("dbo.SummaryReportFROMTableASExtent");

@@ -18,13 +18,13 @@ using System;
 
 namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Teams.UsingUserGeneratedGuidKeys
 {
-    public class PlayerUsingUserGeneratedGuidKey
+    public class PlayerWithUserGeneratedGuidKey
     {
         public Guid Id { get; set; }
         public string Firstname { get; set; }
         public string Lastname { get; set; }
 
         public Guid TeamId { get; set; }
-        public TeamUsingUserGeneratedGuidKey Team { get; set; }
+        public TeamWithUserGeneratedGuidKey Team { get; set; }
     }
 }

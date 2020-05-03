@@ -1,0 +1,2186 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+  <!-- EF Runtime content -->
+  <edmx:Runtime>
+    <!-- SSDL content -->
+    <edmx:StorageModels>
+      <Schema Namespace="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="BatchInvoice">
+          <Key>
+            <PropertyRef Name="PrimaryKey" />
+          </Key>
+          <Property Name="PrimaryKey" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="BatchInvoiceItem">
+          <Key>
+            <PropertyRef Name="PrimaryKey" />
+          </Key>
+          <Property Name="PrimaryKey" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="BatchInvoiceId" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="InvoiceId" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Blog">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CoachTeamsWithDbGeneratedGuid">
+          <Key>
+            <PropertyRef Name="CoachId" />
+            <PropertyRef Name="TeamId" />
+          </Key>
+          <Property Name="CoachId" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="TeamId" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CoachTeamsWithUserGeneratedGuid">
+          <Key>
+            <PropertyRef Name="CoachId" />
+            <PropertyRef Name="TeamId" />
+          </Key>
+          <Property Name="CoachId" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="TeamId" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CoachWithDbGeneratedGuid">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Firstname" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="Lastname" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CoachWithUserGeneratedGuid">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Firstname" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="Lastname" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Company">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="ParentCompanyId" Type="bigint" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Composite">
+          <Key>
+            <PropertyRef Name="NumberId" />
+          </Key>
+          <Property Name="NumberId" Type="bigint" Nullable="false" />
+          <Property Name="UpdatedAt" Type="datetime" Nullable="false" />
+          <Property Name="UpdatedBy" Type="nvarchar(max)" />
+        </EntityType>
+        <EntityType Name="CompositePrime">
+          <Key>
+            <PropertyRef Name="CompositeId" />
+            <PropertyRef Name="PrimeId" />
+          </Key>
+          <Property Name="CompositeId" Type="bigint" Nullable="false" />
+          <Property Name="PrimeId" Type="bigint" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Coordinate">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Value" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Course">
+          <Key>
+            <PropertyRef Name="CourseID" />
+          </Key>
+          <Property Name="CourseID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Title" Type="nvarchar(max)" />
+          <Property Name="Credits" Type="int" Nullable="false" />
+          <Property Name="DepartmentID" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="CourseInstructor">
+          <Key>
+            <PropertyRef Name="CourseID" />
+            <PropertyRef Name="InstructorID" />
+          </Key>
+          <Property Name="CourseID" Type="int" Nullable="false" />
+          <Property Name="InstructorID" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Department">
+          <Key>
+            <PropertyRef Name="DepartmentID" />
+          </Key>
+          <Property Name="DepartmentID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar(max)" />
+          <Property Name="Budget" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Administrator" Type="int" />
+        </EntityType>
+        <EntityType Name="Employee">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="EmployerId" Type="bigint" Nullable="false" />
+        </EntityType>
+        <EntityType Name="EmptyTable">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Instructor">
+          <Key>
+            <PropertyRef Name="InstructorID" />
+          </Key>
+          <Property Name="InstructorID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="LastName" Type="nvarchar(max)" />
+          <Property Name="FirstName" Type="nvarchar(max)" />
+          <Property Name="HireDate" Type="datetime" Nullable="false" />
+          <Property Name="FullName" Type="nvarchar(max)" StoreGeneratedPattern="Computed" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Invoice">
+          <Key>
+            <PropertyRef Name="PrimaryKey" />
+          </Key>
+          <Property Name="PrimaryKey" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Net" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Gross" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Tax" Type="decimal" Precision="19" Scale="2" StoreGeneratedPattern="Computed" Nullable="false" />
+        </EntityType>
+        <EntityType Name="InvoiceItem">
+          <Key>
+            <PropertyRef Name="PrimaryKey" />
+          </Key>
+          <Property Name="PrimaryKey" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="JournalId" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="InvoiceId" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Journal">
+          <Key>
+            <PropertyRef Name="PrimaryKey" />
+          </Key>
+          <Property Name="PrimaryKey" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Keyword">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="PostId" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Text" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Level1">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Level1Name" Type="nvarchar(max)" />
+          <Property Name="Level2Name" Type="nvarchar(max)" />
+          <Property Name="Level3Name" Type="nvarchar(max)" />
+          <Property Name="Level2_Level3_Updated" Type="datetime" Nullable="false" />
+        </EntityType>
+        <EntityType Name="LogItem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Message" Type="nvarchar(max)" />
+          <Property Name="Timestamp" Type="datetime" Nullable="false" />
+          <Property Name="Severity" Type="int" />
+          <Property Name="Recommendation" Type="nvarchar(max)" />
+          <Property Name="LogType" Type="nvarchar" MaxLength="128" />
+        </EntityType>
+        <EntityType Name="Number">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Value" Type="bigint" Nullable="false" />
+          <Property Name="ParityId" Type="int" Nullable="false" />
+          <Property Name="PrimeId" Type="int" />
+          <Property Name="CompositeId" Type="int" />
+          <Property Name="UpdatedAt" Type="datetime" Nullable="false" />
+          <Property Name="UpdatedBy" Type="nvarchar(max)" />
+        </EntityType>
+        <EntityType Name="OfficeAssignment">
+          <Key>
+            <PropertyRef Name="InstructorID" />
+          </Key>
+          <Property Name="InstructorID" Type="int" Nullable="false" />
+          <Property Name="Location" Type="nvarchar(max)" />
+          <Property Name="Timestamp" Type="varbinary(max)" />
+        </EntityType>
+        <EntityType Name="Parity">
+          <Key>
+            <PropertyRef Name="Key" />
+          </Key>
+          <Property Name="Key" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="UpdatedAt" Type="datetime" Nullable="false" />
+          <Property Name="UpdatedBy" Type="nvarchar(max)" />
+        </EntityType>
+        <EntityType Name="Person">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="bigint" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="FirstName" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="LastName" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="BirthDate" Type="datetime" Nullable="false" />
+          <Property Name="MotherId" Type="bigint" />
+          <Property Name="EmployeeNumber" Type="int" />
+        </EntityType>
+        <EntityType Name="PlayerWithDbGeneratedGuid">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Firstname" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="Lastname" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="TeamId" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="PlayerWithUserGeneratedGuid">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Firstname" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="Lastname" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="TeamId" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Point">
+          <Key>
+            <PropertyRef Name="XCoordinateId" />
+            <PropertyRef Name="YCoordinateId" />
+          </Key>
+          <Property Name="XCoordinateId" Type="int" Nullable="false" />
+          <Property Name="YCoordinateId" Type="int" Nullable="false" />
+          <Property Name="Value" Type="float" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Post">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="BlogId" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Text" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Price">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Date" Type="datetime" Nullable="false" />
+          <Property Name="Name" Type="nvarchar(max)" Nullable="false" />
+          <Property Name="Value" Type="decimal" Precision="18" Scale="2" />
+        </EntityType>
+        <EntityType Name="Prime">
+          <Key>
+            <PropertyRef Name="NumberId" />
+          </Key>
+          <Property Name="NumberId" Type="bigint" Nullable="false" />
+          <Property Name="UpdatedAt" Type="datetime" Nullable="false" />
+          <Property Name="UpdatedBy" Type="nvarchar(max)" />
+        </EntityType>
+        <EntityType Name="ReservedSqlKeyword">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Key" Type="int" />
+          <Property Name="Identity" Type="int" />
+          <Property Name="Select" Type="nvarchar(max)" />
+        </EntityType>
+        <EntityType Name="SummaryReportFROMTableASExtent">
+          <Key>
+            <PropertyRef Name="ReportID" />
+          </Key>
+          <Property Name="ReportID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Title" Type="nvarchar(max)" />
+          <Property Name="Entry" Type="nvarchar(max)" />
+          <Property Name="Volume" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Amount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="PeriodID" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="TeamWithDbGeneratedGuid">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="TeamWithUserGeneratedGuid">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Name" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Visitor">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="Name" Type="nvarchar(max)" Nullable="false" />
+        </EntityType>
+        <EntityType Name="VisitorPosts">
+          <Key>
+            <PropertyRef Name="VisitorId" />
+            <PropertyRef Name="PostId" />
+          </Key>
+          <Property Name="VisitorId" Type="uniqueidentifier" Nullable="false" />
+          <Property Name="PostId" Type="uniqueidentifier" Nullable="false" />
+        </EntityType>
+        <EntityType Name="SELECT WORSE FROM NAMES AS Extent1">
+          <Key>
+            <PropertyRef Name="ReportID" />
+          </Key>
+          <Property Name="ReportID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Title" Type="nvarchar(max)" />
+          <Property Name="Entry" Type="nvarchar(max)" />
+          <Property Name="Date" Type="datetime" Nullable="false" />
+          <Property Name="Level1" Type="nvarchar(max)" />
+          <Property Name="Level2" Type="nvarchar(max)" />
+          <Property Name="Level3" Type="nvarchar(max)" />
+          <Property Name="I am Bad Column Name 1 " Type="nvarchar(max)" />
+          <Property Name="A #_@ Abc 123 Абв$" Type="nvarchar(max)" />
+          <Property Name="SELECT WORSE FROM NAMES AS Extent " Type="nvarchar(max)" />
+          <Property Name="Volume" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Amount" Type="decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="PeriodID" Type="int" Nullable="false" />
+          <Property Name="SummaryReportID" Type="int" Nullable="false" />
+        </EntityType>
+        <EntityType Name="Period">
+          <Key>
+            <PropertyRef Name="PeriodID" />
+          </Key>
+          <Property Name="PeriodID" Type="int" StoreGeneratedPattern="Identity" Nullable="false" />
+          <Property Name="Name" Type="nvarchar(max)" />
+        </EntityType>
+        <Association Name="FK_[In # Some_Complex_Schema @Name]_SELECT WORSE FROM NAMES AS Extent1_[Some_Complex_Schema Name]_Period_PeriodID">
+          <End Role="Period" Type="Self.Period" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="SELECT WORSE FROM NAMES AS Extent1" Type="Self.SELECT WORSE FROM NAMES AS Extent1" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Period">
+              <PropertyRef Name="PeriodID" />
+            </Principal>
+            <Dependent Role="SELECT WORSE FROM NAMES AS Extent1">
+              <PropertyRef Name="PeriodID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_[In # Some_Complex_Schema @Name]_SELECT WORSE FROM NAMES AS Extent1_dbo_SummaryReportFROMTableASExtent_SummaryReportID">
+          <End Role="SummaryReportFROMTableASExtent" Type="Self.SummaryReportFROMTableASExtent" Multiplicity="1" />
+          <End Role="SELECT WORSE FROM NAMES AS Extent1" Type="Self.SELECT WORSE FROM NAMES AS Extent1" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="SummaryReportFROMTableASExtent">
+              <PropertyRef Name="ReportID" />
+            </Principal>
+            <Dependent Role="SELECT WORSE FROM NAMES AS Extent1">
+              <PropertyRef Name="SummaryReportID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_BatchInvoiceItem_dbo_BatchInvoice_BatchInvoiceId">
+          <End Role="BatchInvoice" Type="Self.BatchInvoice" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="BatchInvoiceItem" Type="Self.BatchInvoiceItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="BatchInvoice">
+              <PropertyRef Name="PrimaryKey" />
+            </Principal>
+            <Dependent Role="BatchInvoiceItem">
+              <PropertyRef Name="BatchInvoiceId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_BatchInvoiceItem_dbo_Invoice_InvoiceId">
+          <End Role="Invoice" Type="Self.Invoice" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="BatchInvoiceItem" Type="Self.BatchInvoiceItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Invoice">
+              <PropertyRef Name="PrimaryKey" />
+            </Principal>
+            <Dependent Role="BatchInvoiceItem">
+              <PropertyRef Name="InvoiceId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_CoachTeamsWithDbGeneratedGuid_dbo_CoachWithDbGeneratedGuid_CoachId">
+          <End Role="CoachWithDbGeneratedGuid" Type="Self.CoachWithDbGeneratedGuid" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CoachTeamsWithDbGeneratedGuid" Type="Self.CoachTeamsWithDbGeneratedGuid" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CoachWithDbGeneratedGuid">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CoachTeamsWithDbGeneratedGuid">
+              <PropertyRef Name="CoachId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_CoachTeamsWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId">
+          <End Role="TeamWithDbGeneratedGuid" Type="Self.TeamWithDbGeneratedGuid" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CoachTeamsWithDbGeneratedGuid" Type="Self.CoachTeamsWithDbGeneratedGuid" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TeamWithDbGeneratedGuid">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CoachTeamsWithDbGeneratedGuid">
+              <PropertyRef Name="TeamId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_CoachTeamsWithUserGeneratedGuid_dbo_CoachWithUserGeneratedGuid_CoachId">
+          <End Role="CoachWithUserGeneratedGuid" Type="Self.CoachWithUserGeneratedGuid" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CoachTeamsWithUserGeneratedGuid" Type="Self.CoachTeamsWithUserGeneratedGuid" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="CoachWithUserGeneratedGuid">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CoachTeamsWithUserGeneratedGuid">
+              <PropertyRef Name="CoachId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_CoachTeamsWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId">
+          <End Role="TeamWithUserGeneratedGuid" Type="Self.TeamWithUserGeneratedGuid" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CoachTeamsWithUserGeneratedGuid" Type="Self.CoachTeamsWithUserGeneratedGuid" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TeamWithUserGeneratedGuid">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="CoachTeamsWithUserGeneratedGuid">
+              <PropertyRef Name="TeamId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Company_dbo_Company_ParentCompanyId">
+          <End Role="Company" Type="Self.Company" Multiplicity="1" />
+          <End Role="Company1" Type="Self.Company" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Company">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Company1">
+              <PropertyRef Name="ParentCompanyId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Composite_dbo_Number_NumberId">
+          <End Role="Number" Type="Self.Number" Multiplicity="1" />
+          <End Role="Composite" Type="Self.Composite" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="Number">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Composite">
+              <PropertyRef Name="NumberId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_CompositePrime_dbo_Composite_CompositeId">
+          <End Role="Composite" Type="Self.Composite" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CompositePrime" Type="Self.CompositePrime" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Composite">
+              <PropertyRef Name="NumberId" />
+            </Principal>
+            <Dependent Role="CompositePrime">
+              <PropertyRef Name="CompositeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_CompositePrime_dbo_Prime_PrimeId">
+          <End Role="Prime" Type="Self.Prime" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CompositePrime" Type="Self.CompositePrime" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Prime">
+              <PropertyRef Name="NumberId" />
+            </Principal>
+            <Dependent Role="CompositePrime">
+              <PropertyRef Name="PrimeId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Course_dbo_Department_DepartmentID">
+          <End Role="Department" Type="Self.Department" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Course" Type="Self.Course" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Department">
+              <PropertyRef Name="DepartmentID" />
+            </Principal>
+            <Dependent Role="Course">
+              <PropertyRef Name="DepartmentID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_CourseInstructor_dbo_Course_CourseID">
+          <End Role="Course" Type="Self.Course" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CourseInstructor" Type="Self.CourseInstructor" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Course">
+              <PropertyRef Name="CourseID" />
+            </Principal>
+            <Dependent Role="CourseInstructor">
+              <PropertyRef Name="CourseID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_CourseInstructor_dbo_Instructor_InstructorID">
+          <End Role="Instructor" Type="Self.Instructor" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="CourseInstructor" Type="Self.CourseInstructor" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Instructor">
+              <PropertyRef Name="InstructorID" />
+            </Principal>
+            <Dependent Role="CourseInstructor">
+              <PropertyRef Name="InstructorID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Employee_dbo_Company_EmployerId">
+          <End Role="Company" Type="Self.Company" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Employee" Type="Self.Employee" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Company">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Employee">
+              <PropertyRef Name="EmployerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_InvoiceItem_dbo_Invoice_InvoiceId">
+          <End Role="Invoice" Type="Self.Invoice" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="InvoiceItem" Type="Self.InvoiceItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Invoice">
+              <PropertyRef Name="PrimaryKey" />
+            </Principal>
+            <Dependent Role="InvoiceItem">
+              <PropertyRef Name="InvoiceId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_InvoiceItem_dbo_Journal_JournalId">
+          <End Role="Journal" Type="Self.Journal" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="InvoiceItem" Type="Self.InvoiceItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Journal">
+              <PropertyRef Name="PrimaryKey" />
+            </Principal>
+            <Dependent Role="InvoiceItem">
+              <PropertyRef Name="JournalId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Keyword_dbo_Post_PostId">
+          <End Role="Post" Type="Self.Post" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Keyword" Type="Self.Keyword" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Post">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Keyword">
+              <PropertyRef Name="PostId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Number_dbo_Parity_ParityId">
+          <End Role="Parity" Type="Self.Parity" Multiplicity="1" />
+          <End Role="Number" Type="Self.Number" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Parity">
+              <PropertyRef Name="Key" />
+            </Principal>
+            <Dependent Role="Number">
+              <PropertyRef Name="ParityId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_OfficeAssignment_dbo_Instructor_InstructorID">
+          <End Role="Instructor" Type="Self.Instructor" Multiplicity="1" />
+          <End Role="OfficeAssignment" Type="Self.OfficeAssignment" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="Instructor">
+              <PropertyRef Name="InstructorID" />
+            </Principal>
+            <Dependent Role="OfficeAssignment">
+              <PropertyRef Name="InstructorID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Person_dbo_Person_MotherId">
+          <End Role="Person" Type="Self.Person" Multiplicity="0..1" />
+          <End Role="Person1" Type="Self.Person" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Person">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Person1">
+              <PropertyRef Name="MotherId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_PlayerWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId">
+          <End Role="TeamWithDbGeneratedGuid" Type="Self.TeamWithDbGeneratedGuid" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="PlayerWithDbGeneratedGuid" Type="Self.PlayerWithDbGeneratedGuid" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TeamWithDbGeneratedGuid">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PlayerWithDbGeneratedGuid">
+              <PropertyRef Name="TeamId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_PlayerWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId">
+          <End Role="TeamWithUserGeneratedGuid" Type="Self.TeamWithUserGeneratedGuid" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="PlayerWithUserGeneratedGuid" Type="Self.PlayerWithUserGeneratedGuid" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TeamWithUserGeneratedGuid">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PlayerWithUserGeneratedGuid">
+              <PropertyRef Name="TeamId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Point_dbo_Coordinate_XCoordinateId">
+          <End Role="Coordinate" Type="Self.Coordinate" Multiplicity="1" />
+          <End Role="Point" Type="Self.Point" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Coordinate">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Point">
+              <PropertyRef Name="XCoordinateId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Point_dbo_Coordinate_YCoordinateId">
+          <End Role="Coordinate" Type="Self.Coordinate" Multiplicity="1" />
+          <End Role="Point" Type="Self.Point" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Coordinate">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Point">
+              <PropertyRef Name="YCoordinateId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Post_dbo_Blog_BlogId">
+          <End Role="Blog" Type="Self.Blog" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Post" Type="Self.Post" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Blog">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Post">
+              <PropertyRef Name="BlogId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Prime_dbo_Number_NumberId">
+          <End Role="Number" Type="Self.Number" Multiplicity="1" />
+          <End Role="Prime" Type="Self.Prime" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="Number">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Prime">
+              <PropertyRef Name="NumberId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_SummaryReportFROMTableASExtent_[Some_Complex_Schema Name]_Period_PeriodID">
+          <End Role="Period" Type="Self.Period" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="SummaryReportFROMTableASExtent" Type="Self.SummaryReportFROMTableASExtent" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Period">
+              <PropertyRef Name="PeriodID" />
+            </Principal>
+            <Dependent Role="SummaryReportFROMTableASExtent">
+              <PropertyRef Name="PeriodID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_VisitorPosts_dbo_Post_PostId">
+          <End Role="Post" Type="Self.Post" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="VisitorPosts" Type="Self.VisitorPosts" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Post">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="VisitorPosts">
+              <PropertyRef Name="PostId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_VisitorPosts_dbo_Visitor_VisitorId">
+          <End Role="Visitor" Type="Self.Visitor" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="VisitorPosts" Type="Self.VisitorPosts" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Visitor">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="VisitorPosts">
+              <PropertyRef Name="VisitorId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <EntityContainer Name="TannerydBulkOperationsEF6NET47ModelFirstTestsModelsEFUnitTestContextModelStoreContainer">
+          <EntitySet Name="BatchInvoice" EntityType="Self.BatchInvoice" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="BatchInvoiceItem" EntityType="Self.BatchInvoiceItem" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Blog" EntityType="Self.Blog" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CoachTeamsWithDbGeneratedGuid" EntityType="Self.CoachTeamsWithDbGeneratedGuid" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CoachTeamsWithUserGeneratedGuid" EntityType="Self.CoachTeamsWithUserGeneratedGuid" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CoachWithDbGeneratedGuid" EntityType="Self.CoachWithDbGeneratedGuid" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CoachWithUserGeneratedGuid" EntityType="Self.CoachWithUserGeneratedGuid" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Company" EntityType="Self.Company" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Composite" EntityType="Self.Composite" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CompositePrime" EntityType="Self.CompositePrime" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Coordinate" EntityType="Self.Coordinate" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Course" EntityType="Self.Course" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="CourseInstructor" EntityType="Self.CourseInstructor" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Department" EntityType="Self.Department" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Employee" EntityType="Self.Employee" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="EmptyTable" EntityType="Self.EmptyTable" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Instructor" EntityType="Self.Instructor" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Invoice" EntityType="Self.Invoice" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="InvoiceItem" EntityType="Self.InvoiceItem" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Journal" EntityType="Self.Journal" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Keyword" EntityType="Self.Keyword" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Level1" EntityType="Self.Level1" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="LogItem" EntityType="Self.LogItem" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Number" EntityType="Self.Number" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="OfficeAssignment" EntityType="Self.OfficeAssignment" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Parity" EntityType="Self.Parity" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Person" EntityType="Self.Person" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="PlayerWithDbGeneratedGuid" EntityType="Self.PlayerWithDbGeneratedGuid" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="PlayerWithUserGeneratedGuid" EntityType="Self.PlayerWithUserGeneratedGuid" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Point" EntityType="Self.Point" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Post" EntityType="Self.Post" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Price" EntityType="Self.Price" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Prime" EntityType="Self.Prime" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="ReservedSqlKeyword" EntityType="Self.ReservedSqlKeyword" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="SummaryReportFROMTableASExtent" EntityType="Self.SummaryReportFROMTableASExtent" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TeamWithDbGeneratedGuid" EntityType="Self.TeamWithDbGeneratedGuid" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TeamWithUserGeneratedGuid" EntityType="Self.TeamWithUserGeneratedGuid" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="Visitor" EntityType="Self.Visitor" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="VisitorPosts" EntityType="Self.VisitorPosts" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="SELECT WORSE FROM NAMES AS Extent1" EntityType="Self.SELECT WORSE FROM NAMES AS Extent1" Schema="In # Some.Complex_Schema @Name" store:Type="Tables" />
+          <EntitySet Name="Period" EntityType="Self.Period" Schema="Some.Complex_Schema Name" store:Type="Tables" />
+          <AssociationSet Name="FK_[In # Some_Complex_Schema @Name]_SELECT WORSE FROM NAMES AS Extent1_[Some_Complex_Schema Name]_Period_PeriodID" Association="Self.FK_[In # Some_Complex_Schema @Name]_SELECT WORSE FROM NAMES AS Extent1_[Some_Complex_Schema Name]_Period_PeriodID">
+            <End Role="Period" EntitySet="Period" />
+            <End Role="SELECT WORSE FROM NAMES AS Extent1" EntitySet="SELECT WORSE FROM NAMES AS Extent1" />
+          </AssociationSet>
+          <AssociationSet Name="FK_[In # Some_Complex_Schema @Name]_SELECT WORSE FROM NAMES AS Extent1_dbo_SummaryReportFROMTableASExtent_SummaryReportID" Association="Self.FK_[In # Some_Complex_Schema @Name]_SELECT WORSE FROM NAMES AS Extent1_dbo_SummaryReportFROMTableASExtent_SummaryReportID">
+            <End Role="SummaryReportFROMTableASExtent" EntitySet="SummaryReportFROMTableASExtent" />
+            <End Role="SELECT WORSE FROM NAMES AS Extent1" EntitySet="SELECT WORSE FROM NAMES AS Extent1" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_BatchInvoiceItem_dbo_BatchInvoice_BatchInvoiceId" Association="Self.FK_dbo_BatchInvoiceItem_dbo_BatchInvoice_BatchInvoiceId">
+            <End Role="BatchInvoice" EntitySet="BatchInvoice" />
+            <End Role="BatchInvoiceItem" EntitySet="BatchInvoiceItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_BatchInvoiceItem_dbo_Invoice_InvoiceId" Association="Self.FK_dbo_BatchInvoiceItem_dbo_Invoice_InvoiceId">
+            <End Role="Invoice" EntitySet="Invoice" />
+            <End Role="BatchInvoiceItem" EntitySet="BatchInvoiceItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_CoachTeamsWithDbGeneratedGuid_dbo_CoachWithDbGeneratedGuid_CoachId" Association="Self.FK_dbo_CoachTeamsWithDbGeneratedGuid_dbo_CoachWithDbGeneratedGuid_CoachId">
+            <End Role="CoachWithDbGeneratedGuid" EntitySet="CoachWithDbGeneratedGuid" />
+            <End Role="CoachTeamsWithDbGeneratedGuid" EntitySet="CoachTeamsWithDbGeneratedGuid" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_CoachTeamsWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId" Association="Self.FK_dbo_CoachTeamsWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId">
+            <End Role="TeamWithDbGeneratedGuid" EntitySet="TeamWithDbGeneratedGuid" />
+            <End Role="CoachTeamsWithDbGeneratedGuid" EntitySet="CoachTeamsWithDbGeneratedGuid" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_CoachTeamsWithUserGeneratedGuid_dbo_CoachWithUserGeneratedGuid_CoachId" Association="Self.FK_dbo_CoachTeamsWithUserGeneratedGuid_dbo_CoachWithUserGeneratedGuid_CoachId">
+            <End Role="CoachWithUserGeneratedGuid" EntitySet="CoachWithUserGeneratedGuid" />
+            <End Role="CoachTeamsWithUserGeneratedGuid" EntitySet="CoachTeamsWithUserGeneratedGuid" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_CoachTeamsWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId" Association="Self.FK_dbo_CoachTeamsWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId">
+            <End Role="TeamWithUserGeneratedGuid" EntitySet="TeamWithUserGeneratedGuid" />
+            <End Role="CoachTeamsWithUserGeneratedGuid" EntitySet="CoachTeamsWithUserGeneratedGuid" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Company_dbo_Company_ParentCompanyId" Association="Self.FK_dbo_Company_dbo_Company_ParentCompanyId">
+            <End Role="Company" EntitySet="Company" />
+            <End Role="Company1" EntitySet="Company" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Composite_dbo_Number_NumberId" Association="Self.FK_dbo_Composite_dbo_Number_NumberId">
+            <End Role="Number" EntitySet="Number" />
+            <End Role="Composite" EntitySet="Composite" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_CompositePrime_dbo_Composite_CompositeId" Association="Self.FK_dbo_CompositePrime_dbo_Composite_CompositeId">
+            <End Role="Composite" EntitySet="Composite" />
+            <End Role="CompositePrime" EntitySet="CompositePrime" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_CompositePrime_dbo_Prime_PrimeId" Association="Self.FK_dbo_CompositePrime_dbo_Prime_PrimeId">
+            <End Role="Prime" EntitySet="Prime" />
+            <End Role="CompositePrime" EntitySet="CompositePrime" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Course_dbo_Department_DepartmentID" Association="Self.FK_dbo_Course_dbo_Department_DepartmentID">
+            <End Role="Department" EntitySet="Department" />
+            <End Role="Course" EntitySet="Course" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_CourseInstructor_dbo_Course_CourseID" Association="Self.FK_dbo_CourseInstructor_dbo_Course_CourseID">
+            <End Role="Course" EntitySet="Course" />
+            <End Role="CourseInstructor" EntitySet="CourseInstructor" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_CourseInstructor_dbo_Instructor_InstructorID" Association="Self.FK_dbo_CourseInstructor_dbo_Instructor_InstructorID">
+            <End Role="Instructor" EntitySet="Instructor" />
+            <End Role="CourseInstructor" EntitySet="CourseInstructor" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Employee_dbo_Company_EmployerId" Association="Self.FK_dbo_Employee_dbo_Company_EmployerId">
+            <End Role="Company" EntitySet="Company" />
+            <End Role="Employee" EntitySet="Employee" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_InvoiceItem_dbo_Invoice_InvoiceId" Association="Self.FK_dbo_InvoiceItem_dbo_Invoice_InvoiceId">
+            <End Role="Invoice" EntitySet="Invoice" />
+            <End Role="InvoiceItem" EntitySet="InvoiceItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_InvoiceItem_dbo_Journal_JournalId" Association="Self.FK_dbo_InvoiceItem_dbo_Journal_JournalId">
+            <End Role="Journal" EntitySet="Journal" />
+            <End Role="InvoiceItem" EntitySet="InvoiceItem" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Keyword_dbo_Post_PostId" Association="Self.FK_dbo_Keyword_dbo_Post_PostId">
+            <End Role="Post" EntitySet="Post" />
+            <End Role="Keyword" EntitySet="Keyword" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Number_dbo_Parity_ParityId" Association="Self.FK_dbo_Number_dbo_Parity_ParityId">
+            <End Role="Parity" EntitySet="Parity" />
+            <End Role="Number" EntitySet="Number" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_OfficeAssignment_dbo_Instructor_InstructorID" Association="Self.FK_dbo_OfficeAssignment_dbo_Instructor_InstructorID">
+            <End Role="Instructor" EntitySet="Instructor" />
+            <End Role="OfficeAssignment" EntitySet="OfficeAssignment" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Person_dbo_Person_MotherId" Association="Self.FK_dbo_Person_dbo_Person_MotherId">
+            <End Role="Person" EntitySet="Person" />
+            <End Role="Person1" EntitySet="Person" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_PlayerWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId" Association="Self.FK_dbo_PlayerWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId">
+            <End Role="TeamWithDbGeneratedGuid" EntitySet="TeamWithDbGeneratedGuid" />
+            <End Role="PlayerWithDbGeneratedGuid" EntitySet="PlayerWithDbGeneratedGuid" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_PlayerWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId" Association="Self.FK_dbo_PlayerWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId">
+            <End Role="TeamWithUserGeneratedGuid" EntitySet="TeamWithUserGeneratedGuid" />
+            <End Role="PlayerWithUserGeneratedGuid" EntitySet="PlayerWithUserGeneratedGuid" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Point_dbo_Coordinate_XCoordinateId" Association="Self.FK_dbo_Point_dbo_Coordinate_XCoordinateId">
+            <End Role="Coordinate" EntitySet="Coordinate" />
+            <End Role="Point" EntitySet="Point" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Point_dbo_Coordinate_YCoordinateId" Association="Self.FK_dbo_Point_dbo_Coordinate_YCoordinateId">
+            <End Role="Coordinate" EntitySet="Coordinate" />
+            <End Role="Point" EntitySet="Point" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Post_dbo_Blog_BlogId" Association="Self.FK_dbo_Post_dbo_Blog_BlogId">
+            <End Role="Blog" EntitySet="Blog" />
+            <End Role="Post" EntitySet="Post" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Prime_dbo_Number_NumberId" Association="Self.FK_dbo_Prime_dbo_Number_NumberId">
+            <End Role="Number" EntitySet="Number" />
+            <End Role="Prime" EntitySet="Prime" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_SummaryReportFROMTableASExtent_[Some_Complex_Schema Name]_Period_PeriodID" Association="Self.FK_dbo_SummaryReportFROMTableASExtent_[Some_Complex_Schema Name]_Period_PeriodID">
+            <End Role="Period" EntitySet="Period" />
+            <End Role="SummaryReportFROMTableASExtent" EntitySet="SummaryReportFROMTableASExtent" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_VisitorPosts_dbo_Post_PostId" Association="Self.FK_dbo_VisitorPosts_dbo_Post_PostId">
+            <End Role="Post" EntitySet="Post" />
+            <End Role="VisitorPosts" EntitySet="VisitorPosts" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_VisitorPosts_dbo_Visitor_VisitorId" Association="Self.FK_dbo_VisitorPosts_dbo_Visitor_VisitorId">
+            <End Role="Visitor" EntitySet="Visitor" />
+            <End Role="VisitorPosts" EntitySet="VisitorPosts" />
+          </AssociationSet>
+        </EntityContainer>
+      </Schema>
+    </edmx:StorageModels>
+    <!-- CSDL content -->
+    <edmx:ConceptualModels>
+      <Schema Namespace="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+        <EntityType Name="BatchInvoice">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" />
+          <NavigationProperty Name="Invoices" Relationship="Self.FK_dbo_BatchInvoiceItem_dbo_BatchInvoice_BatchInvoiceId" FromRole="BatchInvoice" ToRole="BatchInvoiceItem" />
+        </EntityType>
+        <EntityType Name="BatchInvoiceItem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" />
+          <Property Name="BatchInvoiceId" Type="Guid" Nullable="false" />
+          <Property Name="InvoiceId" Type="Guid" Nullable="false" />
+          <NavigationProperty Name="BatchInvoice" Relationship="Self.FK_dbo_BatchInvoiceItem_dbo_BatchInvoice_BatchInvoiceId" FromRole="BatchInvoiceItem" ToRole="BatchInvoice" />
+          <NavigationProperty Name="Invoice" Relationship="Self.FK_dbo_BatchInvoiceItem_dbo_Invoice_InvoiceId" FromRole="BatchInvoiceItem" ToRole="Invoice" />
+        </EntityType>
+        <EntityType Name="Blog">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="BlogPosts" Relationship="Self.FK_dbo_Post_dbo_Blog_BlogId" FromRole="Blog" ToRole="Post" />
+        </EntityType>
+        <EntityType Name="CoachWithDbGeneratedGuidKey">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Firstname" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Lastname" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Teams" Relationship="Self.CoachTeamsWithDbGeneratedGuid" FromRole="CoachWithDbGeneratedGuid" ToRole="TeamWithDbGeneratedGuid" />
+        </EntityType>
+        <EntityType Name="CoachWithUserGeneratedGuidKey">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" />
+          <Property Name="Firstname" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Lastname" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Teams" Relationship="Self.CoachTeamsWithUserGeneratedGuid" FromRole="CoachWithUserGeneratedGuid" ToRole="TeamWithUserGeneratedGuid" />
+        </EntityType>
+        <EntityType Name="Company">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="ParentCompanyId" Type="Int64" Nullable="false" />
+          <NavigationProperty Name="SubCompanies" Relationship="Self.FK_dbo_Company_dbo_Company_ParentCompanyId" FromRole="Company" ToRole="Company1" />
+          <NavigationProperty Name="ParentCompany" Relationship="Self.FK_dbo_Company_dbo_Company_ParentCompanyId" FromRole="Company1" ToRole="Company" />
+          <NavigationProperty Name="Employees" Relationship="Self.FK_dbo_Employee_dbo_Company_EmployerId" FromRole="Company" ToRole="Employee" />
+        </EntityType>
+        <EntityType Name="Composite">
+          <Key>
+            <PropertyRef Name="NumberId" />
+          </Key>
+          <Property Name="NumberId" Type="Int64" Nullable="false" />
+          <Property Name="UpdatedAt" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Number" Relationship="Self.FK_dbo_Composite_dbo_Number_NumberId" FromRole="Composite" ToRole="Number" />
+          <NavigationProperty Name="Primes" Relationship="Self.CompositePrime" FromRole="Composite" ToRole="Prime" />
+        </EntityType>
+        <EntityType Name="Coordinate">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Value" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Points" Relationship="Self.FK_dbo_Point_dbo_Coordinate_XCoordinateId" FromRole="Coordinate" ToRole="Point" />
+          <NavigationProperty Name="Points1" Relationship="Self.FK_dbo_Point_dbo_Coordinate_YCoordinateId" FromRole="Coordinate" ToRole="Point" />
+        </EntityType>
+        <EntityType Name="Course">
+          <Key>
+            <PropertyRef Name="CourseID" />
+          </Key>
+          <Property Name="CourseID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Title" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Credits" Type="Int32" Nullable="false" />
+          <Property Name="DepartmentID" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="Department" Relationship="Self.FK_dbo_Course_dbo_Department_DepartmentID" FromRole="Course" ToRole="Department" />
+          <NavigationProperty Name="Instructors" Relationship="Self.CourseInstructor" FromRole="Course" ToRole="Instructor" />
+        </EntityType>
+        <EntityType Name="Department">
+          <Key>
+            <PropertyRef Name="DepartmentID" />
+          </Key>
+          <Property Name="DepartmentID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Budget" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Administrator" Type="Int32" />
+          <NavigationProperty Name="Courses" Relationship="Self.FK_dbo_Course_dbo_Department_DepartmentID" FromRole="Department" ToRole="Course" />
+        </EntityType>
+        <EntityType Name="Employee">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="EmployerId" Type="Int64" Nullable="false" />
+          <NavigationProperty Name="Employer" Relationship="Self.FK_dbo_Employee_dbo_Company_EmployerId" FromRole="Employee" ToRole="Company" />
+        </EntityType>
+        <EntityType Name="EmptyTable">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+        </EntityType>
+        <EntityType Name="Instructor">
+          <Key>
+            <PropertyRef Name="InstructorID" />
+          </Key>
+          <Property Name="InstructorID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="LastName" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="FirstName" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="HireDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="FullName" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" annotation:StoreGeneratedPattern="Computed" />
+          <NavigationProperty Name="OfficeAssignment" Relationship="Self.FK_dbo_OfficeAssignment_dbo_Instructor_InstructorID" FromRole="Instructor" ToRole="OfficeAssignment" />
+          <NavigationProperty Name="Courses" Relationship="Self.CourseInstructor" FromRole="Instructor" ToRole="Course" />
+        </EntityType>
+        <EntityType Name="Invoice">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" />
+          <Property Name="Net" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Gross" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Tax" Type="Decimal" Precision="19" Scale="2" Nullable="false" annotation:StoreGeneratedPattern="Computed" />
+          <NavigationProperty Name="BatchInvoiceItems" Relationship="Self.FK_dbo_BatchInvoiceItem_dbo_Invoice_InvoiceId" FromRole="Invoice" ToRole="BatchInvoiceItem" />
+          <NavigationProperty Name="Journals" Relationship="Self.FK_dbo_InvoiceItem_dbo_Invoice_InvoiceId" FromRole="Invoice" ToRole="InvoiceItem" />
+        </EntityType>
+        <EntityType Name="InvoiceItem">
+          <Key>
+            <PropertyRef Name="PrimaryKey" />
+          </Key>
+          <Property Name="PrimaryKey" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="JournalId" Type="Guid" Nullable="false" />
+          <Property Name="InvoiceId" Type="Guid" Nullable="false" />
+          <NavigationProperty Name="Invoice" Relationship="Self.FK_dbo_InvoiceItem_dbo_Invoice_InvoiceId" FromRole="InvoiceItem" ToRole="Invoice" />
+          <NavigationProperty Name="Journal" Relationship="Self.FK_dbo_InvoiceItem_dbo_Journal_JournalId" FromRole="InvoiceItem" ToRole="Journal" />
+        </EntityType>
+        <EntityType Name="Journal">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" />
+          <NavigationProperty Name="InvoiceItems" Relationship="Self.FK_dbo_InvoiceItem_dbo_Journal_JournalId" FromRole="Journal" ToRole="InvoiceItem" />
+        </EntityType>
+        <EntityType Name="Keyword">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="PostId" Type="Guid" Nullable="false" />
+          <Property Name="Text" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Post" Relationship="Self.FK_dbo_Keyword_dbo_Post_PostId" FromRole="Keyword" ToRole="Post" />
+        </EntityType>
+        <EntityType Name="Level1">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Level1Name" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Level2" Type="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Level2" Nullable="false" />
+        </EntityType>
+        <EntityType Name="LogItem">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Message" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Timestamp" Type="DateTime" Nullable="false" Precision="3" />
+        </EntityType>
+        <EntityType Name="Number">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Value" Type="Int64" Nullable="false" />
+          <Property Name="ParityId" Type="Int32" Nullable="false" />
+          <Property Name="PrimeId" Type="Int32" />
+          <Property Name="CompositeId" Type="Int32" />
+          <Property Name="UpdatedAt" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Composite" Relationship="Self.FK_dbo_Composite_dbo_Number_NumberId" FromRole="Number" ToRole="Composite" />
+          <NavigationProperty Name="Parity" Relationship="Self.FK_dbo_Number_dbo_Parity_ParityId" FromRole="Number" ToRole="Parity" />
+          <NavigationProperty Name="Prime" Relationship="Self.FK_dbo_Prime_dbo_Number_NumberId" FromRole="Number" ToRole="Prime" />
+        </EntityType>
+        <EntityType Name="OfficeAssignment">
+          <Key>
+            <PropertyRef Name="InstructorID" />
+          </Key>
+          <Property Name="InstructorID" Type="Int32" Nullable="false" />
+          <Property Name="Location" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Timestamp" Type="Binary" MaxLength="Max" FixedLength="false" />
+          <NavigationProperty Name="Instructor" Relationship="Self.FK_dbo_OfficeAssignment_dbo_Instructor_InstructorID" FromRole="OfficeAssignment" ToRole="Instructor" />
+        </EntityType>
+        <EntityType Name="Parity">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="UpdatedAt" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Numbers" Relationship="Self.FK_dbo_Number_dbo_Parity_ParityId" FromRole="Parity" ToRole="Number" />
+        </EntityType>
+        <EntityType Name="Person">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int64" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="FirstName" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="LastName" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="BirthDate" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="MotherId" Type="Int64" />
+          <Property Name="EmployeeNumber" Type="Int32" />
+          <NavigationProperty Name="Children" Relationship="Self.FK_dbo_Person_dbo_Person_MotherId" FromRole="Person" ToRole="Person1" />
+          <NavigationProperty Name="Mother" Relationship="Self.FK_dbo_Person_dbo_Person_MotherId" FromRole="Person1" ToRole="Person" />
+        </EntityType>
+        <EntityType Name="PlayerWithDbGeneratedGuid">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Firstname" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Lastname" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="TeamId" Type="Guid" Nullable="false" />
+          <NavigationProperty Name="TeamWithDbGeneratedGuid" Relationship="Self.FK_dbo_PlayerWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId" FromRole="PlayerWithDbGeneratedGuid" ToRole="TeamWithDbGeneratedGuid" />
+        </EntityType>
+        <EntityType Name="PlayerWithUserGeneratedGuid">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" />
+          <Property Name="Firstname" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Lastname" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="TeamId" Type="Guid" Nullable="false" />
+          <NavigationProperty Name="TeamWithUserGeneratedGuid" Relationship="Self.FK_dbo_PlayerWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId" FromRole="PlayerWithUserGeneratedGuid" ToRole="TeamWithUserGeneratedGuid" />
+        </EntityType>
+        <EntityType Name="Point">
+          <Key>
+            <PropertyRef Name="XCoordinateId" />
+            <PropertyRef Name="YCoordinateId" />
+          </Key>
+          <Property Name="XCoordinateId" Type="Int32" Nullable="false" />
+          <Property Name="YCoordinateId" Type="Int32" Nullable="false" />
+          <Property Name="Value" Type="Double" Nullable="false" />
+          <NavigationProperty Name="XCoordinate" Relationship="Self.FK_dbo_Point_dbo_Coordinate_XCoordinateId" FromRole="Point" ToRole="Coordinate" />
+          <NavigationProperty Name="YCoordinate" Relationship="Self.FK_dbo_Point_dbo_Coordinate_YCoordinateId" FromRole="Point" ToRole="Coordinate" />
+        </EntityType>
+        <EntityType Name="Post">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="BlogId" Type="Guid" Nullable="false" />
+          <Property Name="Text" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Blog" Relationship="Self.FK_dbo_Post_dbo_Blog_BlogId" FromRole="Post" ToRole="Blog" />
+          <NavigationProperty Name="PostKeywords" Relationship="Self.FK_dbo_Keyword_dbo_Post_PostId" FromRole="Post" ToRole="Keyword" />
+          <NavigationProperty Name="Visitors" Relationship="Self.VisitorPosts" FromRole="Post" ToRole="Visitor" />
+        </EntityType>
+        <EntityType Name="Price">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Date" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="Name" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <Property Name="Value" Type="Decimal" Precision="18" Scale="2" />
+        </EntityType>
+        <EntityType Name="Prime">
+          <Key>
+            <PropertyRef Name="NumberId" />
+          </Key>
+          <Property Name="NumberId" Type="Int64" Nullable="false" />
+          <Property Name="UpdatedAt" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="UpdatedBy" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="Number" Relationship="Self.FK_dbo_Prime_dbo_Number_NumberId" FromRole="Prime" ToRole="Number" />
+          <NavigationProperty Name="Composites" Relationship="Self.CompositePrime" FromRole="Prime" ToRole="Composite" />
+        </EntityType>
+        <EntityType Name="ReservedSqlKeyword">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Key" Type="Int32" />
+          <Property Name="Identity" Type="Int32" />
+          <Property Name="Select" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="SummaryReportFROMTableASExtent">
+          <Key>
+            <PropertyRef Name="ReportID" />
+          </Key>
+          <Property Name="ReportID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Title" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Entry" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Volume" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Amount" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="PeriodID" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="SELECT_WORSE_FROM_NAMES_AS_Extent1" Relationship="Self.FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1_dbo_SummaryReportFROMTableASExtent_SummaryReportID" FromRole="SummaryReportFROMTableASExtent" ToRole="SELECT_WORSE_FROM_NAMES_AS_Extent1" />
+          <NavigationProperty Name="Period" Relationship="Self.FK_dbo_SummaryReportFROMTableASExtent__Some_Complex_Schema_Name__Period_PeriodID" FromRole="SummaryReportFROMTableASExtent" ToRole="Period" />
+        </EntityType>
+        <EntityType Name="TeamWithDbGeneratedGuidKey">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="PlayerWithDbGeneratedGuids" Relationship="Self.FK_dbo_PlayerWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId" FromRole="TeamWithDbGeneratedGuid" ToRole="PlayerWithDbGeneratedGuid" />
+          <NavigationProperty Name="CoachWithDbGeneratedGuids" Relationship="Self.CoachTeamsWithDbGeneratedGuid" FromRole="TeamWithDbGeneratedGuid" ToRole="CoachWithDbGeneratedGuid" />
+        </EntityType>
+        <EntityType Name="TeamWithUserGeneratedGuidKey">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" />
+          <Property Name="Name" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="PlayerWithUserGeneratedGuids" Relationship="Self.FK_dbo_PlayerWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId" FromRole="TeamWithUserGeneratedGuid" ToRole="PlayerWithUserGeneratedGuid" />
+          <NavigationProperty Name="CoachWithUserGeneratedGuids" Relationship="Self.CoachTeamsWithUserGeneratedGuid" FromRole="TeamWithUserGeneratedGuid" ToRole="CoachWithUserGeneratedGuid" />
+        </EntityType>
+        <EntityType Name="Visitor">
+          <Key>
+            <PropertyRef Name="Id" />
+          </Key>
+          <Property Name="Id" Type="Guid" Nullable="false" />
+          <Property Name="Name" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+          <NavigationProperty Name="Posts" Relationship="Self.VisitorPosts" FromRole="Visitor" ToRole="Post" />
+        </EntityType>
+        <EntityType Name="SELECT_WORSE_FROM_NAMES_AS_Extent1">
+          <Key>
+            <PropertyRef Name="ReportID" />
+          </Key>
+          <Property Name="ReportID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Title" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Entry" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Date" Type="DateTime" Nullable="false" Precision="3" />
+          <Property Name="Level1" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Level2" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Level3" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="I_am_Bad_Column_Name_1_" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="A_____Abc_123_Абв_" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="SELECT_WORSE_FROM_NAMES_AS_Extent_" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Name="Volume" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="Amount" Type="Decimal" Precision="18" Scale="2" Nullable="false" />
+          <Property Name="PeriodID" Type="Int32" Nullable="false" />
+          <Property Name="SummaryReportID" Type="Int32" Nullable="false" />
+          <NavigationProperty Name="SummaryReportFROMTableASExtent" Relationship="Self.FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1_dbo_SummaryReportFROMTableASExtent_SummaryReportID" FromRole="SELECT_WORSE_FROM_NAMES_AS_Extent1" ToRole="SummaryReportFROMTableASExtent" />
+          <NavigationProperty Name="Period" Relationship="Self.FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1__Some_Complex_Schema_Name__Period_PeriodID" FromRole="SELECT_WORSE_FROM_NAMES_AS_Extent1" ToRole="Period" />
+        </EntityType>
+        <EntityType Name="Period">
+          <Key>
+            <PropertyRef Name="PeriodID" />
+          </Key>
+          <Property Name="PeriodID" Type="Int32" Nullable="false" annotation:StoreGeneratedPattern="Identity" />
+          <Property Name="Name" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <NavigationProperty Name="SummaryReportFROMTableASExtents" Relationship="Self.FK_dbo_SummaryReportFROMTableASExtent__Some_Complex_Schema_Name__Period_PeriodID" FromRole="Period" ToRole="SummaryReportFROMTableASExtent" />
+          <NavigationProperty Name="SELECT_WORSE_FROM_NAMES_AS_Extent1" Relationship="Self.FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1__Some_Complex_Schema_Name__Period_PeriodID" FromRole="Period" ToRole="SELECT_WORSE_FROM_NAMES_AS_Extent1" />
+        </EntityType>
+        <Association Name="FK_dbo_BatchInvoiceItem_dbo_BatchInvoice_BatchInvoiceId">
+          <End Role="BatchInvoice" Type="Self.BatchInvoice" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="BatchInvoiceItem" Type="Self.BatchInvoiceItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="BatchInvoice">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="BatchInvoiceItem">
+              <PropertyRef Name="BatchInvoiceId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_BatchInvoiceItem_dbo_Invoice_InvoiceId">
+          <End Role="Invoice" Type="Self.Invoice" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="BatchInvoiceItem" Type="Self.BatchInvoiceItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Invoice">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="BatchInvoiceItem">
+              <PropertyRef Name="InvoiceId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Post_dbo_Blog_BlogId">
+          <End Role="Blog" Type="Self.Blog" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Post" Type="Self.Post" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Blog">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Post">
+              <PropertyRef Name="BlogId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Company_dbo_Company_ParentCompanyId">
+          <End Role="Company" Type="Self.Company" Multiplicity="1" />
+          <End Role="Company1" Type="Self.Company" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Company">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Company1">
+              <PropertyRef Name="ParentCompanyId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Employee_dbo_Company_EmployerId">
+          <End Role="Company" Type="Self.Company" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Employee" Type="Self.Employee" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Company">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Employee">
+              <PropertyRef Name="EmployerId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Composite_dbo_Number_NumberId">
+          <End Role="Number" Type="Self.Number" Multiplicity="1" />
+          <End Role="Composite" Type="Self.Composite" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="Number">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Composite">
+              <PropertyRef Name="NumberId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Point_dbo_Coordinate_XCoordinateId">
+          <End Role="Coordinate" Type="Self.Coordinate" Multiplicity="1" />
+          <End Role="Point" Type="Self.Point" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Coordinate">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Point">
+              <PropertyRef Name="XCoordinateId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Point_dbo_Coordinate_YCoordinateId">
+          <End Role="Coordinate" Type="Self.Coordinate" Multiplicity="1" />
+          <End Role="Point" Type="Self.Point" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Coordinate">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Point">
+              <PropertyRef Name="YCoordinateId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Course_dbo_Department_DepartmentID">
+          <End Role="Department" Type="Self.Department" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Course" Type="Self.Course" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Department">
+              <PropertyRef Name="DepartmentID" />
+            </Principal>
+            <Dependent Role="Course">
+              <PropertyRef Name="DepartmentID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_OfficeAssignment_dbo_Instructor_InstructorID">
+          <End Role="Instructor" Type="Self.Instructor" Multiplicity="1" />
+          <End Role="OfficeAssignment" Type="Self.OfficeAssignment" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="Instructor">
+              <PropertyRef Name="InstructorID" />
+            </Principal>
+            <Dependent Role="OfficeAssignment">
+              <PropertyRef Name="InstructorID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_InvoiceItem_dbo_Invoice_InvoiceId">
+          <End Role="Invoice" Type="Self.Invoice" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="InvoiceItem" Type="Self.InvoiceItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Invoice">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="InvoiceItem">
+              <PropertyRef Name="InvoiceId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_InvoiceItem_dbo_Journal_JournalId">
+          <End Role="Journal" Type="Self.Journal" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="InvoiceItem" Type="Self.InvoiceItem" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Journal">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="InvoiceItem">
+              <PropertyRef Name="JournalId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Keyword_dbo_Post_PostId">
+          <End Role="Post" Type="Self.Post" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="Keyword" Type="Self.Keyword" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Post">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Keyword">
+              <PropertyRef Name="PostId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Number_dbo_Parity_ParityId">
+          <End Role="Parity" Type="Self.Parity" Multiplicity="1" />
+          <End Role="Number" Type="Self.Number" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Parity">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Number">
+              <PropertyRef Name="ParityId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Prime_dbo_Number_NumberId">
+          <End Role="Number" Type="Self.Number" Multiplicity="1" />
+          <End Role="Prime" Type="Self.Prime" Multiplicity="0..1" />
+          <ReferentialConstraint>
+            <Principal Role="Number">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Prime">
+              <PropertyRef Name="NumberId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_Person_dbo_Person_MotherId">
+          <End Role="Person" Type="Self.Person" Multiplicity="0..1" />
+          <End Role="Person1" Type="Self.Person" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Person">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="Person1">
+              <PropertyRef Name="MotherId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_PlayerWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId">
+          <End Role="TeamWithDbGeneratedGuid" Type="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.TeamWithDbGeneratedGuidKey" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="PlayerWithDbGeneratedGuid" Type="Self.PlayerWithDbGeneratedGuid" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TeamWithDbGeneratedGuid">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PlayerWithDbGeneratedGuid">
+              <PropertyRef Name="TeamId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_PlayerWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId">
+          <End Role="TeamWithUserGeneratedGuid" Type="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.TeamWithUserGeneratedGuidKey" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="PlayerWithUserGeneratedGuid" Type="Self.PlayerWithUserGeneratedGuid" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="TeamWithUserGeneratedGuid">
+              <PropertyRef Name="Id" />
+            </Principal>
+            <Dependent Role="PlayerWithUserGeneratedGuid">
+              <PropertyRef Name="TeamId" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1_dbo_SummaryReportFROMTableASExtent_SummaryReportID">
+          <End Role="SummaryReportFROMTableASExtent" Type="Self.SummaryReportFROMTableASExtent" Multiplicity="1" />
+          <End Role="SELECT_WORSE_FROM_NAMES_AS_Extent1" Type="Self.SELECT_WORSE_FROM_NAMES_AS_Extent1" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="SummaryReportFROMTableASExtent">
+              <PropertyRef Name="ReportID" />
+            </Principal>
+            <Dependent Role="SELECT_WORSE_FROM_NAMES_AS_Extent1">
+              <PropertyRef Name="SummaryReportID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK_dbo_SummaryReportFROMTableASExtent__Some_Complex_Schema_Name__Period_PeriodID">
+          <End Role="Period" Type="Self.Period" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="SummaryReportFROMTableASExtent" Type="Self.SummaryReportFROMTableASExtent" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Period">
+              <PropertyRef Name="PeriodID" />
+            </Principal>
+            <Dependent Role="SummaryReportFROMTableASExtent">
+              <PropertyRef Name="PeriodID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1__Some_Complex_Schema_Name__Period_PeriodID">
+          <End Role="Period" Type="Self.Period" Multiplicity="1">
+            <OnDelete Action="Cascade" />
+          </End>
+          <End Role="SELECT_WORSE_FROM_NAMES_AS_Extent1" Type="Self.SELECT_WORSE_FROM_NAMES_AS_Extent1" Multiplicity="*" />
+          <ReferentialConstraint>
+            <Principal Role="Period">
+              <PropertyRef Name="PeriodID" />
+            </Principal>
+            <Dependent Role="SELECT_WORSE_FROM_NAMES_AS_Extent1">
+              <PropertyRef Name="PeriodID" />
+            </Dependent>
+          </ReferentialConstraint>
+        </Association>
+        <Association Name="CoachTeamsWithDbGeneratedGuid">
+          <End Role="CoachWithDbGeneratedGuid" Type="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachWithDbGeneratedGuidKey" Multiplicity="*" />
+          <End Role="TeamWithDbGeneratedGuid" Type="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.TeamWithDbGeneratedGuidKey" Multiplicity="*" />
+        </Association>
+        <Association Name="CoachTeamsWithUserGeneratedGuid">
+          <End Role="CoachWithUserGeneratedGuid" Type="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachWithUserGeneratedGuidKey" Multiplicity="*" />
+          <End Role="TeamWithUserGeneratedGuid" Type="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.TeamWithUserGeneratedGuidKey" Multiplicity="*" />
+        </Association>
+        <Association Name="CompositePrime">
+          <End Role="Composite" Type="Self.Composite" Multiplicity="*" />
+          <End Role="Prime" Type="Self.Prime" Multiplicity="*" />
+        </Association>
+        <Association Name="CourseInstructor">
+          <End Role="Course" Type="Self.Course" Multiplicity="*" />
+          <End Role="Instructor" Type="Self.Instructor" Multiplicity="*" />
+        </Association>
+        <Association Name="VisitorPosts">
+          <End Role="Post" Type="Self.Post" Multiplicity="*" />
+          <End Role="Visitor" Type="Self.Visitor" Multiplicity="*" />
+        </Association>
+        <EntityContainer Name="UnitTestsContext" annotation:LazyLoadingEnabled="true">
+          <EntitySet Name="BatchInvoices" EntityType="Self.BatchInvoice" />
+          <EntitySet Name="BatchInvoiceItems" EntityType="Self.BatchInvoiceItem" />
+          <EntitySet Name="Blogs" EntityType="Self.Blog" />
+          <EntitySet Name="CoachesWithDbGeneratedGuids" EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachWithDbGeneratedGuidKey" />
+          <EntitySet Name="CoachesWithUserGeneratedGuids" EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachWithUserGeneratedGuidKey" />
+          <EntitySet Name="Companies" EntityType="Self.Company" />
+          <EntitySet Name="Composites" EntityType="Self.Composite" />
+          <EntitySet Name="Coordinates" EntityType="Self.Coordinate" />
+          <EntitySet Name="Courses" EntityType="Self.Course" />
+          <EntitySet Name="Departments" EntityType="Self.Department" />
+          <EntitySet Name="Employees" EntityType="Self.Employee" />
+          <EntitySet Name="EmptyTables" EntityType="Self.EmptyTable" />
+          <EntitySet Name="Instructors" EntityType="Self.Instructor" />
+          <EntitySet Name="Invoices" EntityType="Self.Invoice" />
+          <EntitySet Name="InvoiceItems" EntityType="Self.InvoiceItem" />
+          <EntitySet Name="Journals" EntityType="Self.Journal" />
+          <EntitySet Name="Keywords" EntityType="Self.Keyword" />
+          <EntitySet Name="Levels" EntityType="Self.Level1" />
+          <EntitySet Name="LogItems" EntityType="Self.LogItem" />
+          <EntitySet Name="Numbers" EntityType="Self.Number" />
+          <EntitySet Name="OfficeAssignments" EntityType="Self.OfficeAssignment" />
+          <EntitySet Name="Parities" EntityType="Self.Parity" />
+          <EntitySet Name="People" EntityType="Self.Person" />
+          <EntitySet Name="PlayerWithDbGeneratedGuids" EntityType="Self.PlayerWithDbGeneratedGuid" />
+          <EntitySet Name="PlayerWithUserGeneratedGuids" EntityType="Self.PlayerWithUserGeneratedGuid" />
+          <EntitySet Name="Points" EntityType="Self.Point" />
+          <EntitySet Name="Posts" EntityType="Self.Post" />
+          <EntitySet Name="Prices" EntityType="Self.Price" />
+          <EntitySet Name="Primes" EntityType="Self.Prime" />
+          <EntitySet Name="ReservedSqlKeywords" EntityType="Self.ReservedSqlKeyword" />
+          <EntitySet Name="SummaryReportFROMTableASExtents" EntityType="Self.SummaryReportFROMTableASExtent" />
+          <EntitySet Name="TeamsWithDbGeneratedGuids" EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.TeamWithDbGeneratedGuidKey" />
+          <EntitySet Name="TeamsWithUserGeneratedGuids" EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.TeamWithUserGeneratedGuidKey" />
+          <EntitySet Name="Visitors" EntityType="Self.Visitor" />
+          <EntitySet Name="SELECT_WORSE_FROM_NAMES_AS_Extent1" EntityType="Self.SELECT_WORSE_FROM_NAMES_AS_Extent1" />
+          <EntitySet Name="Periods" EntityType="Self.Period" />
+          <AssociationSet Name="FK_dbo_BatchInvoiceItem_dbo_BatchInvoice_BatchInvoiceId" Association="Self.FK_dbo_BatchInvoiceItem_dbo_BatchInvoice_BatchInvoiceId">
+            <End Role="BatchInvoice" EntitySet="BatchInvoices" />
+            <End Role="BatchInvoiceItem" EntitySet="BatchInvoiceItems" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_BatchInvoiceItem_dbo_Invoice_InvoiceId" Association="Self.FK_dbo_BatchInvoiceItem_dbo_Invoice_InvoiceId">
+            <End Role="Invoice" EntitySet="Invoices" />
+            <End Role="BatchInvoiceItem" EntitySet="BatchInvoiceItems" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Post_dbo_Blog_BlogId" Association="Self.FK_dbo_Post_dbo_Blog_BlogId">
+            <End Role="Blog" EntitySet="Blogs" />
+            <End Role="Post" EntitySet="Posts" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Company_dbo_Company_ParentCompanyId" Association="Self.FK_dbo_Company_dbo_Company_ParentCompanyId">
+            <End Role="Company" EntitySet="Companies" />
+            <End Role="Company1" EntitySet="Companies" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Employee_dbo_Company_EmployerId" Association="Self.FK_dbo_Employee_dbo_Company_EmployerId">
+            <End Role="Company" EntitySet="Companies" />
+            <End Role="Employee" EntitySet="Employees" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Composite_dbo_Number_NumberId" Association="Self.FK_dbo_Composite_dbo_Number_NumberId">
+            <End Role="Number" EntitySet="Numbers" />
+            <End Role="Composite" EntitySet="Composites" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Point_dbo_Coordinate_XCoordinateId" Association="Self.FK_dbo_Point_dbo_Coordinate_XCoordinateId">
+            <End Role="Coordinate" EntitySet="Coordinates" />
+            <End Role="Point" EntitySet="Points" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Point_dbo_Coordinate_YCoordinateId" Association="Self.FK_dbo_Point_dbo_Coordinate_YCoordinateId">
+            <End Role="Coordinate" EntitySet="Coordinates" />
+            <End Role="Point" EntitySet="Points" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Course_dbo_Department_DepartmentID" Association="Self.FK_dbo_Course_dbo_Department_DepartmentID">
+            <End Role="Department" EntitySet="Departments" />
+            <End Role="Course" EntitySet="Courses" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_OfficeAssignment_dbo_Instructor_InstructorID" Association="Self.FK_dbo_OfficeAssignment_dbo_Instructor_InstructorID">
+            <End Role="Instructor" EntitySet="Instructors" />
+            <End Role="OfficeAssignment" EntitySet="OfficeAssignments" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_InvoiceItem_dbo_Invoice_InvoiceId" Association="Self.FK_dbo_InvoiceItem_dbo_Invoice_InvoiceId">
+            <End Role="Invoice" EntitySet="Invoices" />
+            <End Role="InvoiceItem" EntitySet="InvoiceItems" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_InvoiceItem_dbo_Journal_JournalId" Association="Self.FK_dbo_InvoiceItem_dbo_Journal_JournalId">
+            <End Role="Journal" EntitySet="Journals" />
+            <End Role="InvoiceItem" EntitySet="InvoiceItems" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Keyword_dbo_Post_PostId" Association="Self.FK_dbo_Keyword_dbo_Post_PostId">
+            <End Role="Post" EntitySet="Posts" />
+            <End Role="Keyword" EntitySet="Keywords" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Number_dbo_Parity_ParityId" Association="Self.FK_dbo_Number_dbo_Parity_ParityId">
+            <End Role="Parity" EntitySet="Parities" />
+            <End Role="Number" EntitySet="Numbers" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Prime_dbo_Number_NumberId" Association="Self.FK_dbo_Prime_dbo_Number_NumberId">
+            <End Role="Number" EntitySet="Numbers" />
+            <End Role="Prime" EntitySet="Primes" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_Person_dbo_Person_MotherId" Association="Self.FK_dbo_Person_dbo_Person_MotherId">
+            <End Role="Person" EntitySet="People" />
+            <End Role="Person1" EntitySet="People" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_PlayerWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId" Association="Self.FK_dbo_PlayerWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId">
+            <End Role="TeamWithDbGeneratedGuid" EntitySet="TeamsWithDbGeneratedGuids" />
+            <End Role="PlayerWithDbGeneratedGuid" EntitySet="PlayerWithDbGeneratedGuids" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_PlayerWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId" Association="Self.FK_dbo_PlayerWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId">
+            <End Role="TeamWithUserGeneratedGuid" EntitySet="TeamsWithUserGeneratedGuids" />
+            <End Role="PlayerWithUserGeneratedGuid" EntitySet="PlayerWithUserGeneratedGuids" />
+          </AssociationSet>
+          <AssociationSet Name="FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1_dbo_SummaryReportFROMTableASExtent_SummaryReportID" Association="Self.FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1_dbo_SummaryReportFROMTableASExtent_SummaryReportID">
+            <End Role="SummaryReportFROMTableASExtent" EntitySet="SummaryReportFROMTableASExtents" />
+            <End Role="SELECT_WORSE_FROM_NAMES_AS_Extent1" EntitySet="SELECT_WORSE_FROM_NAMES_AS_Extent1" />
+          </AssociationSet>
+          <AssociationSet Name="FK_dbo_SummaryReportFROMTableASExtent__Some_Complex_Schema_Name__Period_PeriodID" Association="Self.FK_dbo_SummaryReportFROMTableASExtent__Some_Complex_Schema_Name__Period_PeriodID">
+            <End Role="Period" EntitySet="Periods" />
+            <End Role="SummaryReportFROMTableASExtent" EntitySet="SummaryReportFROMTableASExtents" />
+          </AssociationSet>
+          <AssociationSet Name="FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1__Some_Complex_Schema_Name__Period_PeriodID" Association="Self.FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1__Some_Complex_Schema_Name__Period_PeriodID">
+            <End Role="Period" EntitySet="Periods" />
+            <End Role="SELECT_WORSE_FROM_NAMES_AS_Extent1" EntitySet="SELECT_WORSE_FROM_NAMES_AS_Extent1" />
+          </AssociationSet>
+          <AssociationSet Name="CoachTeamsWithDbGeneratedGuid" Association="Self.CoachTeamsWithDbGeneratedGuid">
+            <End Role="CoachWithDbGeneratedGuid" EntitySet="CoachesWithDbGeneratedGuids" />
+            <End Role="TeamWithDbGeneratedGuid" EntitySet="TeamsWithDbGeneratedGuids" />
+          </AssociationSet>
+          <AssociationSet Name="CoachTeamsWithUserGeneratedGuid" Association="Self.CoachTeamsWithUserGeneratedGuid">
+            <End Role="CoachWithUserGeneratedGuid" EntitySet="CoachesWithUserGeneratedGuids" />
+            <End Role="TeamWithUserGeneratedGuid" EntitySet="TeamsWithUserGeneratedGuids" />
+          </AssociationSet>
+          <AssociationSet Name="CompositePrime" Association="Self.CompositePrime">
+            <End Role="Composite" EntitySet="Composites" />
+            <End Role="Prime" EntitySet="Primes" />
+          </AssociationSet>
+          <AssociationSet Name="CourseInstructor" Association="Self.CourseInstructor">
+            <End Role="Course" EntitySet="Courses" />
+            <End Role="Instructor" EntitySet="Instructors" />
+          </AssociationSet>
+          <AssociationSet Name="VisitorPosts" Association="Self.VisitorPosts">
+            <End Role="Post" EntitySet="Posts" />
+            <End Role="Visitor" EntitySet="Visitors" />
+          </AssociationSet>
+        </EntityContainer>
+        <EntityType Name="LogWarning" BaseType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.LogItem" >
+          <Property Name="Recommendation" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" Nullable="false" />
+        </EntityType>
+        <EntityType Name="LogError" BaseType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.LogItem" >
+          <Property Name="Severity" Type="Int32" Nullable="false" />
+        </EntityType>
+        <ComplexType Name="Level2">
+          <Property Type="String" Name="Level2Name" MaxLength="Max" FixedLength="false" Unicode="true" />
+          <Property Type="DateTime" Name="Updated" Nullable="false" />
+        </ComplexType>
+      </Schema>
+    </edmx:ConceptualModels>
+    <!-- C-S mapping content -->
+    <edmx:Mappings>
+      <Mapping Space="C-S" xmlns="http://schemas.microsoft.com/ado/2009/11/mapping/cs">
+        <EntityContainerMapping StorageEntityContainer="TannerydBulkOperationsEF6NET47ModelFirstTestsModelsEFUnitTestContextModelStoreContainer" CdmEntityContainer="UnitTestsContext">
+          <EntitySetMapping Name="BatchInvoices">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.BatchInvoice">
+              <MappingFragment StoreEntitySet="BatchInvoice">
+                <ScalarProperty Name="Id" ColumnName="PrimaryKey" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="BatchInvoiceItems">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.BatchInvoiceItem">
+              <MappingFragment StoreEntitySet="BatchInvoiceItem">
+                <ScalarProperty Name="Id" ColumnName="PrimaryKey" />
+                <ScalarProperty Name="BatchInvoiceId" ColumnName="BatchInvoiceId" />
+                <ScalarProperty Name="InvoiceId" ColumnName="InvoiceId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Blogs">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Blog">
+              <MappingFragment StoreEntitySet="Blog">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CoachesWithDbGeneratedGuids">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachWithDbGeneratedGuidKey">
+              <MappingFragment StoreEntitySet="CoachWithDbGeneratedGuid">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Firstname" ColumnName="Firstname" />
+                <ScalarProperty Name="Lastname" ColumnName="Lastname" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CoachesWithUserGeneratedGuids">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachWithUserGeneratedGuidKey">
+              <MappingFragment StoreEntitySet="CoachWithUserGeneratedGuid">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Firstname" ColumnName="Firstname" />
+                <ScalarProperty Name="Lastname" ColumnName="Lastname" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Companies">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Company">
+              <MappingFragment StoreEntitySet="Company">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="ParentCompanyId" ColumnName="ParentCompanyId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Composites">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Composite">
+              <MappingFragment StoreEntitySet="Composite">
+                <ScalarProperty Name="NumberId" ColumnName="NumberId" />
+                <ScalarProperty Name="UpdatedAt" ColumnName="UpdatedAt" />
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Coordinates">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Coordinate">
+              <MappingFragment StoreEntitySet="Coordinate">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Value" ColumnName="Value" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Courses">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Course">
+              <MappingFragment StoreEntitySet="Course">
+                <ScalarProperty Name="CourseID" ColumnName="CourseID" />
+                <ScalarProperty Name="Title" ColumnName="Title" />
+                <ScalarProperty Name="Credits" ColumnName="Credits" />
+                <ScalarProperty Name="DepartmentID" ColumnName="DepartmentID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Departments">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Department">
+              <MappingFragment StoreEntitySet="Department">
+                <ScalarProperty Name="DepartmentID" ColumnName="DepartmentID" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Budget" ColumnName="Budget" />
+                <ScalarProperty Name="Administrator" ColumnName="Administrator" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Employees">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Employee">
+              <MappingFragment StoreEntitySet="Employee">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="EmployerId" ColumnName="EmployerId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="EmptyTables">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.EmptyTable">
+              <MappingFragment StoreEntitySet="EmptyTable">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Instructors">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Instructor">
+              <MappingFragment StoreEntitySet="Instructor">
+                <ScalarProperty Name="InstructorID" ColumnName="InstructorID" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="HireDate" ColumnName="HireDate" />
+                <ScalarProperty Name="FullName" ColumnName="FullName" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Invoices">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Invoice">
+              <MappingFragment StoreEntitySet="Invoice">
+                <ScalarProperty Name="Id" ColumnName="PrimaryKey" />
+                <ScalarProperty Name="Net" ColumnName="Net" />
+                <ScalarProperty Name="Gross" ColumnName="Gross" />
+                <ScalarProperty Name="Tax" ColumnName="Tax" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="InvoiceItems">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.InvoiceItem">
+              <MappingFragment StoreEntitySet="InvoiceItem">
+                <ScalarProperty Name="PrimaryKey" ColumnName="PrimaryKey" />
+                <ScalarProperty Name="JournalId" ColumnName="JournalId" />
+                <ScalarProperty Name="InvoiceId" ColumnName="InvoiceId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Journals">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Journal">
+              <MappingFragment StoreEntitySet="Journal">
+                <ScalarProperty Name="Id" ColumnName="PrimaryKey" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Keywords">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Keyword">
+              <MappingFragment StoreEntitySet="Keyword">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="PostId" ColumnName="PostId" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Levels">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Level1">
+              <MappingFragment StoreEntitySet="Level1">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Level1Name" ColumnName="Level1Name" />
+                <ComplexProperty Name="Level2">
+                  <ScalarProperty Name="Updated" ColumnName="Level2_Level3_Updated" />
+                  <ScalarProperty Name="Level2Name" ColumnName="Level2Name" />
+                </ComplexProperty>
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="LogItems">
+            <EntityTypeMapping TypeName="IsTypeOf(Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.LogItem)">
+              <MappingFragment StoreEntitySet="LogItem">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Timestamp" ColumnName="Timestamp" />
+                <ScalarProperty Name="Message" ColumnName="Message" />
+              </MappingFragment>
+            </EntityTypeMapping>
+            <EntityTypeMapping TypeName="IsTypeOf(Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.LogWarning)">
+              <MappingFragment StoreEntitySet="LogItem">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Recommendation" ColumnName="Recommendation" />
+                <Condition ColumnName="LogType" Value="Warning" />
+              </MappingFragment>
+            </EntityTypeMapping>
+            <EntityTypeMapping TypeName="IsTypeOf(Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.LogError)">
+              <MappingFragment StoreEntitySet="LogItem">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Severity" ColumnName="Severity" />
+                <Condition ColumnName="LogType" Value="Error" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Numbers">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Number">
+              <MappingFragment StoreEntitySet="Number">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Value" ColumnName="Value" />
+                <ScalarProperty Name="ParityId" ColumnName="ParityId" />
+                <ScalarProperty Name="PrimeId" ColumnName="PrimeId" />
+                <ScalarProperty Name="CompositeId" ColumnName="CompositeId" />
+                <ScalarProperty Name="UpdatedAt" ColumnName="UpdatedAt" />
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="OfficeAssignments">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.OfficeAssignment">
+              <MappingFragment StoreEntitySet="OfficeAssignment">
+                <ScalarProperty Name="InstructorID" ColumnName="InstructorID" />
+                <ScalarProperty Name="Location" ColumnName="Location" />
+                <ScalarProperty Name="Timestamp" ColumnName="Timestamp" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Parities">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Parity">
+              <MappingFragment StoreEntitySet="Parity">
+                <ScalarProperty Name="Id" ColumnName="Key" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="UpdatedAt" ColumnName="UpdatedAt" />
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="People">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Person">
+              <MappingFragment StoreEntitySet="Person">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="FirstName" ColumnName="FirstName" />
+                <ScalarProperty Name="LastName" ColumnName="LastName" />
+                <ScalarProperty Name="BirthDate" ColumnName="BirthDate" />
+                <ScalarProperty Name="MotherId" ColumnName="MotherId" />
+                <ScalarProperty Name="EmployeeNumber" ColumnName="EmployeeNumber" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="PlayerWithDbGeneratedGuids">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.PlayerWithDbGeneratedGuid">
+              <MappingFragment StoreEntitySet="PlayerWithDbGeneratedGuid">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Firstname" ColumnName="Firstname" />
+                <ScalarProperty Name="Lastname" ColumnName="Lastname" />
+                <ScalarProperty Name="TeamId" ColumnName="TeamId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="PlayerWithUserGeneratedGuids">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.PlayerWithUserGeneratedGuid">
+              <MappingFragment StoreEntitySet="PlayerWithUserGeneratedGuid">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Firstname" ColumnName="Firstname" />
+                <ScalarProperty Name="Lastname" ColumnName="Lastname" />
+                <ScalarProperty Name="TeamId" ColumnName="TeamId" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Points">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Point">
+              <MappingFragment StoreEntitySet="Point">
+                <ScalarProperty Name="XCoordinateId" ColumnName="XCoordinateId" />
+                <ScalarProperty Name="YCoordinateId" ColumnName="YCoordinateId" />
+                <ScalarProperty Name="Value" ColumnName="Value" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Posts">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Post">
+              <MappingFragment StoreEntitySet="Post">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="BlogId" ColumnName="BlogId" />
+                <ScalarProperty Name="Text" ColumnName="Text" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Prices">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Price">
+              <MappingFragment StoreEntitySet="Price">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+                <ScalarProperty Name="Value" ColumnName="Value" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Primes">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Prime">
+              <MappingFragment StoreEntitySet="Prime">
+                <ScalarProperty Name="NumberId" ColumnName="NumberId" />
+                <ScalarProperty Name="UpdatedAt" ColumnName="UpdatedAt" />
+                <ScalarProperty Name="UpdatedBy" ColumnName="UpdatedBy" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="ReservedSqlKeywords">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.ReservedSqlKeyword">
+              <MappingFragment StoreEntitySet="ReservedSqlKeyword">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Key" ColumnName="Key" />
+                <ScalarProperty Name="Identity" ColumnName="Identity" />
+                <ScalarProperty Name="Select" ColumnName="Select" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="SummaryReportFROMTableASExtents">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.SummaryReportFROMTableASExtent">
+              <MappingFragment StoreEntitySet="SummaryReportFROMTableASExtent">
+                <ScalarProperty Name="ReportID" ColumnName="ReportID" />
+                <ScalarProperty Name="Title" ColumnName="Title" />
+                <ScalarProperty Name="Entry" ColumnName="Entry" />
+                <ScalarProperty Name="Volume" ColumnName="Volume" />
+                <ScalarProperty Name="Amount" ColumnName="Amount" />
+                <ScalarProperty Name="PeriodID" ColumnName="PeriodID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TeamsWithDbGeneratedGuids">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.TeamWithDbGeneratedGuidKey">
+              <MappingFragment StoreEntitySet="TeamWithDbGeneratedGuid">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="TeamsWithUserGeneratedGuids">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.TeamWithUserGeneratedGuidKey">
+              <MappingFragment StoreEntitySet="TeamWithUserGeneratedGuid">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Visitors">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Visitor">
+              <MappingFragment StoreEntitySet="Visitor">
+                <ScalarProperty Name="Id" ColumnName="Id" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="SELECT_WORSE_FROM_NAMES_AS_Extent1">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.SELECT_WORSE_FROM_NAMES_AS_Extent1">
+              <MappingFragment StoreEntitySet="SELECT WORSE FROM NAMES AS Extent1">
+                <ScalarProperty Name="ReportID" ColumnName="ReportID" />
+                <ScalarProperty Name="Title" ColumnName="Title" />
+                <ScalarProperty Name="Entry" ColumnName="Entry" />
+                <ScalarProperty Name="Date" ColumnName="Date" />
+                <ScalarProperty Name="Level1" ColumnName="Level1" />
+                <ScalarProperty Name="Level2" ColumnName="Level2" />
+                <ScalarProperty Name="Level3" ColumnName="Level3" />
+                <ScalarProperty Name="I_am_Bad_Column_Name_1_" ColumnName="I am Bad Column Name 1 " />
+                <ScalarProperty Name="A_____Abc_123_Абв_" ColumnName="A #_@ Abc 123 Абв$" />
+                <ScalarProperty Name="SELECT_WORSE_FROM_NAMES_AS_Extent_" ColumnName="SELECT WORSE FROM NAMES AS Extent " />
+                <ScalarProperty Name="Volume" ColumnName="Volume" />
+                <ScalarProperty Name="Amount" ColumnName="Amount" />
+                <ScalarProperty Name="PeriodID" ColumnName="PeriodID" />
+                <ScalarProperty Name="SummaryReportID" ColumnName="SummaryReportID" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="Periods">
+            <EntityTypeMapping TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Period">
+              <MappingFragment StoreEntitySet="Period">
+                <ScalarProperty Name="PeriodID" ColumnName="PeriodID" />
+                <ScalarProperty Name="Name" ColumnName="Name" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <AssociationSetMapping Name="CoachTeamsWithDbGeneratedGuid" TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachTeamsWithDbGeneratedGuid" StoreEntitySet="CoachTeamsWithDbGeneratedGuid">
+            <EndProperty Name="CoachWithDbGeneratedGuid">
+              <ScalarProperty Name="Id" ColumnName="CoachId" />
+            </EndProperty>
+            <EndProperty Name="TeamWithDbGeneratedGuid">
+              <ScalarProperty Name="Id" ColumnName="TeamId" />
+            </EndProperty>
+          </AssociationSetMapping>
+          <AssociationSetMapping Name="CoachTeamsWithUserGeneratedGuid" TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachTeamsWithUserGeneratedGuid" StoreEntitySet="CoachTeamsWithUserGeneratedGuid">
+            <EndProperty Name="CoachWithUserGeneratedGuid">
+              <ScalarProperty Name="Id" ColumnName="CoachId" />
+            </EndProperty>
+            <EndProperty Name="TeamWithUserGeneratedGuid">
+              <ScalarProperty Name="Id" ColumnName="TeamId" />
+            </EndProperty>
+          </AssociationSetMapping>
+          <AssociationSetMapping Name="CompositePrime" TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CompositePrime" StoreEntitySet="CompositePrime">
+            <EndProperty Name="Composite">
+              <ScalarProperty Name="NumberId" ColumnName="CompositeId" />
+            </EndProperty>
+            <EndProperty Name="Prime">
+              <ScalarProperty Name="NumberId" ColumnName="PrimeId" />
+            </EndProperty>
+          </AssociationSetMapping>
+          <AssociationSetMapping Name="CourseInstructor" TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CourseInstructor" StoreEntitySet="CourseInstructor">
+            <EndProperty Name="Course">
+              <ScalarProperty Name="CourseID" ColumnName="CourseID" />
+            </EndProperty>
+            <EndProperty Name="Instructor">
+              <ScalarProperty Name="InstructorID" ColumnName="InstructorID" />
+            </EndProperty>
+          </AssociationSetMapping>
+          <AssociationSetMapping Name="VisitorPosts" TypeName="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.VisitorPosts" StoreEntitySet="VisitorPosts">
+            <EndProperty Name="Post">
+              <ScalarProperty Name="Id" ColumnName="PostId" />
+            </EndProperty>
+            <EndProperty Name="Visitor">
+              <ScalarProperty Name="Id" ColumnName="VisitorId" />
+            </EndProperty>
+          </AssociationSetMapping>
+        </EntityContainerMapping>
+      </Mapping>
+    </edmx:Mappings>
+  </edmx:Runtime>
+  <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <Connection>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="MetadataArtifactProcessing" Value="EmbedInOutputAssembly" />
+      </DesignerInfoPropertySet>
+    </Connection>
+    <Options>
+      <DesignerInfoPropertySet>
+        <DesignerProperty Name="ValidateOnBuild" Value="true" />
+        <DesignerProperty Name="EnablePluralization" Value="true" />
+        <DesignerProperty Name="IncludeForeignKeysInModel" Value="true" />
+        <DesignerProperty Name="UseLegacyProvider" Value="false" />
+        <DesignerProperty Name="CodeGenerationStrategy" Value="None" />
+      </DesignerInfoPropertySet>
+    </Options>
+    <!-- Diagram content (shape and connector positions) -->
+    <Diagrams></Diagrams>
+  </Designer>
+</edmx:Edmx>

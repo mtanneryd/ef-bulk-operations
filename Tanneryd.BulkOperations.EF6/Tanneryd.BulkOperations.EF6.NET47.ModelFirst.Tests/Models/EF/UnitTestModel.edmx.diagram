@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<edmx:Edmx Version="3.0" xmlns:edmx="http://schemas.microsoft.com/ado/2009/11/edmx">
+ <!-- EF Designer content (DO NOT EDIT MANUALLY BELOW HERE) -->
+  <edmx:Designer xmlns="http://schemas.microsoft.com/ado/2009/11/edmx">
+    <!-- Diagram content (shape and connector positions) -->
+    <edmx:Diagrams>
+      <Diagram DiagramId="a450862de0ee41548ae62d5da347bc45" Name="Diagram1">
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.BatchInvoice" Width="1.5" PointX="9.75" PointY="17.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.BatchInvoiceItem" Width="1.5" PointX="12" PointY="14.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Blog" Width="1.5" PointX="0.75" PointY="2.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachWithDbGeneratedGuidKey" Width="1.5" PointX="0.75" PointY="11" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachWithUserGeneratedGuidKey" Width="1.5" PointX="9.75" PointY="10" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Company" Width="1.5" PointX="7.75" PointY="0.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Composite" Width="1.5" PointX="5.25" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Coordinate" Width="1.5" PointX="12.75" PointY="1" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Course" Width="1.5" PointX="17" PointY="13" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Department" Width="1.5" PointX="14.75" PointY="13.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Employee" Width="1.5" PointX="10" PointY="1.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.EmptyTable" Width="1.5" PointX="0.75" PointY="13.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Instructor" Width="1.5" PointX="19.25" PointY="13" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Invoice" Width="1.5" PointX="9.75" PointY="14.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.InvoiceItem" Width="1.5" PointX="12" PointY="17.375" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Journal" Width="1.5" PointX="9.75" PointY="20.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Keyword" Width="1.5" PointX="5.25" PointY="1" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Level1" Width="1.5" PointX="5" PointY="19.125" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.LogItem" Width="1.5" PointX="6" PointY="16.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Number" Width="1.5" PointX="3" PointY="7" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.OfficeAssignment" Width="1.5" PointX="21.5" PointY="13.25" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Parity" Width="1.5" PointX="0.75" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Person" Width="1.5" PointX="7.625" PointY="11.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.PlayerWithDbGeneratedGuid" Width="1.5" PointX="5.25" PointY="10.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.PlayerWithUserGeneratedGuid" Width="1.5" PointX="14.25" PointY="9.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Point" Width="1.5" PointX="15" PointY="0.875" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Post" Width="1.5" PointX="3" PointY="2" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Price" Width="1.5" PointX="0.75" PointY="16.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Prime" Width="1.5" PointX="7.5" PointY="7.5" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.ReservedSqlKeyword" Width="1.5" PointX="2.75" PointY="16.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.SummaryReportFROMTableASExtent" Width="1.5" PointX="12" PointY="4.75" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.TeamWithDbGeneratedGuidKey" Width="1.5" PointX="3" PointY="11" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.TeamWithUserGeneratedGuidKey" Width="1.5" PointX="12" PointY="10" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Visitor" Width="1.5" PointX="5.25" PointY="3.625" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.SELECT_WORSE_FROM_NAMES_AS_Extent1" Width="1.5" PointX="14.25" PointY="4" IsExpanded="true" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.Period" Width="1.5" PointX="9.75" PointY="5.125" IsExpanded="true" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_BatchInvoiceItem_dbo_BatchInvoice_BatchInvoiceId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_BatchInvoiceItem_dbo_Invoice_InvoiceId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_Post_dbo_Blog_BlogId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_Company_dbo_Company_ParentCompanyId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_Employee_dbo_Company_EmployerId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_Composite_dbo_Number_NumberId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_Point_dbo_Coordinate_XCoordinateId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_Point_dbo_Coordinate_YCoordinateId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_Course_dbo_Department_DepartmentID" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_OfficeAssignment_dbo_Instructor_InstructorID" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_InvoiceItem_dbo_Invoice_InvoiceId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_InvoiceItem_dbo_Journal_JournalId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_Keyword_dbo_Post_PostId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_Number_dbo_Parity_ParityId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_Prime_dbo_Number_NumberId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_Person_dbo_Person_MotherId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_PlayerWithDbGeneratedGuid_dbo_TeamWithDbGeneratedGuid_TeamId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_PlayerWithUserGeneratedGuid_dbo_TeamWithUserGeneratedGuid_TeamId" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1_dbo_SummaryReportFROMTableASExtent_SummaryReportID" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK_dbo_SummaryReportFROMTableASExtent__Some_Complex_Schema_Name__Period_PeriodID" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.FK__In___Some_Complex_Schema__Name__SELECT_WORSE_FROM_NAMES_AS_Extent1__Some_Complex_Schema_Name__Period_PeriodID" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachTeamsWithDbGeneratedGuid" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CoachTeamsWithUserGeneratedGuid" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CompositePrime" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.CourseInstructor" ManuallyRouted="false" />
+        <AssociationConnector Association="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.VisitorPosts" ManuallyRouted="false" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.LogWarning" Width="1.5" PointX="5.125" PointY="14.625" />
+        <InheritanceConnector EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.LogWarning" />
+        <EntityTypeShape EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.LogError" Width="1.5" PointX="7.125" PointY="14.625" />
+        <InheritanceConnector EntityType="Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Models.EF.UnitTestContextModel.LogError" />
+      </Diagram>
+    </edmx:Diagrams>
+  </edmx:Designer>
+</edmx:Edmx>

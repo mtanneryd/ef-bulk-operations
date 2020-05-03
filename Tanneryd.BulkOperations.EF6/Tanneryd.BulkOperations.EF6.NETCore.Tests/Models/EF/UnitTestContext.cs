@@ -10,6 +10,8 @@ using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.People;
 using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Prices;
 using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Report;
 using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.School;
+using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Logs;
+
 
 namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF
 {
@@ -96,16 +98,19 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF
 
         #region Team
 
-        public DbSet<DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey> TeamsWithDbGeneratedGuids { get; set; }
-        public DbSet<DM.Teams.UsingDbGeneratedGuidKeys.PlayerUsingDbGeneratedGuidKey> PlayersWithDbGeneratedGuids { get; set; }
-        public DbSet<DM.Teams.UsingDbGeneratedGuidKeys.CoachUsingDbGeneratedGuidKey> CoachesWithDbGeneratedGuids { get; set; }
+        public DbSet<DM.Teams.UsingDbGeneratedGuidKeys.TeamWithDbGeneratedGuidKey> TeamsWithDbGeneratedGuids { get; set; }
+        public DbSet<DM.Teams.UsingDbGeneratedGuidKeys.PlayerWithDbGeneratedGuidKey> PlayersWithDbGeneratedGuids { get; set; }
+        public DbSet<DM.Teams.UsingDbGeneratedGuidKeys.CoachWithDbGeneratedGuidKey> CoachesWithDbGeneratedGuids { get; set; }
 
-        public DbSet<DM.Teams.UsingUserGeneratedGuidKeys.TeamUsingUserGeneratedGuidKey> TeamsWithUserGeneratedGuids { get; set; }
-        public DbSet<DM.Teams.UsingUserGeneratedGuidKeys.PlayerUsingUserGeneratedGuidKey> PlayersWithUserGeneratedGuids  { get; set; }
-        public DbSet<DM.Teams.UsingUserGeneratedGuidKeys.CoachUsingUserGeneratedGuidKey> CoachesWithUserGeneratedGuids  { get; set; }
+        public DbSet<DM.Teams.UsingUserGeneratedGuidKeys.TeamWithUserGeneratedGuidKey> TeamsWithUserGeneratedGuids { get; set; }
+        public DbSet<DM.Teams.UsingUserGeneratedGuidKeys.PlayerWithUserGeneratedGuidKey> PlayersWithUserGeneratedGuids  { get; set; }
+        public DbSet<DM.Teams.UsingUserGeneratedGuidKeys.CoachWithUserGeneratedGuidKey> CoachesWithUserGeneratedGuids  { get; set; }
 
         #endregion
 
+        public DbSet<LogItem> LogItems { get; set; }
+        public DbSet<LogWarning> LogWarnings { get; set; }
+        public DbSet<LogError> LogErrors { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
@@ -610,48 +615,48 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF
 
             #region db generated guids
 
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.TeamWithDbGeneratedGuidKey>()
                 .ToTable("TeamWithDbGeneratedGuid")
                 .HasKey(p => p.Id);
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.TeamWithDbGeneratedGuidKey>()
                 .Property(p => p.Id)
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.TeamWithDbGeneratedGuidKey>()
                 .Property(p => p.Name)
                 .IsRequired();
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.TeamUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.TeamWithDbGeneratedGuidKey>()
                 .HasMany(b => b.Players)
                 .WithRequired(p => p.Team)
                 .HasForeignKey(p => p.TeamId);
 
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.PlayerUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.PlayerWithDbGeneratedGuidKey>()
                 .ToTable("PlayerWithDbGeneratedGuid")
                 .HasKey(p => p.Id);
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.PlayerUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.PlayerWithDbGeneratedGuidKey>()
                 .Property(p => p.Id)
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.PlayerUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.PlayerWithDbGeneratedGuidKey>()
                 .Property(p => p.Firstname)
                 .IsRequired();
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.PlayerUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.PlayerWithDbGeneratedGuidKey>()
                 .Property(p => p.Lastname)
                 .IsRequired();
 
 
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.CoachUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.CoachWithDbGeneratedGuidKey>()
                 .ToTable("CoachWithDbGeneratedGuid")
                 .HasKey(p => p.Id);
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.CoachUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.CoachWithDbGeneratedGuidKey>()
                 .Property(p => p.Id)
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.CoachUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.CoachWithDbGeneratedGuidKey>()
                 .Property(p => p.Firstname)
                 .IsRequired();
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.CoachUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.CoachWithDbGeneratedGuidKey>()
                 .Property(p => p.Lastname)
                 .IsRequired();
 
-            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.CoachUsingDbGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingDbGeneratedGuidKeys.CoachWithDbGeneratedGuidKey>()
                 .HasMany(a => a.Teams)
                 .WithMany()
                 .Map(x =>
@@ -665,48 +670,48 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF
 
             #region user generated guids
 
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.TeamUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.TeamWithUserGeneratedGuidKey>()
                 .ToTable("TeamWithUserGeneratedGuid")
                 .HasKey(p => p.Id);
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.TeamUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.TeamWithUserGeneratedGuidKey>()
                 .Property(p => p.Id)
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.None);
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.TeamUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.TeamWithUserGeneratedGuidKey>()
                 .Property(p => p.Name)
                 .IsRequired();
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.TeamUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.TeamWithUserGeneratedGuidKey>()
                 .HasMany(b => b.Players)
                 .WithRequired(p => p.Team)
                 .HasForeignKey(p => p.TeamId);
 
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.PlayerUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.PlayerWithUserGeneratedGuidKey>()
                 .ToTable("PlayerWithUserGeneratedGuid")
                 .HasKey(p => p.Id);
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.PlayerUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.PlayerWithUserGeneratedGuidKey>()
                 .Property(p => p.Id)
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.None);
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.PlayerUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.PlayerWithUserGeneratedGuidKey>()
                 .Property(p => p.Firstname)
                 .IsRequired();
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.PlayerUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.PlayerWithUserGeneratedGuidKey>()
                 .Property(p => p.Lastname)
                 .IsRequired();
 
 
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.CoachUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.CoachWithUserGeneratedGuidKey>()
                 .ToTable("CoachWithUserGeneratedGuid")
                 .HasKey(p => p.Id);
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.CoachUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.CoachWithUserGeneratedGuidKey>()
                 .Property(p => p.Id)
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.None);
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.CoachUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.CoachWithUserGeneratedGuidKey>()
                 .Property(p => p.Firstname)
                 .IsRequired();
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.CoachUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.CoachWithUserGeneratedGuidKey>()
                 .Property(p => p.Lastname)
                 .IsRequired();
 
-            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.CoachUsingUserGeneratedGuidKey>()
+            modelBuilder.Entity<DM.Teams.UsingUserGeneratedGuidKeys.CoachWithUserGeneratedGuidKey>()
                 .HasMany(a => a.Teams)
                 .WithMany()
                 .Map(x =>
@@ -720,6 +725,28 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF
 
             #endregion
 
+            #region Logs
+
+            modelBuilder.Entity<LogItem>()
+                .ToTable("LogItem")
+                .HasKey(u => u.Id);
+            modelBuilder.Entity<LogItem>()
+                .Property(u => u.Id)
+                .HasColumnName("Id")
+                .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            modelBuilder.Entity<LogItem>()
+                .Property(u => u.Message);
+            modelBuilder.Entity<LogItem>()
+                .Property(u => u.Timestamp);
+            modelBuilder.Entity<LogWarning>()
+                .Property(u => u.Recommendation);
+            modelBuilder.Entity<LogError>()
+                .Property(u => u.Severity);
+            modelBuilder.Entity<LogItem>()
+                .Map<LogWarning>(m => m.Requires("LogType").HasValue("Warning"))
+                .Map<LogError>(m => m.Requires("LogType").HasValue("Error"));
+
+            #endregion
         }
     }
 }

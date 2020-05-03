@@ -38,7 +38,8 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests
         protected void CleanupUnitTestContext()
         {
             var db = new UnitTestContext();
-            db.BatchInvoiceItems.RemoveRange(db.BatchInvoiceItems.ToArray());
+            var items = db.BatchInvoiceItems.ToArray();
+            db.BatchInvoiceItems.RemoveRange(items);
             db.InvoiceItems.RemoveRange(db.InvoiceItems.ToArray());
             db.Invoices.RemoveRange(db.Invoices.ToArray());
             db.Journals.RemoveRange(db.Journals.ToArray());
@@ -93,6 +94,9 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests
             db.SaveChanges();
 
             db.Prices.RemoveRange(db.Prices.ToArray());
+            db.SaveChanges();
+
+            db.LogItems.RemoveRange(db.LogItems.ToArray());
             db.SaveChanges();
         }
 

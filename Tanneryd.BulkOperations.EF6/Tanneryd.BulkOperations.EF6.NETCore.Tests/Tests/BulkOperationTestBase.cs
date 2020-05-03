@@ -94,6 +94,9 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests
 
             db.Prices.RemoveRange(db.Prices.ToArray());
             db.SaveChanges();
+
+            db.LogItems.RemoveRange(db.LogItems.ToArray());
+            db.SaveChanges();
         }
 
         //#region Invoice

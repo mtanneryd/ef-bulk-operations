@@ -249,7 +249,6 @@ namespace Tanneryd.BulkOperations.EF6
 
             try
             {
-                // NOTE(Ossian): Had to change from typeof(T) to the below to accept IList<object> being passed to BulkInsertAll
                 var t = request.Entities.First().GetType();
                 var tableName = GetTableName(ctx, t);
                 var mappingsByType = new Dictionary<Type, Mappings>();
@@ -346,6 +345,7 @@ namespace Tanneryd.BulkOperations.EF6
         /// <param name="connection"></param>
         /// <param name="transaction"></param>
         /// <param name="tableName"></param>
+        /// <param name="discriminator"></param>
         /// <param name="columnNames"></param>
         /// <param name="includeRowNumber"></param>
         /// <returns></returns>
@@ -353,10 +353,16 @@ namespace Tanneryd.BulkOperations.EF6
             SqlConnection connection,
             SqlTransaction transaction,
             TableName tableName,
+            Discriminator discriminator,
             string[] columnNames,
             IncludeRowNumber includeRowNumber = IncludeRowNumber.No)
         {
             var selectClause = string.Join(",", columnNames.Select(p => $"[{p}]"));
+
+            if (discriminator != null)
+            {
+                selectClause = $"[{discriminator.Column.Name}]," + selectClause;
+            }
 
             if (includeRowNumber == IncludeRowNumber.Yes)
             {
@@ -403,6 +409,7 @@ namespace Tanneryd.BulkOperations.EF6
         /// <param name="connection"></param>
         /// <param name="transaction"></param>
         /// <param name="tableName"></param>
+        /// <param name="discriminator"></param>
         /// <param name="options"></param>
         /// <param name="includeRowNumber"></param>
         /// <returns></returns>
@@ -413,6 +420,7 @@ namespace Tanneryd.BulkOperations.EF6
             SqlConnection connection,
             SqlTransaction transaction,
             string tableName,
+            Discriminator discriminator,
             SqlBulkCopyOptions options = SqlBulkCopyOptions.Default,
             IncludeRowNumber includeRowNumber = IncludeRowNumber.No)
         {
@@ -447,6 +455,13 @@ namespace Tanneryd.BulkOperations.EF6
                     var tableColumnName = columnMappings[property.Name].TableColumn.Name;
                     bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(clrPropertyName, tableColumnName));
                 }
+            }
+
+            if (discriminator != null)
+            {
+                Type discriminatorType = Type.GetType(discriminator.Column.PrimitiveType.ClrEquivalentType.FullName);
+                table.Columns.Add(new DataColumn(discriminator.Column.Name, discriminatorType));
+                bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(discriminator.Column.Name, discriminator.Column.Name));
             }
 
             if (includeRowNumber == IncludeRowNumber.Yes)
@@ -501,6 +516,7 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tableName,
+                    mappings.Discriminator,
                     keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
                     IncludeRowNumber.Yes);
 
@@ -517,6 +533,7 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tempTableName,
+                    mappings.Discriminator,
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                     IncludeRowNumber.Yes);
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
@@ -612,6 +629,7 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tableName,
+                    mappings.Discriminator,
                     keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
                     IncludeRowNumber.Yes);
 
@@ -627,6 +645,7 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tempTableName,
+                    mappings.Discriminator,
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                     IncludeRowNumber.Yes);
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
@@ -718,6 +737,7 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tableName,
+                    mappings.Discriminator,
                     keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
                     IncludeRowNumber.Yes);
 
@@ -733,6 +753,7 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tempTableName,
+                    mappings.Discriminator,
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                     IncludeRowNumber.Yes);
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
@@ -830,6 +851,7 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tableName,
+                    mappings.Discriminator,
                     keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
                     IncludeRowNumber.Yes);
 
@@ -844,6 +866,7 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     request.Transaction,
                     tempTableName,
+                    mappings.Discriminator,
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                     IncludeRowNumber.Yes);
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
@@ -1032,8 +1055,6 @@ namespace Tanneryd.BulkOperations.EF6
             BulkInsertResponse response)
         {
             if (entities.Count == 0) return;
-
-            // exclude already existing entities
 
             Type t = entities[0].GetType();
             if (!mappingsByType.ContainsKey(t))
@@ -1420,6 +1441,7 @@ namespace Tanneryd.BulkOperations.EF6
 
             var rowsAffected = 0;
             bool hasComplexProperties = mappings.ComplexPropertyNames.Any();
+            bool usingTableInheritance = mappings.Discriminator != null;
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
 
@@ -1441,11 +1463,25 @@ namespace Tanneryd.BulkOperations.EF6
 
                 entities = flattenedEntities;
             }
-
+            
             // Ignore all properties that we have no mappings for.
             var properties = GetProperties(entities[0])
                 .Where(p => columnMappings.ContainsKey(p.Name))
                 .ToArray();
+
+            // Add any discriminator property info here
+            //if (usingTableInheritance)
+            //{
+            //    properties =
+            //    properties.Concat(new[]
+            //    {
+            //        new BulkPropertyInfo
+            //        {
+            //            Name = mappings.Discriminator.Column.Name,
+            //            Type = Type.GetType(mappings.Discriminator.Column.PrimitiveType.ClrEquivalentType.FullName)
+            //        }
+            //    }).ToArray();
+            //}
 
             var table = new DataTable();
 
@@ -1547,7 +1583,6 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     if (newEntities.Count > 0)
                     {
-                        var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name).ToArray();
                         var bulkCopy = CreateBulkCopy(
                             table,
                             properties,
@@ -1555,10 +1590,11 @@ namespace Tanneryd.BulkOperations.EF6
                             conn,
                             transaction,
                             tableName.Fullname,
+                            mappings.Discriminator,
                             SqlBulkCopyOptions.Default,
                             IncludeRowNumber.No);
 
-                        AddEntitiesToTable(table, newEntities, properties, t, IncludeRowNumber.No);
+                        AddEntitiesToTable(table, newEntities, properties, t, mappings.Discriminator,IncludeRowNumber.No);
                         rowsAffected += newEntities.Count;
 
                         var s = new Stopwatch();
@@ -1582,7 +1618,13 @@ namespace Tanneryd.BulkOperations.EF6
                     {
                         var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name).ToArray();
                         var tempTableName =
-                            CreateTempTable(conn, transaction, tableName, allColumnNames, IncludeRowNumber.Yes);
+                            CreateTempTable(
+                                conn,
+                                transaction,
+                                tableName, 
+                                mappings.Discriminator,
+                                allColumnNames, 
+                                IncludeRowNumber.Yes);
 
                         var bulkCopy = CreateBulkCopy(
                             table,
@@ -1591,10 +1633,11 @@ namespace Tanneryd.BulkOperations.EF6
                             conn,
                             transaction,
                             tempTableName,
+                            mappings.Discriminator,
                             SqlBulkCopyOptions.Default,
                             IncludeRowNumber.Yes);
 
-                        AddEntitiesToTable(table, newEntities, properties, t, IncludeRowNumber.Yes);
+                        AddEntitiesToTable(table, newEntities, properties, t, mappings.Discriminator,IncludeRowNumber.Yes);
 
                         var s = new Stopwatch();
                         s.Start();
@@ -1628,6 +1671,7 @@ namespace Tanneryd.BulkOperations.EF6
                             newEntities,
                             pkProperty,
                             hasComplexProperties,
+                            mappings.Discriminator,
                             t);
                     }
                 }
@@ -1641,12 +1685,13 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     transaction,
                     tableName.Fullname,
+                    mappings.Discriminator,
                     SqlBulkCopyOptions.Default,
                     IncludeRowNumber.No);
 
                 // Make sure that we only insert entities not already in the database.
                 var notExistingEntities = BulkSelectNotExisting(ctx, t, entities, pkColumnMappings, transaction);
-                AddEntitiesToTable(table, notExistingEntities, properties, t, IncludeRowNumber.No);
+                AddEntitiesToTable(table, notExistingEntities, properties, t,mappings.Discriminator,IncludeRowNumber.No);
                 rowsAffected += notExistingEntities.Count;
 
                 var s = new Stopwatch();
@@ -1791,6 +1836,7 @@ namespace Tanneryd.BulkOperations.EF6
             ArrayList newEntities,
             EdmProperty pkProperty,
             bool hasComplexProperties,
+            Discriminator discriminator,
             Type t)
         {
             var cmd = conn.CreateCommand();
@@ -1809,6 +1855,10 @@ namespace Tanneryd.BulkOperations.EF6
             if (nonPrimaryKeyColumnMappings.Any())
             {
                 var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => $"[{p.TableColumn.Name}]"));
+                if (discriminator != null)
+                {
+                    columnNames = columnNames + $", [{discriminator.Column.Name}]";
+                }
                 query = $@"  
                         MERGE {tableName.Fullname}
                         USING 
@@ -1824,10 +1874,16 @@ namespace Tanneryd.BulkOperations.EF6
             }
             else
             {
-                query = query = $@"  
+                var columnNames = "rowno";
+                if (discriminator != null)
+                {
+                    columnNames = $"[{discriminator.Column.Name}]," + columnNames;
+                }
+
+                query = $@"  
                         MERGE {tableName.Fullname}
                         USING 
-                            (SELECT rowno
+                            (SELECT {columnNames}
                              FROM   {tempTableName}) t (rowno)
                         ON 1 = 0
                         WHEN NOT MATCHED THEN
@@ -1875,7 +1931,12 @@ namespace Tanneryd.BulkOperations.EF6
             return newEntities.Count;
         }
 
-        private static void AddEntitiesToTable(DataTable table, IList entities, BulkPropertyInfo[] properties, Type t,
+        private static void AddEntitiesToTable(
+            DataTable table,
+            IList entities, 
+            BulkPropertyInfo[] properties, 
+            Type t,
+            Discriminator discriminator,
             IncludeRowNumber includeRowNumber)
         {
             if (entities.Count == 0) return;
@@ -1898,6 +1959,8 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     var e = entity;
                     var columnValues = properties.Select(p => GetProperty(t, p.Name, e, DBNull.Value)).ToList();
+
+                    if (discriminator != null) columnValues.Add(discriminator.Value);
                     if (includeRowNumber == IncludeRowNumber.Yes) columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
@@ -1963,10 +2026,10 @@ namespace Tanneryd.BulkOperations.EF6
                 navigationPropertyNames.AddRange(mappings.FromForeignKeyMappings.Select(m => m.NavigationPropertyName));
             }
 
-
             Type t = entity.GetType();
             var properties = t.GetProperties();
-            foreach (var property in properties.Where(p => !navigationPropertyNames.Contains(p.Name)))
+            var dataProperties = properties.Where(p => !navigationPropertyNames.Contains(p.Name));
+            foreach (var property in dataProperties)
             {
                 var val = property.GetValue(entity);
 
@@ -1986,7 +2049,7 @@ namespace Tanneryd.BulkOperations.EF6
                     }
                 }
                 // The only way that we could get here is if we have been called 
-                // recursivly and that should ONLY happen if we are traversing a
+                // recursively and that should ONLY happen if we are traversing a
                 // hierarchy of complex types.
                 else
                 {
@@ -2061,6 +2124,17 @@ namespace Tanneryd.BulkOperations.EF6
             return entities;
         }
 
+        /// <summary>
+        /// This method does NOT support table inheritance right now.
+        /// </summary>
+        /// <param name="conn"></param>
+        /// <param name="entities"></param>
+        /// <param name="tableName"></param>
+        /// <param name="columnMappings"></param>
+        /// <param name="keyColumnMappings"></param>
+        /// <param name="nonKeyColumnMappings"></param>
+        /// <param name="sqlTransaction"></param>
+        /// <returns></returns>
         private static string FillTempTable(
             SqlConnection conn,
             IList entities,
@@ -2073,7 +2147,13 @@ namespace Tanneryd.BulkOperations.EF6
             var columnNames = keyColumnMappings.Select(m => m.TableColumn.Name)
                 .Concat(nonKeyColumnMappings.Select(m => m.TableColumn.Name)).ToArray();
 
-            var tempTableName = CreateTempTable(conn, sqlTransaction, tableName, columnNames, IncludeRowNumber.Yes);
+            var tempTableName = CreateTempTable(
+                conn, 
+                sqlTransaction, 
+                tableName, 
+                null,
+                columnNames,
+                IncludeRowNumber.Yes);
 
             if (keyColumnMappings.Length == 1 &&
                 ((keyColumnMappings[0].TableColumn.IsStoreGeneratedIdentity &&
@@ -2106,11 +2186,12 @@ namespace Tanneryd.BulkOperations.EF6
                 conn,
                 sqlTransaction,
                 tempTableName,
+                null,
                 SqlBulkCopyOptions.KeepIdentity,
                 IncludeRowNumber.Yes);
 
             var type = entities[0].GetType();
-            AddEntitiesToTable(table, entities, properties, type, IncludeRowNumber.Yes);
+            AddEntitiesToTable(table, entities, properties, type,null, IncludeRowNumber.Yes);
 
             //
             // Fill the temp table.
@@ -2267,11 +2348,15 @@ namespace Tanneryd.BulkOperations.EF6
 
         private static Mappings GetMappings(DbContext ctx, Type t)
         {
+            Discriminator discriminator = null;
             var objectContext = ((IObjectContextAdapter)ctx).ObjectContext;
             var workspace = objectContext.MetadataWorkspace;
             var containerName = objectContext.DefaultContainerName;
             t = ObjectContext.GetObjectType(t);
             var entityName = t.Name;
+
+            // If we are dealing with table inheritance we need the base type name as well.
+            var baseEntityName = t.BaseType?.Name;
 
             var storageMapping =
                 (EntityContainerMapping)workspace.GetItem<GlobalItem>(containerName, DataSpace.CSSpace);
@@ -2282,19 +2367,43 @@ namespace Tanneryd.BulkOperations.EF6
             // Add mappings for all scalar properties. That is, for all properties  
             // that do not represent other entities (navigation properties).
             //
-            var entitySetMap = entitySetMaps.Single(m => m.EntitySet.ElementType.Name == entityName);
+            var entitySetMap = entitySetMaps
+                .Single(m =>
+                    m.EntitySet.ElementType.Name == entityName ||
+                    m.EntitySet.ElementType.Name == baseEntityName);
             var typeMappings = entitySetMap.EntityTypeMappings;
-            EntityTypeMapping typeMapping = typeMappings[0];
-            var fragments = typeMapping.Fragments;
-            var fragment = fragments[0];
-            var propertyMappings = fragment.PropertyMappings;
+            var typeMapping = typeMappings[0];
+            var propertyMappings = new List<PropertyMapping>();
+            foreach (var tm in typeMappings)
+            {
+                if (tm.IsHierarchyMapping ||
+                    tm.EntityType.Name == entityName)
+                {
+                    var fragments = tm.Fragments;
+                    var fragment = fragments[0];
+                    if (fragment.Conditions.Any())
+                    {
+                        var valueConditionMapping =
+                            (ValueConditionMapping)fragment.Conditions[0];
+                        discriminator = new Discriminator
+                        {
+                            Column = valueConditionMapping.Column,
+                            Value = valueConditionMapping.Value
+                        };
+                    }
+                    var uknownMappings = fragment.PropertyMappings
+                        .Where(m => propertyMappings.All(pm => pm.Property.Name != m.Property.Name));
+
+                    propertyMappings.AddRange(uknownMappings);
+                }
+            }
 
             var columnMappings = new List<TableColumnMapping>();
             columnMappings.AddRange(
                 propertyMappings
                     .Where(p => p is ScalarPropertyMapping)
                     .Cast<ScalarPropertyMapping>()
-                    .Where(m=>!m.Column.IsStoreGeneratedComputed)
+                    .Where(m => !m.Column.IsStoreGeneratedComputed)
                     .Select(p => new TableColumnMapping
                     {
                         EntityProperty = p.Property,
@@ -2405,6 +2514,7 @@ namespace Tanneryd.BulkOperations.EF6
             var mappings = new Mappings
             {
                 TableName = tableName,
+                Discriminator = discriminator,
                 ComplexPropertyNames = complexPropertyMappings.Select(m => m.Property.Name).ToArray(),
                 ColumnMappingByPropertyName = columnMappingByPropertyName,
                 ColumnMappingByColumnName = columnMappingByColumnName,

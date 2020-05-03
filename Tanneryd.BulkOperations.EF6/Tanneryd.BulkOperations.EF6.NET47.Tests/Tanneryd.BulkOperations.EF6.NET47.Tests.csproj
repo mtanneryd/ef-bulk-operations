@@ -63,9 +63,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Migrations\202004121947295_InitialMigration.cs" />
-    <Compile Include="Migrations\202004121947295_InitialMigration.designer.cs">
-      <DependentUpon>202004121947295_InitialMigration.cs</DependentUpon>
+    <Compile Include="Migrations\202005021819344_InitialMigration.cs" />
+    <Compile Include="Migrations\202005021819344_InitialMigration.designer.cs">
+      <DependentUpon>202005021819344_InitialMigration.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\DM\Blog\Blog.cs" />
@@ -75,7 +75,7 @@
     <Compile Include="Models\DM\Levels\Level1.cs" />
     <Compile Include="Models\DM\Levels\Level2.cs" />
     <Compile Include="Models\DM\Levels\Level3.cs" />
-    <Compile Include="Models\DM\Logs\LogEntry.cs" />
+    <Compile Include="Models\DM\Logs\LogItem.cs" />
     <Compile Include="Models\DM\Miscellaneous\Coordinate.cs" />
     <Compile Include="Models\DM\Miscellaneous\EmptyTable.cs" />
     <Compile Include="Models\DM\Miscellaneous\Point.cs" />
@@ -126,8 +126,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Migrations\202004121947295_InitialMigration.resx">
-      <DependentUpon>202004121947295_InitialMigration.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\202005021819344_InitialMigration.resx">
+      <DependentUpon>202005021819344_InitialMigration.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

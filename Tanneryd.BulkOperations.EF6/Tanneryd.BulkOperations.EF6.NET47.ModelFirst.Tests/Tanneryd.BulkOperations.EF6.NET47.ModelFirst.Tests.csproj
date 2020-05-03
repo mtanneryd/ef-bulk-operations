@@ -1,0 +1,254 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\EntityFramework.6.4.0\build\EntityFramework.props" Condition="Exists('..\packages\EntityFramework.6.4.0\build\EntityFramework.props')" />
+  <Import Project="..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.props" Condition="Exists('..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1FA73E2F-1CE1-4F02-B06F-68FEA853CDD7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests</RootNamespace>
+    <AssemblyName>Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.4.0\lib\net45\EntityFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.4.0\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\MSTest.TestFramework.2.1.1\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions, Version=14.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\MSTest.TestFramework.2.1.1\lib\net45\Microsoft.VisualStudio.TestPlatform.TestFramework.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Security" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Models\EF\BatchInvoice.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\BatchInvoiceItem.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Blog.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\CoachWithDbGeneratedGuidKey.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\CoachWithUserGeneratedGuidKey.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Company.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Composite.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Coordinate.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Course.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Department.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Employee.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\EmptyTable.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Instructor.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Invoice.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\InvoiceItem.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Journal.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Keyword.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Level1.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Level2.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\LogError.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\LogItem.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\LogWarning.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Number.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\OfficeAssignment.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Parity.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Period.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Person.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\PlayerWithDbGeneratedGuid.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\PlayerWithUserGeneratedGuid.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Point.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Post.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Price.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Prime.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\ReservedSqlKeyword.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\SELECT_WORSE_FROM_NAMES_AS_Extent1.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\SummaryReportFROMTableASExtent.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\TeamWithDbGeneratedGuidKey.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\TeamWithUserGeneratedGuidKey.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\UnitTestModel.Context.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>UnitTestModel.Context.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\UnitTestModel.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\UnitTestModel.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>UnitTestModel.edmx</DependentUpon>
+    </Compile>
+    <Compile Include="Models\EF\Visitor.cs">
+      <DependentUpon>UnitTestModel.tt</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Tests\BulkOperationTestBase.cs" />
+    <Compile Include="Tests\Delete\BulkDeleteTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertComputedColumns.cs" />
+    <Compile Include="Tests\Insert\BulkInsertGitIssuesTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertManyToManyTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertMiscellaneousTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertOneToManyTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertSelfReferenceTests.cs" />
+    <Compile Include="Tests\Insert\BulkInsertTeamTests.cs" />
+    <Compile Include="Tests\Select\BulkSelectExistingTests.cs" />
+    <Compile Include="Tests\Select\BulkSelectTests.cs" />
+    <Compile Include="Tests\Update\BulkUpdateTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.Config" />
+    <EntityDeploy Include="Models\EF\UnitTestModel.edmx">
+      <Generator>EntityModelCodeGenerator</Generator>
+      <LastGenOutput>UnitTestModel.Designer.cs</LastGenOutput>
+    </EntityDeploy>
+    <None Include="Models\EF\UnitTestModel.edmx.diagram">
+      <DependentUpon>UnitTestModel.edmx</DependentUpon>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.csproj">
+      <Project>{d6cde382-b0ff-4ad5-aa0e-78c706ccd0e0}</Project>
+      <Name>Tanneryd.BulkOperations.EF6</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Models\EF\UnitTestModel.Context.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>UnitTestModel.edmx</DependentUpon>
+      <LastGenOutput>UnitTestModel.Context.cs</LastGenOutput>
+    </Content>
+    <Content Include="Models\EF\UnitTestModel.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <DependentUpon>UnitTestModel.edmx</DependentUpon>
+      <LastGenOutput>UnitTestModel.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.props'))" />
+    <Error Condition="!Exists('..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.targets'))" />
+    <Error Condition="!Exists('..\packages\EntityFramework.6.4.0\build\EntityFramework.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.0\build\EntityFramework.props'))" />
+    <Error Condition="!Exists('..\packages\EntityFramework.6.4.0\build\EntityFramework.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\EntityFramework.6.4.0\build\EntityFramework.targets'))" />
+  </Target>
+  <Import Project="..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.targets" Condition="Exists('..\packages\MSTest.TestAdapter.2.1.1\build\net45\MSTest.TestAdapter.targets')" />
+  <Import Project="..\packages\EntityFramework.6.4.0\build\EntityFramework.targets" Condition="Exists('..\packages\EntityFramework.6.4.0\build\EntityFramework.targets')" />
+</Project>

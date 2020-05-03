@@ -16,25 +16,24 @@
 
 using System;
 
-namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Logs
+namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Logs
 {
-    public class LogEntry
+    public class LogWarning : LogItem
     {
-        public DateTime Date { get; set; }
-        public string Message { get; set; }
+        public string Recommendation { get; set; }
+
     }
 
-    public class LogEntryWithComplexType
+    public class LogError : LogItem
     {
-        public DateTime Date { get; set; }
-        public string Message { get; set; }
-        public ExtraInfo ExtraInfo { get; set; }
+        public int Severity { get; set; }
+
     }
 
-    public class ExtraInfo
+    public class LogItem
     {
-        public string Extra1 { get; set; }
-        public string Extra2 { get; set; }
-        public string Extra3 { get; set; }
+        public int Id { get; set; }
+        public string Message { get; set; }
+        public DateTime Timestamp { get; set; }
     }
 }
