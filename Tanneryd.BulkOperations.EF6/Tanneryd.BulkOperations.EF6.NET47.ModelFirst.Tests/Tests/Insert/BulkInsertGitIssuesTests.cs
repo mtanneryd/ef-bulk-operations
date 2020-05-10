@@ -48,8 +48,8 @@ namespace Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Tests.Insert
                 db.BulkInsertAll(request);
             }
         }
-       
-                [TestMethod]
+
+        [TestMethod]
         public void BulkInsertingEntitiesUsingTablePerHierarchyShouldWorkWhenIgnoringGeneratedPrimaryKeys()
         {
             using (var db = new UnitTestsContext())
@@ -222,6 +222,5 @@ namespace Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Tests.Insert
                 Assert.AreEqual("my error message 3", dbErrors[2].Message);
             }
         }
-
     }
 }

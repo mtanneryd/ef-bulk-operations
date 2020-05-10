@@ -1469,20 +1469,6 @@ namespace Tanneryd.BulkOperations.EF6
                 .Where(p => columnMappings.ContainsKey(p.Name))
                 .ToArray();
 
-            // Add any discriminator property info here
-            //if (usingTableInheritance)
-            //{
-            //    properties =
-            //    properties.Concat(new[]
-            //    {
-            //        new BulkPropertyInfo
-            //        {
-            //            Name = mappings.Discriminator.Column.Name,
-            //            Type = Type.GetType(mappings.Discriminator.Column.PrimitiveType.ClrEquivalentType.FullName)
-            //        }
-            //    }).ToArray();
-            //}
-
             var table = new DataTable();
 
             // Check to see if the table has a primary key.
@@ -2372,31 +2358,60 @@ namespace Tanneryd.BulkOperations.EF6
                     m.EntitySet.ElementType.Name == entityName ||
                     m.EntitySet.ElementType.Name == baseEntityName);
             var typeMappings = entitySetMap.EntityTypeMappings;
-            var typeMapping = typeMappings[0];
+            
             var propertyMappings = new List<PropertyMapping>();
-            foreach (var tm in typeMappings)
-            {
-                if (tm.IsHierarchyMapping ||
-                    tm.EntityType.Name == entityName)
-                {
-                    var fragments = tm.Fragments;
-                    var fragment = fragments[0];
-                    if (fragment.Conditions.Any())
-                    {
-                        var valueConditionMapping =
-                            (ValueConditionMapping)fragment.Conditions[0];
-                        discriminator = new Discriminator
-                        {
-                            Column = valueConditionMapping.Column,
-                            Value = valueConditionMapping.Value
-                        };
-                    }
-                    var uknownMappings = fragment.PropertyMappings
-                        .Where(m => propertyMappings.All(pm => pm.Property.Name != m.Property.Name));
+            NavigationProperty[] navigationProperties = new NavigationProperty[0];
 
-                    propertyMappings.AddRange(uknownMappings);
-                }
+            // As long as we do not deal with table inheritance
+            // we assume there is only one type mapping available.
+            if (typeMappings.Count() == 1)
+            {
+                var typeMapping = typeMappings[0];
+                var fragments = typeMapping.Fragments;
+                var fragment = fragments[0];
+
+                propertyMappings.AddRange(fragment.PropertyMappings);
+
+                navigationProperties =
+                    typeMapping.EntityType.DeclaredMembers
+                        .Where(m => m.BuiltInTypeKind == BuiltInTypeKind.NavigationProperty)
+                        .Cast<NavigationProperty>()
+                        .Where(p => p.RelationshipType is AssociationType)
+                        .ToArray();
             }
+            // If we have more than one type mapping we assume that we are
+            // dealing with table inheritance.
+            else
+            {
+                foreach (var tm in typeMappings)
+                {
+                    var name = tm.EntityType != null ? tm.EntityType.Name : tm.IsOfEntityTypes[0].Name;
+
+                    if (name == baseEntityName ||
+                        name == entityName)
+                    {
+                        var fragments = tm.Fragments;
+                        var fragment = fragments[0];
+                        if (fragment.Conditions.Any())
+                        {
+                            var valueConditionMapping =
+                                (ValueConditionMapping)fragment.Conditions[0];
+                            discriminator = new Discriminator
+                            {
+                                Column = valueConditionMapping.Column,
+                                Value = valueConditionMapping.Value
+                            };
+                        }
+                        var uknownMappings = fragment.PropertyMappings
+                            .Where(m => propertyMappings.All(pm => pm.Property.Name != m.Property.Name));
+
+                        propertyMappings.AddRange(uknownMappings);
+                    }
+                }
+
+                //var typeMapping = typeMappings.Single(tm => tm.IsOfEntityTypes[0].Name == entityName);
+            }
+
 
             var columnMappings = new List<TableColumnMapping>();
             columnMappings.AddRange(
@@ -2426,13 +2441,7 @@ namespace Tanneryd.BulkOperations.EF6
             //
             //
             var foreignKeyMappings = new List<ForeignKeyMapping>();
-            var navigationProperties =
-                typeMapping.EntityType.DeclaredMembers
-                    .Where(m => m.BuiltInTypeKind == BuiltInTypeKind.NavigationProperty)
-                    .Cast<NavigationProperty>()
-                    .Where(p => p.RelationshipType is AssociationType)
-                    .ToArray();
-
+            
             foreach (var navigationProperty in navigationProperties)
             {
                 var relType = (AssociationType)navigationProperty.RelationshipType;

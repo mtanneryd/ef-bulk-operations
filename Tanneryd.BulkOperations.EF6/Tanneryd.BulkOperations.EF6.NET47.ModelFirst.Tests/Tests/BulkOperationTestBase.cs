@@ -94,6 +94,9 @@ namespace Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.Tests
             db.Prices.RemoveRange(db.Prices.ToArray());
             db.SaveChanges();
 
+            db.LogItems.RemoveRange(db.LogItems.ToArray());
+            db.SaveChanges();
+
             var cmdText = @"
             BEGIN
                 ALTER TABLE [dbo].[Instructor] DROP COLUMN FullName

@@ -8,7 +8,7 @@ A nuget package that extends the DbContext in EF6 with bulk operations for both 
 Read the CodeProject article [Bulk operations using Entity Framework](https://www.codeproject.com/Articles/1226978/Bulk-operations-using-Entity-Framework) if you are interested in some background.
 
 ### Prerequisites
-The extension is built for, and requires, Entity Framework 6 and .NET 4.5 or later.
+The extension is built for, and requires, Entity Framework 6.
 
 ### Installing
 Install the nuget package [Tanneryd.BulkOperations.EF6](https://www.nuget.org/packages/Tanneryd.BulkOperations.EF6). This will make the following methods available on the DbContext.
@@ -183,8 +183,9 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
-##### 1.4.0 (2020-04-01)
- * The package now targets both .netstd and .net45 
+##### 1.4.0 (2020-05-04)
+ * Added experimental support for TPH table inheritance.
+ * The package now targets both netstandard2.1 and net45
  * Fixed a bug when using computed columns in tables without identity primary keys (reported and resolved by https://github.com/hzahradnik)
 
 ##### 1.3.0 (2019-12-21)
@@ -216,7 +217,7 @@ NOT IMPLEMENTED
 ## Built With
 
 * Visual Studio 2019
-* .NET Framework 4.5
+* netstandard2.1 and net45
 * Entity Framework 6.2.0
 
 ## Versioning
