@@ -2,6 +2,10 @@
 
 A nuget package that extends the DbContext in EF6 with bulk operations for both inserts and updates.
 
+## Project status
+### 2020-05-10
+I'm currently working on the 1.4 release. It will target both netstandard2.1 and net45. It also introduces experimental support for TPH table inheritance. Some bugs are also fixed, hopefully.
+
 ## Getting Started
 
 ### Background
