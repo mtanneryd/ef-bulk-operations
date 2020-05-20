@@ -2316,11 +2316,12 @@ namespace Tanneryd.BulkOperations.EF6.NetStd
             //
             var foreignKeyMappings = new List<ForeignKeyMapping>();
             var navigationProperties =
-                typeMapping.EntityType.DeclaredMembers
-                    .Where(m => m.BuiltInTypeKind == BuiltInTypeKind.NavigationProperty)
-                    .Cast<NavigationProperty>()
-                    .Where(p => p.RelationshipType is AssociationType)
-                    .ToArray();
+	            typeMapping.EntityType
+		            .DeclaredMembers
+		            .Where(m => m.BuiltInTypeKind == BuiltInTypeKind.NavigationProperty)
+		            .Cast<NavigationProperty>()
+		            .Where(p => p.RelationshipType is AssociationType)
+		            .ToArray();
 
             foreach (var navigationProperty in navigationProperties)
             {

@@ -19,3 +19,5 @@
 *.user
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.Tests/EF/StebbingContext.cs
 Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NetStd/nuget_api.txt
+/Tanneryd.BulkOperations.EF6/issue-31-reproduction/bin/Debug
+/Tanneryd.BulkOperations.EF6/issue-31-reproduction/obj
