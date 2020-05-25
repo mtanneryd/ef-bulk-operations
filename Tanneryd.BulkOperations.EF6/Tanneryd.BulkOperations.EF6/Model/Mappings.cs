@@ -19,7 +19,7 @@ using System.Collections.Generic;
 
 namespace Tanneryd.BulkOperations.EF6.Model
 {
-    internal class Mappings
+    public class Mappings
     {
         public Mappings()
         {

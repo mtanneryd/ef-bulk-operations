@@ -28,7 +28,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests
         public void TableNameForGitHubIssue17ShouldPass()
         {
             var sql = @"SELECT [Extent1].[Id] AS [Id], [Extent1].[Identifier] AS [Identifier], [Extent1].[Name] AS [Name], [Extent1].[Latitude] AS [Latitude], [Extent1].[Longitude] AS [Longitude], [Extent1].[FIR] AS [FIR], [Extent1].[UIR] AS [UIR], [Extent1].[ICAO] AS [ICAO], [Extent1].[MagneticVariation] AS [MagneticVariation], [Extent1].[Frequency] AS [Frequency], [Extent1].[CountryName] AS [CountryName], [Extent1].[CountryId] AS [CountryId], [Extent1].[StateId] AS [StateId], [Extent1].[CityId] AS [CityId], [Extent1].[IsActive] AS [IsActive] FROM [dbo].[Points] AS [Extent1] WHERE ([Extent1].[IsActive] = @DynamicFilterParam_000001) OR (@DynamicFilterParam_000002 IS NOT NULL)";
-            var tableName = DbContextExtensions.ParseTableName(sql);
+            var tableName = new MappingsExtractor().ParseTableName(sql);
             Assert.AreEqual("Points", tableName.Name);
             Assert.AreEqual("dbo", tableName.Schema);
         }
@@ -39,19 +39,20 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests
         {
             using (var ctx = new UnitTestContext())
             {
-                var tableName = ctx.GetTableName(typeof(Course));
+                var extractor = new MappingsExtractor();
+                var tableName = extractor.GetTableName(ctx,typeof(Course));
                 Assert.AreEqual("dbo", tableName.Schema);
                 Assert.AreEqual("Course", tableName.Name);
 
-                tableName = ctx.GetTableName(typeof(Department));
+                tableName = extractor.GetTableName(ctx,typeof(Department));
                 Assert.AreEqual("dbo", tableName.Schema);
                 Assert.AreEqual("Department", tableName.Name);
 
-                tableName = ctx.GetTableName(typeof(Instructor));
+                tableName = extractor.GetTableName(ctx,typeof(Instructor));
                 Assert.AreEqual("dbo", tableName.Schema);
                 Assert.AreEqual("Instructor", tableName.Name);
 
-                tableName = ctx.GetTableName(typeof(OfficeAssignment));
+                tableName = extractor.GetTableName(ctx,typeof(OfficeAssignment));
                 Assert.AreEqual("dbo", tableName.Schema);
                 Assert.AreEqual("OfficeAssignment", tableName.Name);
             }
@@ -62,14 +63,16 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests
         {
             using (var ctx = new UnitTestContext())
             {
-                var tableName = ctx.GetTableName(typeof(Period));
+                var extractor = new MappingsExtractor();
+
+                var tableName = extractor.GetTableName(ctx,typeof(Period));
                 Assert.AreEqual("Some.Complex_Schema Name", tableName.Schema);
                 Assert.AreEqual("Period", tableName.Name);
 
-                tableName = ctx.GetTableName(typeof(SummaryReportFROMTableASExtent));
+                tableName = extractor.GetTableName(ctx,typeof(SummaryReportFROMTableASExtent));
                 Assert.AreEqual(nameof(SummaryReportFROMTableASExtent), tableName.Name);
 
-                tableName = ctx.GetTableName(typeof(DetailReportWithFROM));
+                tableName = extractor.GetTableName(ctx,typeof(DetailReportWithFROM));
                 Assert.AreEqual("In # Some.Complex_Schema @Name", tableName.Schema);
                 Assert.AreEqual("SELECT WORSE FROM NAMES AS Extent1", tableName.Name);
             }

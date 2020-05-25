@@ -30,7 +30,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
     /// We do not support Many-To-Many relationships with compound keys.
     /// 
     /// </summary>
-    internal class ForeignKeyMapping
+    public class ForeignKeyMapping
     {
         public ForeignKeyMapping()
         {

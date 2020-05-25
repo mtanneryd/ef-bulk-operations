@@ -25,7 +25,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
     /// In conceptual-space, EdmProperty represents a property on an Entity.
     /// In store-space, EdmProperty represents a column in a table.
     /// </summary>
-    internal class TableColumnMapping
+    public class TableColumnMapping
     {
         public bool IsIncludedFromComplexType { get; set; }
         public bool IsForeignKey { get; set; }

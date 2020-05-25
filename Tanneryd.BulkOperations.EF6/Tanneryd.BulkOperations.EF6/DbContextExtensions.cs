@@ -21,8 +21,6 @@ using System.Data;
 using System.Data.Entity;
 using System.Data.Entity.Core.Mapping;
 using System.Data.Entity.Core.Metadata.Edm;
-using System.Data.Entity.Core.Objects;
-using System.Data.Entity.Infrastructure;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Dynamic;
@@ -44,6 +42,8 @@ namespace Tanneryd.BulkOperations.EF6
             typeof(UInt32),
             typeof(UInt64),
         };
+
+        private static readonly MappingsExtractor _mappingExtractor = new MappingsExtractor();
 
         #region Public API
 
@@ -250,11 +250,11 @@ namespace Tanneryd.BulkOperations.EF6
             try
             {
                 var t = request.Entities.First().GetType();
-                var tableName = GetTableName(ctx, t);
+                var tableName = _mappingExtractor.GetTableName(ctx, t);
                 var mappingsByType = new Dictionary<Type, Mappings>();
                 if (request.SortUsingClusteredIndex)
                 {
-                    var mappings = GetMappings(ctx, t);
+                    var mappings = _mappingExtractor.GetMappings(ctx, t);
                     mappingsByType.Add(t, mappings);
 
                     var s0 = new Stopwatch();
@@ -321,7 +321,7 @@ namespace Tanneryd.BulkOperations.EF6
         public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx, TimeSpan timeout)
         {
             var response = new BulkInsertResponse();
-            var tableName = GetTableName(ctx, typeof(T));
+            var tableName = _mappingExtractor.GetTableName(ctx, typeof(T));
 
             var s0 = new Stopwatch();
             s0.Start();
@@ -487,7 +487,7 @@ namespace Tanneryd.BulkOperations.EF6
             if (!request.Items.Any()) return new List<T1>();
 
             Type t = typeof(T2);
-            var mappings = GetMappings(ctx, t);
+            var mappings = _mappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertByEntityProperty =
@@ -594,7 +594,7 @@ namespace Tanneryd.BulkOperations.EF6
             if (!request.Items.Any()) return;
 
             Type t = typeof(T2);
-            var mappings = GetMappings(ctx, t);
+            var mappings = _mappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertyByEntityProperty =
@@ -702,7 +702,7 @@ namespace Tanneryd.BulkOperations.EF6
             if (!request.Items.Any()) return new List<T2>();
 
             Type t = typeof(T2);
-            var mappings = GetMappings(ctx, t);
+            var mappings = _mappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertByEntityProperty =
@@ -821,7 +821,7 @@ namespace Tanneryd.BulkOperations.EF6
             if (!request.Items.Any()) return new List<T1>();
 
             Type t = typeof(T2);
-            var mappings = GetMappings(ctx, t);
+            var mappings = _mappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertyByEntityProperty =
@@ -939,7 +939,7 @@ namespace Tanneryd.BulkOperations.EF6
             var transaction = request.Transaction;
 
             Type t = request.Entities[0].GetType();
-            var mappings = GetMappings(ctx, t);
+            var mappings = _mappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
 
@@ -1059,7 +1059,7 @@ namespace Tanneryd.BulkOperations.EF6
             Type t = entities[0].GetType();
             if (!mappingsByType.ContainsKey(t))
             {
-                mappingsByType.Add(t, GetMappings(ctx, t));
+                mappingsByType.Add(t, _mappingExtractor.GetMappings(ctx, t));
             }
 
             var mappings = mappingsByType[t];
@@ -1401,7 +1401,7 @@ namespace Tanneryd.BulkOperations.EF6
         {
             if (!mappingsByType.ContainsKey(t))
             {
-                mappingsByType.Add(t, GetMappings(ctx, t));
+                mappingsByType.Add(t, _mappingExtractor.GetMappings(ctx, t));
             }
 
             var mappings = mappingsByType[t];
@@ -1463,7 +1463,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 entities = flattenedEntities;
             }
-            
+
             // Ignore all properties that we have no mappings for.
             var properties = GetProperties(entities[0])
                 .Where(p => columnMappings.ContainsKey(p.Name))
@@ -1580,7 +1580,7 @@ namespace Tanneryd.BulkOperations.EF6
                             SqlBulkCopyOptions.Default,
                             IncludeRowNumber.No);
 
-                        AddEntitiesToTable(table, newEntities, properties, t, mappings.Discriminator,IncludeRowNumber.No);
+                        AddEntitiesToTable(table, newEntities, properties, t, mappings.Discriminator, IncludeRowNumber.No);
                         rowsAffected += newEntities.Count;
 
                         var s = new Stopwatch();
@@ -1607,9 +1607,9 @@ namespace Tanneryd.BulkOperations.EF6
                             CreateTempTable(
                                 conn,
                                 transaction,
-                                tableName, 
+                                tableName,
                                 mappings.Discriminator,
-                                allColumnNames, 
+                                allColumnNames,
                                 IncludeRowNumber.Yes);
 
                         var bulkCopy = CreateBulkCopy(
@@ -1623,7 +1623,7 @@ namespace Tanneryd.BulkOperations.EF6
                             SqlBulkCopyOptions.Default,
                             IncludeRowNumber.Yes);
 
-                        AddEntitiesToTable(table, newEntities, properties, t, mappings.Discriminator,IncludeRowNumber.Yes);
+                        AddEntitiesToTable(table, newEntities, properties, t, mappings.Discriminator, IncludeRowNumber.Yes);
 
                         var s = new Stopwatch();
                         s.Start();
@@ -1677,7 +1677,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 // Make sure that we only insert entities not already in the database.
                 var notExistingEntities = BulkSelectNotExisting(ctx, t, entities, pkColumnMappings, transaction);
-                AddEntitiesToTable(table, notExistingEntities, properties, t,mappings.Discriminator,IncludeRowNumber.No);
+                AddEntitiesToTable(table, notExistingEntities, properties, t, mappings.Discriminator, IncludeRowNumber.No);
                 rowsAffected += notExistingEntities.Count;
 
                 var s = new Stopwatch();
@@ -1919,8 +1919,8 @@ namespace Tanneryd.BulkOperations.EF6
 
         private static void AddEntitiesToTable(
             DataTable table,
-            IList entities, 
-            BulkPropertyInfo[] properties, 
+            IList entities,
+            BulkPropertyInfo[] properties,
             Type t,
             Discriminator discriminator,
             IncludeRowNumber includeRowNumber)
@@ -2134,9 +2134,9 @@ namespace Tanneryd.BulkOperations.EF6
                 .Concat(nonKeyColumnMappings.Select(m => m.TableColumn.Name)).ToArray();
 
             var tempTableName = CreateTempTable(
-                conn, 
-                sqlTransaction, 
-                tableName, 
+                conn,
+                sqlTransaction,
+                tableName,
                 null,
                 columnNames,
                 IncludeRowNumber.Yes);
@@ -2177,7 +2177,7 @@ namespace Tanneryd.BulkOperations.EF6
                 IncludeRowNumber.Yes);
 
             var type = entities[0].GetType();
-            AddEntitiesToTable(table, entities, properties, type,null, IncludeRowNumber.Yes);
+            AddEntitiesToTable(table, entities, properties, type, null, IncludeRowNumber.Yes);
 
             //
             // Fill the temp table.
@@ -2266,312 +2266,7 @@ namespace Tanneryd.BulkOperations.EF6
             return conn;
         }
 
-        public static TableName GetTableName(this DbContext ctx, Type t)
-        {
-            var dbSet = ctx.Set(t);
-            var sql = dbSet.ToString();
-            return ParseTableName(sql);
-        }
-
-        public static TableName ParseTableName(string sql)
-        {
-            var pattern = @"FROM\s+\[(?<schema>[\w@$#_\. ]+)\]\.\[(?<table>[\w@$#_\. ]+)\]";
-            var regex = new Regex(pattern);
-            var match = regex.Match(sql);
-
-            if (match.Success)
-            {
-                var schema = match.Groups["schema"].Value;
-                var table = match.Groups["table"].Value;
-
-                return new TableName { Schema = schema, Name = table };
-            }
-
-            pattern = @"FROM\s+\[(?<table>[\w@$#_\. ]+)\]";
-            regex = new Regex(pattern);
-            match = regex.Match(sql);
-
-            if (match.Success)
-            {
-                var table = match.Groups["table"].Value;
-                return new TableName { Schema = "dbo", Name = table };
-            }
-
-            throw new ArgumentException($"Failed to parse table name from {sql}. Bulk operation failed.");
-        }
-
-        private static IEnumerable<TableColumnMapping> GetTableColumnMappings(ICollection<PropertyMapping> properties,
-            bool isIncludedFromComplexType)
-        {
-            if (!properties.Any()) yield break;
-
-            var scalarPropertyMappings =
-                properties
-                    .Where(p => p is ScalarPropertyMapping)
-                    .Cast<ScalarPropertyMapping>()
-                    .Select(p => new TableColumnMapping
-                    {
-                        IsIncludedFromComplexType = isIncludedFromComplexType,
-                        EntityProperty = p.Property,
-                        TableColumn = p.Column
-                    });
-            foreach (var mapping in scalarPropertyMappings)
-            {
-                yield return mapping;
-            }
-
-            var complexPropertyMappings =
-                properties
-                    .Where(p => p is ComplexPropertyMapping)
-                    .Cast<ComplexPropertyMapping>()
-                    .SelectMany(m => m.TypeMappings.SelectMany(tm => tm.PropertyMappings)).ToArray();
-            ;
-            foreach (var p in GetTableColumnMappings(complexPropertyMappings, true))
-            {
-                yield return p;
-            }
-        }
-
-        private static Mappings GetMappings(DbContext ctx, Type t)
-        {
-            Discriminator discriminator = null;
-            var objectContext = ((IObjectContextAdapter)ctx).ObjectContext;
-            var workspace = objectContext.MetadataWorkspace;
-            var containerName = objectContext.DefaultContainerName;
-            t = ObjectContext.GetObjectType(t);
-            var entityName = t.Name;
-
-            // If we are dealing with table inheritance we need the base type name as well.
-            var baseEntityName = t.BaseType?.Name;
-
-            var storageMapping =
-                (EntityContainerMapping)workspace.GetItem<GlobalItem>(containerName, DataSpace.CSSpace);
-            var entitySetMaps = storageMapping.EntitySetMappings.ToList();
-            var associationSetMaps = storageMapping.AssociationSetMappings.ToList();
-
-            //
-            // Add mappings for all scalar properties. That is, for all properties  
-            // that do not represent other entities (navigation properties).
-            //
-            var entitySetMap = entitySetMaps
-                .Single(m =>
-                    m.EntitySet.ElementType.Name == entityName ||
-                    m.EntitySet.ElementType.Name == baseEntityName);
-            var typeMappings = entitySetMap.EntityTypeMappings;
-            
-            var propertyMappings = new List<PropertyMapping>();
-            NavigationProperty[] navigationProperties = new NavigationProperty[0];
-
-            // As long as we do not deal with table inheritance
-            // we assume there is only one type mapping available.
-            if (typeMappings.Count() == 1)
-            {
-                var typeMapping = typeMappings[0];
-                var fragments = typeMapping.Fragments;
-                var fragment = fragments[0];
-
-                propertyMappings.AddRange(fragment.PropertyMappings);
-
-                navigationProperties =
-                    typeMapping.EntityType.DeclaredMembers
-                        .Where(m => m.BuiltInTypeKind == BuiltInTypeKind.NavigationProperty)
-                        .Cast<NavigationProperty>()
-                        .Where(p => p.RelationshipType is AssociationType)
-                        .ToArray();
-            }
-            // If we have more than one type mapping we assume that we are
-            // dealing with table inheritance.
-            else
-            {
-                foreach (var tm in typeMappings)
-                {
-                    var name = tm.EntityType != null ? tm.EntityType.Name : tm.IsOfEntityTypes[0].Name;
-
-                    if (name == baseEntityName ||
-                        name == entityName)
-                    {
-                        var fragments = tm.Fragments;
-                        var fragment = fragments[0];
-                        if (fragment.Conditions.Any())
-                        {
-                            var valueConditionMapping =
-                                (ValueConditionMapping)fragment.Conditions[0];
-                            discriminator = new Discriminator
-                            {
-                                Column = valueConditionMapping.Column,
-                                Value = valueConditionMapping.Value
-                            };
-                        }
-                        var uknownMappings = fragment.PropertyMappings
-                            .Where(m => propertyMappings.All(pm => pm.Property.Name != m.Property.Name));
-
-                        propertyMappings.AddRange(uknownMappings);
-                    }
-                }
-
-                //var typeMapping = typeMappings.Single(tm => tm.IsOfEntityTypes[0].Name == entityName);
-            }
-
-
-            var columnMappings = new List<TableColumnMapping>();
-            columnMappings.AddRange(
-                propertyMappings
-                    .Where(p => p is ScalarPropertyMapping)
-                    .Cast<ScalarPropertyMapping>()
-                    .Where(m => !m.Column.IsStoreGeneratedComputed)
-                    .Select(p => new TableColumnMapping
-                    {
-                        EntityProperty = p.Property,
-                        TableColumn = p.Column
-                    }));
-            var complexPropertyMappings = propertyMappings
-                .Where(p => p is ComplexPropertyMapping)
-                .Cast<ComplexPropertyMapping>()
-                .ToArray();
-            if (complexPropertyMappings.Any())
-            {
-                columnMappings.AddRange(GetTableColumnMappings(complexPropertyMappings, true));
-            }
-
-            var columnMappingByPropertyName = columnMappings.ToDictionary(m => m.EntityProperty.Name, m => m);
-            var columnMappingByColumnName = columnMappings.ToDictionary(m => m.TableColumn.Name, m => m);
-
-            //
-            // Add mappings for all navigation properties.
-            //
-            //
-            var foreignKeyMappings = new List<ForeignKeyMapping>();
-            
-            foreach (var navigationProperty in navigationProperties)
-            {
-                var relType = (AssociationType)navigationProperty.RelationshipType;
-
-                // Only bother with unknown relationships
-                if (foreignKeyMappings.All(m => m.NavigationPropertyName != navigationProperty.Name))
-                {
-                    var fkMapping = new ForeignKeyMapping
-                    {
-                        NavigationPropertyName = navigationProperty.Name,
-                        BuiltInTypeKind = navigationProperty.TypeUsage.EdmType.BuiltInTypeKind,
-                    };
-
-                    //
-                    // Many-To-Many
-                    //
-                    if (associationSetMaps.Any() &&
-                        associationSetMaps.Any(m => m.AssociationSet.Name == relType.Name))
-                    {
-                        var map = associationSetMaps.Single(m => m.AssociationSet.Name == relType.Name);
-                        var sourceMapping =
-                            new TableColumnMapping
-                            {
-                                TableColumn = map.SourceEndMapping.PropertyMappings[0].Column,
-                                EntityProperty = map.SourceEndMapping.PropertyMappings[0].Property,
-                            };
-                        var targetMapping =
-                            new TableColumnMapping
-                            {
-                                TableColumn = map.TargetEndMapping.PropertyMappings[0].Column,
-                                EntityProperty = map.TargetEndMapping.PropertyMappings[0].Property,
-                            };
-
-                        fkMapping.FromType = (map.SourceEndMapping.AssociationEnd.TypeUsage.EdmType as RefType)
-                            ?.ElementType.Name;
-                        fkMapping.ToType = (map.TargetEndMapping.AssociationEnd.TypeUsage.EdmType as RefType)
-                            ?.ElementType.Name;
-                        var schema = map.StoreEntitySet.Schema;
-                        var name = map.StoreEntitySet.Table ?? map.StoreEntitySet.Name;
-
-                        fkMapping.AssociationMapping = new AssociationMapping
-                        {
-                            TableName = new TableName
-                            {
-                                Name = name,
-                                Schema = schema,
-                            },
-                            Source = sourceMapping,
-                            Target = targetMapping
-                        };
-                    }
-                    //
-                    // One-To-One or One-to-Many
-                    //
-                    else
-                    {
-                        fkMapping.FromType = relType.Constraint.FromProperties.First().DeclaringType.Name;
-                        fkMapping.ToType = relType.Constraint.ToProperties.First().DeclaringType.Name;
-
-                        var foreignKeyRelations = new List<ForeignKeyRelation>();
-                        for (int i = 0; i < relType.Constraint.FromProperties.Count; i++)
-                        {
-                            foreignKeyRelations.Add(new ForeignKeyRelation
-                            {
-                                FromProperty = relType.Constraint.FromProperties[i].Name,
-                                ToProperty = relType.Constraint.ToProperties[i].Name,
-                            });
-                        }
-
-                        fkMapping.ForeignKeyRelations = foreignKeyRelations.ToArray();
-                    }
-
-                    foreignKeyMappings.Add(fkMapping);
-                }
-            }
-
-            var tableName = GetTableName(ctx, t);
-
-            var mappings = new Mappings
-            {
-                TableName = tableName,
-                Discriminator = discriminator,
-                ComplexPropertyNames = complexPropertyMappings.Select(m => m.Property.Name).ToArray(),
-                ColumnMappingByPropertyName = columnMappingByPropertyName,
-                ColumnMappingByColumnName = columnMappingByColumnName,
-                ToForeignKeyMappings = foreignKeyMappings.Where(m => m.ToType == entityName).ToArray(),
-                FromForeignKeyMappings = foreignKeyMappings.Where(m => m.FromType == entityName).ToArray()
-            };
-
-            foreach (var toPropertyName in mappings.ToForeignKeyMappings.SelectMany(m =>
-                m.ForeignKeyRelations.Select(r => r.ToProperty)))
-            {
-                if (mappings.ColumnMappingByPropertyName.ContainsKey(toPropertyName))
-                {
-                    var tableColumnMapping = mappings.ColumnMappingByPropertyName[toPropertyName];
-                    tableColumnMapping.IsForeignKey = true;
-                }
-            }
-
-            foreach (var toPropertyName in mappings.FromForeignKeyMappings.SelectMany(m =>
-                m.ForeignKeyRelations.Select(r => r.ToProperty)))
-            {
-                if (mappings.ColumnMappingByPropertyName.ContainsKey(toPropertyName))
-                {
-                    var tableColumnMapping = mappings.ColumnMappingByPropertyName[toPropertyName];
-                    tableColumnMapping.IsForeignKey = true;
-                }
-            }
-
-            var associationMappings = mappings.ToForeignKeyMappings
-                .Where(m => m.AssociationMapping != null)
-                .Select(m => m.AssociationMapping);
-            foreach (var associationMapping in associationMappings)
-            {
-                associationMapping.Source.IsForeignKey = true;
-                associationMapping.Target.IsForeignKey = true;
-            }
-
-            associationMappings = mappings.FromForeignKeyMappings
-                .Where(m => m.AssociationMapping != null)
-                .Select(m => m.AssociationMapping);
-            foreach (var associationMapping in associationMappings)
-            {
-                associationMapping.Source.IsForeignKey = true;
-                associationMapping.Target.IsForeignKey = true;
-            }
-
-            return mappings;
-        }
-
+ 
         /// <summary>
         /// Use reflection to get the property value by its property 
         /// name from an object instance.

@@ -16,7 +16,7 @@
 
 namespace Tanneryd.BulkOperations.EF6.Model
 {
-    internal class ForeignKeyRelation
+    public class ForeignKeyRelation
     {
         /// <summary>
         /// This is the primary key property

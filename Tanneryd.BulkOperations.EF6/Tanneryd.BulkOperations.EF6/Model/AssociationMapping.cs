@@ -16,7 +16,7 @@
 
 namespace Tanneryd.BulkOperations.EF6.Model
 {
-    internal class AssociationMapping
+    public class AssociationMapping
     {
         public TableName TableName { get; set; }
         public TableColumnMapping Source { get; set; }
