@@ -230,13 +230,8 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 
 ## Authors
 
-* **Måns Tånneryd** 
+* **MÃ¥ns TÃ¥nneryd** 
 
 ## License
 
 This project is licensed under the Apache License - see the [LICENSE.md](LICENSE.md) file for details.
-
-
-
-
-
