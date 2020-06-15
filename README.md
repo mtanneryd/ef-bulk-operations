@@ -3,8 +3,9 @@
 A nuget package that extends the DbContext in EF6 with bulk operations for both inserts and updates.
 
 ## Project status
-### 2020-05-10
-I'm currently working on the 1.4 release. It will target both netstandard2.1 and net45. It also introduces experimental support for TPH table inheritance. Some bugs are also fixed, hopefully.
+### 2020-06-15
+I'm currently working on the 1.5 release. It is planned to contain an improved BulkSelect where it will be possible to identify the rows using join operations.
+
 
 ## Getting Started
 
@@ -187,7 +188,7 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
-##### 1.4.0 (2020-05-04)
+##### 1.4.0 (2020-06-15)
  * Added experimental support for TPH table inheritance.
  * The package now targets both netstandard2.1 and net45
  * Fixed a bug when using computed columns in tables without identity primary keys (reported and resolved by https://github.com/hzahradnik)
