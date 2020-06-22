@@ -11,11 +11,10 @@
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET47.Tests/obj
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NetCore.Tests/bin
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NetCore.Tests/obj
+/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests/bin
+/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests/obj
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/nuget_api.txt
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.nuspec
 *.nupkg
 *.user
-/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.Tests/EF/StebbingContext.cs
 Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NetStd/nuget_api.txt
-/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests/bin/Debug
-/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests/obj

@@ -14,18 +14,26 @@
  * limitations under the License.
  */
 
+using System;
+using System.Data;
+
 namespace Tanneryd.BulkOperations.EF6.Model
 {
-    public class ForeignKeyRelation
+    public class TableColumn
     {
-        /// <summary>
-        /// This is the primary key property
-        /// </summary>
-        public string FromProperty { get; set; }
+        public Type Type { get; set; }
+        public string SqlType { get; set; }
+        public bool UseQuotes { get; set; }
+        public string Name { get; set; }
 
-        /// <summary>
-        /// This is the foreign key property
-        /// </summary>
-        public string ToProperty { get; set; }
+        public string DefaultValue
+        {
+            get
+            {
+                if (SqlType.Contains("varchar"))
+                    return "<empty>";
+                return "0";
+            }
+        }
     }
 }

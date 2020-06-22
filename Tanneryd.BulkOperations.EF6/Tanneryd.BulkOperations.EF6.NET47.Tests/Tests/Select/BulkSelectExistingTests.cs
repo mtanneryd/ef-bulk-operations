@@ -1,5 +1,5 @@
 ﻿/*
-* Copyright ©  2017-2019 Tånneryd IT AB
+* Copyright ©  2017-2020 Tånneryd IT AB
 * 
 * Licensed under the Apache License, Version 2.0 (the "License");
 * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
+using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Companies;
 using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Numbers;
 using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Prices;
 using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Teams.UsingUserGeneratedGuidKeys;
@@ -30,6 +31,12 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
     [TestClass]
     public class BulkSelectExistingTests : BulkOperationTestBase
     {
+        public class EmployeeSelectionItem
+        {
+            public string EmployerName { get; set; }
+            public string Name { get; set; }
+        }
+
         [TestInitialize]
         public void Initialize()
         {
@@ -41,6 +48,139 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Select
         public void CleanUp()
         {
             CleanupUnitTestContext();
+        }
+
+        [TestMethod]
+        public void SelectExistingEmployeeFromCompanyByCompanyName()
+        {
+            using (var db = new UnitTestContext())
+            {
+
+                var companies = new[]
+                {
+                    new Company
+                    {
+                        Name = "Company 1",
+                        Employees = new[]
+                        {
+                            new Employee {Name = "E1"},
+                            new Employee {Name = "E2"},
+                            new Employee {Name = "E3"},
+                            new Employee {Name = "E4"},
+                            new Employee {Name = "E5"},
+                            new Employee {Name = "E6"},
+                            new Employee {Name = "E7"},
+                            new Employee {Name = "E8"},
+                            new Employee {Name = "E9"},
+                            new Employee {Name = "E10"},
+                            new Employee {Name = "E11"},
+                            new Employee {Name = "E12"},
+                            new Employee {Name = "E13"},
+                            new Employee {Name = "E14"},
+                            new Employee {Name = "E15"},
+                        }
+                    },
+                    new Company
+                    {
+                    Name = "Company 2",
+                    Employees = new[]
+                    {
+                        new Employee {Name = "E1"},
+                        new Employee {Name = "E2"},
+                        new Employee {Name = "E3"},
+                        new Employee {Name = "E4"},
+                        new Employee {Name = "E5"},
+                        new Employee {Name = "E6"},
+                        new Employee {Name = "E7"},
+                        new Employee {Name = "E8"},
+                        new Employee {Name = "E9"},
+                        new Employee {Name = "E10"},
+                    },
+                    },
+                    new Company
+                    {
+                        Name = "Company 3",
+                        Employees = new[]
+                        {
+                            new Employee {Name = "E1"},
+                            new Employee {Name = "E2"},
+                            new Employee {Name = "E3"},
+                            new Employee {Name = "E4"},
+                            new Employee {Name = "E5"},
+                        }
+                    }
+                };
+
+                foreach (var c in companies)
+                {
+                    c.ParentCompany = c;
+                }
+
+                var insertRequest = new BulkInsertRequest<Company>
+                {
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes,
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                    Entities = companies
+                };
+                db.BulkInsertAll(insertRequest);
+
+                var request = new BulkSelectRequest<EmployeeSelectionItem>
+                {
+                    Items = new[] {
+                        new EmployeeSelectionItem
+                        {
+                            EmployerName = "Company 1",
+                            Name = "E1"
+                        },
+                        new EmployeeSelectionItem
+                        {
+                            EmployerName = "Company 1",
+                            Name = "E2"
+                        },
+                        new EmployeeSelectionItem
+                        {
+                            EmployerName = "Company 1",
+                            Name = "E3"
+                        },
+                        new EmployeeSelectionItem
+                        {
+                            EmployerName = "Company 1",
+                            Name = "E4"
+                        },
+                        new EmployeeSelectionItem
+                        {
+                            EmployerName = "Company 1",
+                            Name = "E5"
+                        },
+                        new EmployeeSelectionItem
+                        {
+                            EmployerName = "Company 3",
+                            Name = "E6"
+                        },
+                        new EmployeeSelectionItem
+                        {
+                            EmployerName = "Company 3",
+                            Name = "E7"
+                        },
+                    },
+                    KeyPropertyMappings = new[]
+                    {
+                        new KeyPropertyMapping
+                        {
+                            EntityPropertyName = "Employer.Name",
+                            ItemPropertyName = "EmployerName"
+                        },
+                        new KeyPropertyMapping
+                        {
+                            EntityPropertyName = "Name",
+                            ItemPropertyName = "Name"
+                        },
+                    }
+                };
+
+                var employees = db.BulkSelectExisting<EmployeeSelectionItem, Employee>(request);
+                Assert.AreEqual(5, employees.Count());
+            }
         }
 
         [TestMethod]
