@@ -430,7 +430,7 @@ namespace Tanneryd.BulkOperations.EF6
                 DestinationTableName = tableName,
                 EnableStreaming = true,
                 BatchSize = 1000000,
-                BulkCopyTimeout = 10 * 60
+                BulkCopyTimeout = 0
             };
 
             foreach (var property in properties)
