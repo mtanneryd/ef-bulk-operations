@@ -994,10 +994,12 @@ namespace Tanneryd.BulkOperations.EF6
                 var conditionStatements =
                     selectedKeyMappings.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                var cmdBody = $@"UPDATE t0 SET {setStatementsSql}
-                                 FROM {tableName.Fullname} AS t0
-                                 INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
-                                ";
+                var cmdBody = $@"MERGE INTO {tableName.Fullname} t0
+                                 USING {tempTableName} AS t1
+                                 ON {conditionStatementsSql}
+                                 WHEN MATCHED
+                                 THEN UPDATE
+                                 SET {setStatementsSql};";
                 var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout);
                 rowsAffected += cmd.ExecuteNonQuery();
 
