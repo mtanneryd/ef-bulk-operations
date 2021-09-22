@@ -2,21 +2,26 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.1;net45</TargetFrameworks>
-    <Version>1.4.0</Version>
+    <Version>1.4.1</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageId>Tanneryd.BulkOperations.EF6</PackageId>
     <Authors>Måns Tånneryd</Authors>
     <Company>Tånneryd IT AB</Company>
     <Product>Tanneryd.BulkOperations.EF6</Product>
-    <Copyright>Tånneryd IT AB</Copyright>
+    <Copyright>Copyright ©  2017-2021 Tånneryd IT AB</Copyright>
     <PackageReleaseNotes>Added experimental support for TPH table inheritance.
 Package now targets netstandard2.1 and net45
 Fixed a bug when using computed columns in tables without identity primary keys</PackageReleaseNotes>
+    <PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
     <None Remove="nuget_api.txt" />
+    <None Include="LICENSE-2.0.txt">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
