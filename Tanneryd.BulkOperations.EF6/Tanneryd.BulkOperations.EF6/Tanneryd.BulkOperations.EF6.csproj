@@ -10,9 +10,7 @@
     <Company>Tånneryd IT AB</Company>
     <Product>Tanneryd.BulkOperations.EF6</Product>
     <Copyright>Copyright ©  2017-2021 Tånneryd IT AB</Copyright>
-    <PackageReleaseNotes>Added experimental support for TPH table inheritance.
-Package now targets netstandard2.1 and net45
-Fixed a bug when using computed columns in tables without identity primary keys</PackageReleaseNotes>
+    <PackageReleaseNotes></PackageReleaseNotes>
     <PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
   </PropertyGroup>
 
