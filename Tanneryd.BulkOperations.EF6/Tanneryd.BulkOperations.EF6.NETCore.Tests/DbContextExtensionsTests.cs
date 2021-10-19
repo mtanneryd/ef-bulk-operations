@@ -33,6 +33,14 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests
             Assert.AreEqual("dbo", tableName.Schema);
         }
 
+        [TestMethod]
+        public void TableNameWithDashShouldPass()
+        {
+            var sql = @"SELECT [Extent1].[Id] AS [Id], [Extent1].[Identifier] AS [Identifier], [Extent1].[Name] AS [Name], [Extent1].[Latitude] AS [Latitude], [Extent1].[Longitude] AS [Longitude], [Extent1].[FIR] AS [FIR], [Extent1].[UIR] AS [UIR], [Extent1].[ICAO] AS [ICAO], [Extent1].[MagneticVariation] AS [MagneticVariation], [Extent1].[Frequency] AS [Frequency], [Extent1].[CountryName] AS [CountryName], [Extent1].[CountryId] AS [CountryId], [Extent1].[StateId] AS [StateId], [Extent1].[CityId] AS [CityId], [Extent1].[IsActive] AS [IsActive] FROM [dbo-2].[Points-2] AS [Extent1] WHERE ([Extent1].[IsActive] = @DynamicFilterParam_000001) OR (@DynamicFilterParam_000002 IS NOT NULL)";
+            var tableName = new MappingsExtractor().ParseTableName(sql);
+            Assert.AreEqual("Points-2", tableName.Name);
+            Assert.AreEqual("dbo-2", tableName.Schema);
+        }
 
         [TestMethod]
         public void SchoolTableNames()
