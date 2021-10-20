@@ -294,7 +294,7 @@ namespace Tanneryd.BulkOperations.EF6
 
         public TableName ParseTableName(string sql)
         {
-            var pattern = @"FROM\s+\[(?<schema>[\w@$#_\. ]+)\]\.\[(?<table>[\w@$#_\. ]+)\]";
+            var pattern = @"FROM\s+\[(?<schema>[\w@$#_\. -]+)\]\.\[(?<table>[\w@$#_\. -]+)\]";
             var regex = new Regex(pattern);
             var match = regex.Match(sql);
 
@@ -306,7 +306,7 @@ namespace Tanneryd.BulkOperations.EF6
                 return new TableName { Schema = schema, Name = table };
             }
 
-            pattern = @"FROM\s+\[(?<table>[\w@$#_\. ]+)\]";
+            pattern = @"FROM\s+\[(?<table>[\w@$#_\. -]+)\]";
             regex = new Regex(pattern);
             match = regex.Match(sql);
 
