@@ -895,7 +895,9 @@ namespace Tanneryd.BulkOperations.EF6
                 });
 
                 var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                var query = $@"SELECT DISTINCT [t0].[rowno]
+                // We could improve performance here by replacing "[t1].*" below with the actual
+                // columns as specified in request.ColumnPropertyMappings.
+                var query = $@"SELECT DISTINCT [t0].[rowno], [t1].*
                                FROM {tempTableName} AS [t0]
                                INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
 
@@ -908,6 +910,11 @@ namespace Tanneryd.BulkOperations.EF6
                     while (sqlDataReader.Read())
                     {
                         var rowNo = (int)sqlDataReader[0];
+                        var item = items[rowNo];
+                        foreach (var cpm in request.ColumnPropertyMappings)
+                        {
+                            SetProperty(cpm.ItemPropertyName, item, sqlDataReader[cpm.EntityPropertyName]);    
+                        }
                         existingEntities.Add(items[rowNo]);
                     }
                 }

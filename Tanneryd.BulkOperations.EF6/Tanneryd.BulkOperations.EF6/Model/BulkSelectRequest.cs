@@ -25,18 +25,25 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public BulkSelectRequest(string[] keyPropertyNames, IList<T> items = null, SqlTransaction transaction = null)
         {
             KeyPropertyMappings = KeyPropertyMapping.IdentityMappings(keyPropertyNames);
+            ColumnPropertyMappings = new KeyPropertyMapping[0];
             Items = items;
             Transaction = transaction;
         }
 
         public IList<T> Items { get; set; }
         public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
+        /// <summary>
+        /// Mappings for the columns we would like to update on our
+        /// local entities if they match existing entities in the database.
+        /// </summary>
+        public KeyPropertyMapping[] ColumnPropertyMappings { get; set; }
         public SqlTransaction Transaction { get; set; }
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(1);
 
         public BulkSelectRequest()
         {
             KeyPropertyMappings = new KeyPropertyMapping[0];
+            ColumnPropertyMappings = new KeyPropertyMapping[0];
             Items = new T[0];
         }
     }
