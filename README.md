@@ -188,6 +188,9 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
+##### 1.4.1 (2021-11-12)
+ * Added support for retrieving values from the database (updating the local entities that have matching data in the database) when doing a BulkSelectExisting.
+	
 ##### 1.4.0 (2020-06-15)
  * Added experimental support for TPH table inheritance.
  * The package now targets both netstandard2.1 and net45
@@ -221,9 +224,9 @@ NOT IMPLEMENTED
 
 ## Built With
 
-* Visual Studio 2019
+* Visual Studio 2022
 * netstandard2.1 and net45
-* Entity Framework 6.2.0
+* Entity Framework 6.4.0
 
 ## Versioning
 
