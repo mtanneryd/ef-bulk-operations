@@ -2,11 +2,6 @@
 
 A nuget package that extends the DbContext in EF6 with bulk operations for both inserts and updates.
 
-## Project status
-### 2020-06-15
-I'm currently working on the 1.5 release. It is planned to contain an improved BulkSelect where it will be possible to identify the rows using join operations.
-
-
 ## Getting Started
 
 ### Background
