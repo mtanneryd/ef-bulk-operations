@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright ©  2017-2019 Tånneryd IT AB
+ * Copyright ©  2017-2020 Tånneryd IT AB
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Tanneryd.BulkOperations.EF6.Model
 {
@@ -23,7 +24,7 @@ namespace Tanneryd.BulkOperations.EF6.Model
     {
         public Mappings()
         {
-            ComplexPropertyNames = new String [0];
+            ComplexPropertyNames = new String[0];
             ToForeignKeyMappings = new ForeignKeyMapping[0];
             FromForeignKeyMappings = new ForeignKeyMapping[0];
         }
@@ -35,5 +36,36 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public Dictionary<string, TableColumnMapping> ColumnMappingByColumnName { get; set; }
         public ForeignKeyMapping[] ToForeignKeyMappings { get; set; }
         public ForeignKeyMapping[] FromForeignKeyMappings { get; set; }
+
+        public string[] GetPrimaryKeyMembers()
+        {
+            dynamic declaringType = ColumnMappingByPropertyName
+                .Values
+                .First()
+                .TableColumn
+                .DeclaringType;
+
+            var primaryKeyMembers = new List<string>();
+            foreach (var keyMember in declaringType.KeyMembers)
+                primaryKeyMembers.Add(keyMember.ToString());
+
+            return primaryKeyMembers.ToArray();
+        }
+
+        public TableColumnMapping[] GetPrimaryKeyColumnMappings()
+        {
+            var keyMembers = GetPrimaryKeyMembers();
+            var pkColumnMappings = ColumnMappingByPropertyName.Values
+                .Where(m => keyMembers.Contains(m.TableColumn.Name))
+                .ToArray();
+            return pkColumnMappings;
+        }
+
+        public bool IsPrimaryKeyStoreGenerated(TableColumnMapping[] pkColumnMappings)
+        {
+            return pkColumnMappings.Length == 1 &&
+                   (pkColumnMappings[0].TableColumn.IsStoreGeneratedIdentity ||
+                    pkColumnMappings[0].TableColumn.IsStoreGeneratedComputed);
+        }
     }
 }
