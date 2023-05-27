@@ -112,8 +112,14 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF
         public DbSet<LogWarning> LogWarnings { get; set; }
         public DbSet<LogError> LogErrors { get; set; }
 
-        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        public UnitTestContext()
+            :base("data source =(localdb)\\MSSQLLocalDB; initial catalog = Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF.UnitTestContext; persist security info=True;Integrated Security = SSPI; MultipleActiveResultSets=True")
+            //:base("data source =.\\SQLEXPRESS; initial catalog = Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF.UnitTestContext; persist security info=True;Integrated Security = SSPI; MultipleActiveResultSets=True")
         {
+
+        }
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {            
             #region Blog
 
             modelBuilder.Entity<Blog>()

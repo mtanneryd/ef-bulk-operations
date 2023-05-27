@@ -176,5 +176,132 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Delete
                 Assert.AreEqual(p0.Id, people[0].Id);
             }
         }
+
+        [TestMethod]
+        public void DeleteAllChildrenOfMother()
+        {
+            var p0 = new Person
+            {
+                FirstName = "Angelica",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now
+            };
+            var p1 = new Person
+            {
+                FirstName = "Arvid",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now,
+                EmployeeNumber = 0,
+                Mother = p0
+            };
+            var p2 = new Person
+            {
+                FirstName = "Viktor",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now,
+                EmployeeNumber = 0,
+                Mother = p0
+            };
+
+            using (var db = new UnitTestContext())
+            {
+                db.People.AddRange(new[] { p0, p1, p2 });
+                db.SaveChanges();
+
+                var people = db.People.OrderBy(p => p.FirstName).ToArray();
+                Assert.AreEqual(3, people.Length);
+                Assert.AreEqual((object)p0.Id, people[0].Id);
+                Assert.AreEqual((object)p1.Id, people[1].Id);
+                Assert.AreEqual((object)p2.Id, people[2].Id);
+
+                // Delete all children of p0 in the database 
+                // by providing an empty list of existing entities.
+
+                p1.EmployeeNumber = null;
+                p2.EmployeeNumber = null;
+                db.BulkDeleteNotExisting<Person, Person>(new BulkDeleteRequest<Person>(
+                    new[] { new SqlCondition("MotherId", p0.Id) },
+                    new[] { "FirstName", "EmployeeNumber", "LastName" })
+                {
+                    Items = Array.Empty<Person>().ToList()
+                });
+
+                people = db.People.OrderBy(p => p.FirstName).ToArray();
+                Assert.AreEqual(1, people.Length);
+                Assert.AreEqual((object)p0.Id, people[0].Id);
+            }
+        }
+
+        [TestMethod]
+        public void DeleteAllChildrenOfOneMotherButNotTheOther()
+        {
+            var p0 = new Person
+            {
+                FirstName = "Angelica",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now
+            };
+            var p1 = new Person
+            {
+                FirstName = "Arvid",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now,
+                EmployeeNumber = 0,
+                Mother = p0
+            };
+            var p2 = new Person
+            {
+                FirstName = "Viktor",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now,
+                EmployeeNumber = 0,
+                Mother = p0
+            };
+            var p3 = new Person
+            {
+                FirstName = "Inga-Lill",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now
+            };
+            var p4 = new Person
+            {
+                FirstName = "Måns",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now,
+                EmployeeNumber = 0,
+                Mother = p3
+            };
+            using (var db = new UnitTestContext())
+            {
+                db.People.AddRange(new[] { p0, p1, p2, p3, p4 });
+                db.SaveChanges();
+
+                var people = db.People.OrderBy(p => p.FirstName).ToArray();
+                Assert.AreEqual(5, people.Length);
+                Assert.AreEqual((object)p0.Id, people[0].Id);
+                Assert.AreEqual((object)p1.Id, people[1].Id);
+                Assert.AreEqual((object)p3.Id, people[2].Id);
+                Assert.AreEqual((object)p4.Id, people[3].Id);
+                Assert.AreEqual((object)p2.Id, people[4].Id);
+
+                // Delete all children of p0 in the database 
+                // by providing an empty list of existing entities.
+
+                p1.EmployeeNumber = null;
+                p2.EmployeeNumber = null;
+                db.BulkDeleteNotExisting<Person, Person>(new BulkDeleteRequest<Person>(
+                    new[] { new SqlCondition("MotherId", p0.Id) },
+                    new[] { "FirstName", "EmployeeNumber", "LastName" })
+                {
+                    Items = Array.Empty<Person>().ToList()
+                });
+
+                people = db.People.OrderBy(p => p.FirstName).ToArray();
+                Assert.AreEqual(3, people.Length);
+                Assert.AreEqual((object)p0.Id, people[0].Id);
+                Assert.AreEqual((object)p3.Id, people[1].Id);
+                Assert.AreEqual((object)p4.Id, people[2].Id);
+            }
+        }
     }
 }

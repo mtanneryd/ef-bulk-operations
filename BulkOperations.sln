@@ -1,15 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.5.33516.290
+VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tanneryd.BulkOperations.EF6", "Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.csproj", "{D6CDE382-B0FF-4AD5-AA0E-78C706CCD0E0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tanneryd.BulkOperations.EF6.NETCore.Tests", "Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.NETCore.Tests\Tanneryd.BulkOperations.EF6.NETCore.Tests.csproj", "{897ECD38-F41D-4006-88B4-CF9C9B1F732B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tanneryd.BulkOperations.EFCore", "Tanneryd.BulkOperations.EFCore\Tanneryd.BulkOperations.EFCore\Tanneryd.BulkOperations.EFCore.csproj", "{31DFD900-7E77-4076-80E3-571CEB4C0CFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests", "Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests\Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.csproj", "{1FA73E2F-1CE1-4F02-B06F-68FEA853CDD7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tanneryd.BulkOperations.EF6.NET47.Tests", "Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.NET47.Tests\Tanneryd.BulkOperations.EF6.NET47.Tests.csproj", "{106E6908-3E9D-4B2B-A2DB-3A281DC57A4A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests", "Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests\Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests.csproj", "{1FA73E2F-1CE1-4F02-B06F-68FEA853CDD7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tanneryd.BulkOperations.EF6.NETCore.Tests", "Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.NETCore.Tests\Tanneryd.BulkOperations.EF6.NETCore.Tests.csproj", "{9B096FBB-8C52-4B73-8954-A75428BA0534}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tanneryd.BulkOperations.EFCore.Tests", "Tanneryd.BulkOperations.EFCore\Tanneryd.BulkOperations.EFCore.Tests\Tanneryd.BulkOperations.EFCore.Tests.csproj", "{DA06E0AB-95CE-4502-B6D7-1654852C3477}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,18 +25,26 @@ Global
 		{D6CDE382-B0FF-4AD5-AA0E-78C706CCD0E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6CDE382-B0FF-4AD5-AA0E-78C706CCD0E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6CDE382-B0FF-4AD5-AA0E-78C706CCD0E0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{897ECD38-F41D-4006-88B4-CF9C9B1F732B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{897ECD38-F41D-4006-88B4-CF9C9B1F732B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{897ECD38-F41D-4006-88B4-CF9C9B1F732B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{897ECD38-F41D-4006-88B4-CF9C9B1F732B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{106E6908-3E9D-4B2B-A2DB-3A281DC57A4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{106E6908-3E9D-4B2B-A2DB-3A281DC57A4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{106E6908-3E9D-4B2B-A2DB-3A281DC57A4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{106E6908-3E9D-4B2B-A2DB-3A281DC57A4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{31DFD900-7E77-4076-80E3-571CEB4C0CFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{31DFD900-7E77-4076-80E3-571CEB4C0CFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{31DFD900-7E77-4076-80E3-571CEB4C0CFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{31DFD900-7E77-4076-80E3-571CEB4C0CFC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1FA73E2F-1CE1-4F02-B06F-68FEA853CDD7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1FA73E2F-1CE1-4F02-B06F-68FEA853CDD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FA73E2F-1CE1-4F02-B06F-68FEA853CDD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FA73E2F-1CE1-4F02-B06F-68FEA853CDD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{106E6908-3E9D-4B2B-A2DB-3A281DC57A4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{106E6908-3E9D-4B2B-A2DB-3A281DC57A4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{106E6908-3E9D-4B2B-A2DB-3A281DC57A4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{106E6908-3E9D-4B2B-A2DB-3A281DC57A4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B096FBB-8C52-4B73-8954-A75428BA0534}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B096FBB-8C52-4B73-8954-A75428BA0534}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B096FBB-8C52-4B73-8954-A75428BA0534}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B096FBB-8C52-4B73-8954-A75428BA0534}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA06E0AB-95CE-4502-B6D7-1654852C3477}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA06E0AB-95CE-4502-B6D7-1654852C3477}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA06E0AB-95CE-4502-B6D7-1654852C3477}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA06E0AB-95CE-4502-B6D7-1654852C3477}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

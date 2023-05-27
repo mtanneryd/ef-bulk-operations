@@ -1,30 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.1;net45</TargetFrameworks>
-    <Version>1.4.3</Version>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageId>Tanneryd.BulkOperations.EF6</PackageId>
-    <Authors>Måns Tånneryd</Authors>
-    <Company>Tånneryd IT AB</Company>
-    <Product>Tanneryd.BulkOperations.EF6</Product>
-    <Copyright>Copyright ©  2017-2021 Tånneryd IT AB</Copyright>
-    <PackageReleaseNotes></PackageReleaseNotes>
-    <PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.1;net45</TargetFrameworks>
+		<Version>1.4.5</Version>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<PackageId>Tanneryd.BulkOperations.EF6</PackageId>
+		<Authors>Måns Tånneryd</Authors>
+		<Company>Tånneryd IT AB</Company>
+		<Product>Tanneryd.BulkOperations.EF6</Product>
+		<Copyright>Copyright ©  2017-2022 Tånneryd IT AB</Copyright>
+		<PackageReleaseNotes></PackageReleaseNotes>
+		<PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedAllSources>True</EmbedAllSources>
   </PropertyGroup>
 
-  <ItemGroup>
-    <None Remove="nuget_api.txt" />
-    <None Include="LICENSE-2.0.txt">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove="nuget_api.txt" />
+		<None Include="LICENSE-2.0.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="EntityFramework" Version="6.4.4" />
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="EntityFramework" Version="6.4.4" />
+		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+	</ItemGroup>
 
 </Project>

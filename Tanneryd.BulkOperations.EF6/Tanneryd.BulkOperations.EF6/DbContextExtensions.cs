@@ -591,8 +591,6 @@ namespace Tanneryd.BulkOperations.EF6
 
         private static void DoBulkDeleteNotExisting<T1, T2>(DbContext ctx, BulkDeleteRequest<T1> request)
         {
-            if (!request.Items.Any()) return;
-
             Type t = typeof(T2);
             var mappings = _mappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
@@ -651,7 +649,7 @@ namespace Tanneryd.BulkOperations.EF6
                 if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
 
                 int i = 0;
-                var type = items[0].GetType();
+                var type = typeof(T1);
                 foreach (var entity in items)
                 {
                     var e = entity;

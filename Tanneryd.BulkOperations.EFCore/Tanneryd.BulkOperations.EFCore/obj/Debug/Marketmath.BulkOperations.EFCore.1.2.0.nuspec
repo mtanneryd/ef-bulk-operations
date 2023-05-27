@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Marketmath.BulkOperations.EFCore</id>
+    <version>1.2.0</version>
+    <authors>Måns Tånneryd</authors>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <license type="file">LICENSE-2.0.txt</license>
+    <licenseUrl>https://aka.ms/deprecateLicenseUrl</licenseUrl>
+    <projectUrl>https://github.com/mtanneryd/ef-core-bulk-operations</projectUrl>
+    <description>Provides bulk operations for EF Core</description>
+    <copyright>Copyright ©  2017-2021 Tånneryd IT AB</copyright>
+    <dependencies>
+      <group targetFramework="net7.0">
+        <dependency id="Microsoft.EntityFrameworkCore" version="7.0.5" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.EntityFrameworkCore.Abstractions" version="7.0.5" exclude="Build,Analyzers" />
+        <dependency id="Microsoft.EntityFrameworkCore.SqlServer" version="7.0.5" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="C:\development\nuget_package_repo\Debug\net7.0\Tanneryd.BulkOperations.EFCore.runtimeconfig.json" target="lib\net7.0\Tanneryd.BulkOperations.EFCore.runtimeconfig.json" />
+    <file src="C:\development\nuget_package_repo\Debug\net7.0\Tanneryd.BulkOperations.EFCore.dll" target="lib\net7.0\Tanneryd.BulkOperations.EFCore.dll" />
+    <file src="C:\development\mtanneryd\ef6-bulk-operations\Tanneryd.BulkOperations.EFCore\Tanneryd.BulkOperations.EFCore\LICENSE-2.0.txt" target="LICENSE-2.0.txt" />
+  </files>
+</package>
