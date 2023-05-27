@@ -2,8 +2,10 @@
 # This .gitignore file was automatically created by Microsoft(R) Visual Studio.
 ################################################################################
 
-/packages
-/.vs
+bin/
+obj/
+packages/
+.vs/
 /Tanneryd.BulkOperations.EF6/.vs
 /Tanneryd.BulkOperations.EF6/packages
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/bin
@@ -22,3 +24,4 @@ Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NetStd/nuget_api.txt
 /Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests/obj
 Tanneryd.BulkOperations.EF6/.idea/
 Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests/bin/
+
