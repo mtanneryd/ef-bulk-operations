@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.29411.108
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tanneryd.BulkOperations.EFCore", "Tanneryd.BulkOperations.EFCore\Tanneryd.BulkOperations.EFCore.csproj", "{C1673610-8EDB-4797-9D2C-BF3E2FC5B652}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tanneryd.BulkOperations.EFCore.Tests", "Tanneryd.BulkOperations.EFCore.Tests\Tanneryd.BulkOperations.EFCore.Tests.csproj", "{A760526C-15D8-425E-A1C7-757997D60D38}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C1673610-8EDB-4797-9D2C-BF3E2FC5B652}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C1673610-8EDB-4797-9D2C-BF3E2FC5B652}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C1673610-8EDB-4797-9D2C-BF3E2FC5B652}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C1673610-8EDB-4797-9D2C-BF3E2FC5B652}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A760526C-15D8-425E-A1C7-757997D60D38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A760526C-15D8-425E-A1C7-757997D60D38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A760526C-15D8-425E-A1C7-757997D60D38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A760526C-15D8-425E-A1C7-757997D60D38}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7ACB46C5-1C40-443B-9046-B490482A6878}
+	EndGlobalSection
+EndGlobal

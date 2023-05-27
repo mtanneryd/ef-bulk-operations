@@ -10,9 +10,9 @@
         public Configuration()
         {
             AutomaticMigrationsEnabled = false;
-            MigrationsDirectory = @"Migrations";
+            MigrationsDirectory = @"Migrations";  
         }
-
+        
         protected override void Seed(Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF.UnitTestContext context)
         {
             //  This method will be called after migrating to the latest version.
