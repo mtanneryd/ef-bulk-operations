@@ -15,6 +15,7 @@
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedAllSources>True</EmbedAllSources>
+		<LangVersion>Latest</LangVersion>
   </PropertyGroup>
 
 	<ItemGroup>
