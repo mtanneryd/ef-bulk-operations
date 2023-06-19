@@ -14,11 +14,13 @@
 * limitations under the License.
 */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Blog;
+using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Prices;
 using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF;
 
 namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Update
@@ -37,6 +39,75 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Update
         public void CleanUp()
         {
             CleanupUnitTestContext();
+        }
+
+        [TestMethod]
+        public void ModifiedEntitiesWithNullableColumnShouldBeUpdated()
+        {
+            using var db1 = new UnitTestContext();
+            using var db2 = new UnitTestContext();
+            var initialPrices = new Price[]
+            {
+                new Price
+                {
+                    Date = new DateTime(2023, 5, 29),
+                    Name = "A",
+                    Value = 1m
+                },
+                new Price
+                {
+                    Date = new DateTime(2023, 5, 29),
+                    Name = "B",
+                    Value = null
+                },
+                new Price
+                {
+                    Date = new DateTime(2023, 5, 29),
+                    Name = "C",
+                    Value = null
+                },
+            };
+            db1.Prices.AddRange(initialPrices);
+            db1.SaveChanges();
+
+            var updatedPrices = new Price[]
+            {
+                new Price
+                {
+                    Date = new DateTime(2023, 5, 29),
+                    Name = "A",
+                    Value = 1.50m
+                },
+                new Price
+                {
+                    Date = new DateTime(2023, 5, 29),
+                    Name = "B",
+                    Value = null
+                },
+                new Price
+                {
+                    Date = new DateTime(2023, 5, 29),
+                    Name = "C",
+                    Value = 2.0m
+                },
+            };
+
+            db1.BulkUpdateAll(new BulkUpdateRequest
+            {
+                Entities = updatedPrices,
+                KeyPropertyNames = new[] { "Date", "Name" },
+                UpdatedColumnNames = new[] { "Value" },
+            });
+            var prices = db2.Prices.OrderBy(p => p.Name).ToArray();
+            Assert.AreEqual("A", prices[0].Name);
+            Assert.AreEqual(new DateTime(2023, 5, 29), prices[0].Date);
+            Assert.AreEqual(1.50m, prices[0].Value);
+            Assert.AreEqual("B", prices[1].Name);
+            Assert.AreEqual(new DateTime(2023, 5, 29), prices[1].Date);
+            Assert.AreEqual(null, prices[1].Value);
+            Assert.AreEqual("C", prices[2].Name);
+            Assert.AreEqual(new DateTime(2023, 5, 29), prices[2].Date);
+            Assert.AreEqual(2.0m, prices[2].Value);
         }
 
         [TestMethod]
