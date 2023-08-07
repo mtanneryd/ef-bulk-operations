@@ -17,9 +17,6 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedAllSources>True</EmbedAllSources>
 		<LangVersion>Latest</LangVersion>
-		<OutputPath Condition="$(COMPUTERNAME) == 'MANS-P53S'">C:\development\nuget\nuget_package_repo\$(Configuration)</OutputPath>
-		<OutputPath Condition="$(COMPUTERNAME) == 'Fredrik-MMath'">C:\Users\fredrik\source\repos\nuget_package_repo\$(Configuration)</OutputPath>
-		<OutputPath Condition="$(COMPUTERNAME) == 'Jannes2'">C:\nugets\$(Configuration)</OutputPath>
 	</PropertyGroup>
 
 	<ItemGroup>
