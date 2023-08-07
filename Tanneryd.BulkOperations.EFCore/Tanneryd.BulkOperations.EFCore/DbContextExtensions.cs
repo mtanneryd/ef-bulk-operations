@@ -1035,8 +1035,6 @@ namespace Tanneryd.BulkOperations.EFCore
         {
             var rowsAffected = 0;
 
-            var keyMemberNames = request.KeyPropertyNames;
-            var updatedColumnNames = request.UpdatedColumnNames;
             var entities = request.Entities;
             var transaction = request.Transaction;
 
@@ -1044,17 +1042,21 @@ namespace Tanneryd.BulkOperations.EFCore
             var mappings = _mappingExtractor.GetMappings(t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
-
+            var keyPropertyNames = request.KeyPropertyNames;
+            var updatedPropertyNames = request.UpdatedPropertyNames;
+            var keyColumnNames = keyPropertyNames.Select(n=>columnMappings[n].TableColumn.Column.Name).ToArray();
+            var updatedColumnNames = updatedPropertyNames.Select(n=>columnMappings[n].TableColumn.Column.Name).ToArray();
+            
             //
             // Check to see if the table has a primary key. If so,
             // get a clr property name to table column name mapping.
             //
             var primaryKeyMembers = GetPrimaryKeyMembers(columnMappings);
 
-            var selectedKeyMembers = keyMemberNames.Any() ? keyMemberNames : primaryKeyMembers.ToArray();
+            var selectedKeyMembers = keyColumnNames.Any() ? keyColumnNames : primaryKeyMembers.ToArray();
             var allKeyMembers = new List<string>();
             allKeyMembers.AddRange(primaryKeyMembers);
-            allKeyMembers.AddRange(keyMemberNames);
+            allKeyMembers.AddRange(keyColumnNames);
 
             var selectedKeyMappings = columnMappings.Values
                 .Where(m => selectedKeyMembers.Contains(m.TableColumn.Column.Name))
@@ -1417,7 +1419,7 @@ namespace Tanneryd.BulkOperations.EFCore
                         var request = new BulkUpdateRequest
                         {
                             Entities = navPropertySelfReferences.Select(e => e.Entity).Distinct().ToArray(),
-                            UpdatedColumnNames = navPropertySelfReferences.SelectMany(e => e.ForeignKeyProperties)
+                            UpdatedPropertyNames = navPropertySelfReferences.SelectMany(e => e.ForeignKeyProperties)
                                 .Distinct().ToArray(),
                             Transaction = sqlTransaction
                         };

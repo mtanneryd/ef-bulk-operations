@@ -12,12 +12,15 @@
 		<Description>Provides bulk operations for EF Core</Description>
 		<Copyright>Copyright ©  2017-2021 Tånneryd IT AB</Copyright>
 		<PackageId>Tanneryd.BulkOperations.EFCore</PackageId>
-		<Version>2.0.0</Version>
+		<Version>2.0.1</Version>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedAllSources>True</EmbedAllSources>
 		<LangVersion>Latest</LangVersion>
-  </PropertyGroup>
+		<OutputPath Condition="$(COMPUTERNAME) == 'MANS-P53S'">C:\development\nuget\nuget_package_repo\$(Configuration)</OutputPath>
+		<OutputPath Condition="$(COMPUTERNAME) == 'Fredrik-MMath'">C:\Users\fredrik\source\repos\nuget_package_repo\$(Configuration)</OutputPath>
+		<OutputPath Condition="$(COMPUTERNAME) == 'Jannes2'">C:\nugets\$(Configuration)</OutputPath>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<Compile Remove="OptionRecompileInterceptor.cs" />
