@@ -43,15 +43,15 @@ public class BulkInsertRequest<T>
 public class BulkUpdateRequest
 {
     public IList Entities { get; set; }
-    public string[] UpdatedColumnNames { get; set; }
-    public string[] KeyMemberNames { get; set; }
+    public string[] UpdatedPropertyNames { get; set; }
+    public string[] KeyPropertyNames { get; set; }
     public SqlTransaction Transaction { get; set; }
     public bool InsertIfNew { get; set; }
 }
 ```
 
-* If UpdatedColumnNames is an empty list all non-key mapped columns will be updated, otherwise only the columns specified.
-* If KeyMemberNames is an empty list the primary key columns will be used to select which rows to update, otherwise the columns specified will be used.
+* If UpdatedPropertyNames is an empty list all non-key mapped columns will be updated, otherwise only the columns specified.
+* If KeyPropertyNames is an empty list the primary key columns will be used to select which rows to update, otherwise the columns specified will be used.
 
 ```csharp
  public static BulkOperationResponse BulkUpdateAll(
@@ -183,6 +183,12 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
+##### 2.0.1 (2023-08-07)
+ * Fixed a bug in BulkUpdateAll when column names are not identical with entity property names.
+ 
+##### 2.0.0 (2023-06-19)
+ * Merged EF6 and EF Core packages into one solution and one github project.
+ 
 ##### 1.4.1 (2021-11-12)
  * Added support for retrieving values from the database (updating the local entities that have matching data in the database) when doing a BulkSelectExisting.
 	
