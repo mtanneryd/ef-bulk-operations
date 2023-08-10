@@ -1203,18 +1203,21 @@ namespace Tanneryd.BulkOperations.EFCore
                                 PropertyInfo toPropertyInfo = t.GetProperty(foreignKeyRelation.ToProperty);
                                 var navPropertyKeyType = toPropertyInfo.PropertyType;
                                 var isGuid = IsGuid(navPropertyKeyType);
+                                var isDateTime = IsDateTime(navPropertyKeyType);
                                 var navPropertyKey = GetProperty(t, foreignKeyRelation.ToProperty, entity);
 
                                 // we do nothing unless the one-to-one
                                 // nav property in previously unknown
-                                if (navPropertyKey == null ||
-                                    (isGuid && navPropertyKey == Guid.Empty) ||
+                                if (navPropertyKey == null ||                                    
+                                    (isGuid && navPropertyKey == default(Guid)) ||
+                                    (isDateTime && navPropertyKey == default(DateTime)) ||
                                     navPropertyKey == 0)
                                 {
                                     var currentValue = GetProperty(navPropertyType, foreignKeyRelation.FromProperty,
                                         navProperty);
-                                    if ((isGuid && navPropertyKey != Guid.Empty) ||
-                                        (!isGuid && currentValue > 0))
+                                    if ((isGuid && navPropertyKey != default(Guid)) ||
+                                        (isDateTime && navPropertyKey != default(DateTime)) ||
+                                        (!(isGuid || isDateTime) && currentValue > 0))
                                     {
                                         SetProperty(foreignKeyRelation.ToProperty, entity, currentValue);
                                     }
@@ -2386,6 +2389,12 @@ namespace Tanneryd.BulkOperations.EFCore
         {
             var isGuid = (t == typeof(Guid) || t == typeof(Guid?));
             return isGuid;
+        }
+
+        private static bool IsDateTime(Type t)
+        {
+            var isDateTime = (t == typeof(DateTime) || t == typeof(DateTime?));
+            return isDateTime;
         }
 
         /// <summary>
