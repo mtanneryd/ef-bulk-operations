@@ -2,17 +2,18 @@
 
 	<PropertyGroup>
 		<TargetFramework>net7.0</TargetFramework>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<Version>2.0.4</Version>
 		<Authors>Måns Tånneryd</Authors>
 		<Company>Tånneryd IT</Company>
+		<Description>Provides bulk operations for EF Core</Description>
 		<Product>BulkOperations for EFCore</Product>
+		<Copyright>Copyright ©  2017-2023 Tånneryd IT AB</Copyright>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
-		<PackageProjectUrl>https://github.com/mtanneryd/ef-core-bulk-operations</PackageProjectUrl>
-		<Description>Provides bulk operations for EF Core</Description>
-		<Copyright>Copyright ©  2017-2021 Tånneryd IT AB</Copyright>
 		<PackageId>Tanneryd.BulkOperations.EFCore</PackageId>
-		<Version>2.0.3</Version>
+		<PackageProjectUrl>https://www.nuget.org/packages/Tanneryd.BulkOperations.EFCore</PackageProjectUrl>
+		<PackageReleaseNotes></PackageReleaseNotes>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedAllSources>True</EmbedAllSources>

@@ -2,16 +2,18 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net45</TargetFrameworks>
-		<Version>2.0.3</Version>
-		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-		<PackageId>Tanneryd.BulkOperations.EF6</PackageId>
+		<Version>2.0.4</Version>
 		<Authors>Måns Tånneryd</Authors>
 		<Company>Tånneryd IT AB</Company>
+		<Description>Provides bulk operations for EF6</Description>
 		<Product>Tanneryd.BulkOperations.EF6</Product>
-		<Copyright>Copyright ©  2017-2022 Tånneryd IT AB</Copyright>
-		<PackageReleaseNotes></PackageReleaseNotes>
+		<Copyright>Copyright ©  2017-2023 Tånneryd IT AB</Copyright>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
+		<PackageId>Tanneryd.BulkOperations.EF6</PackageId>
+		<PackageProjectUrl>https://www.nuget.org/packages/Tanneryd.BulkOperations.EF6</PackageProjectUrl>
+		<PackageReleaseNotes></PackageReleaseNotes>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedAllSources>True</EmbedAllSources>
