@@ -1,11 +1,6 @@
-# Tanneryd.BulkOperations.EF6
+# Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EFCore
 
-A nuget package that extends the DbContext in EF6 with bulk operations for both inserts and updates.
-
-## Project status
-### 2020-06-15
-I'm currently working on the 1.5 release. It is planned to contain an improved BulkSelect where it will be possible to identify the rows using join operations.
-
+Nuget packages that extend the DbContext in EF6/EFCore with bulk operations.
 
 ## Getting Started
 
@@ -13,10 +8,13 @@ I'm currently working on the 1.5 release. It is planned to contain an improved B
 Read the CodeProject article [Bulk operations using Entity Framework](https://www.codeproject.com/Articles/1226978/Bulk-operations-using-Entity-Framework) if you are interested in some background.
 
 ### Prerequisites
-The extension is built for, and requires, Entity Framework 6.
+The extension is built for, and requires, Entity Framework 6 or EF Core.
 
 ### Installing
-Install the nuget package [Tanneryd.BulkOperations.EF6](https://www.nuget.org/packages/Tanneryd.BulkOperations.EF6). This will make the following methods available on the DbContext.
+ * EF6: Install the nuget package [Tanneryd.BulkOperations.EF6](https://www.nuget.org/packages/Tanneryd.BulkOperations.EF6). 
+ * EFCore: Install the nuget package [Tanneryd.BulkOperations.EFCore](https://www.nuget.org/packages/Tanneryd.BulkOperations.EFCore). 
+
+This will make the following methods available on the DbContext.
 
 ### API
 
@@ -48,15 +46,15 @@ public class BulkInsertRequest<T>
 public class BulkUpdateRequest
 {
     public IList Entities { get; set; }
-    public string[] UpdatedColumnNames { get; set; }
-    public string[] KeyMemberNames { get; set; }
+    public string[] UpdatedPropertyNames { get; set; }
+    public string[] KeyPropertyNames { get; set; }
     public SqlTransaction Transaction { get; set; }
     public bool InsertIfNew { get; set; }
 }
 ```
 
-* If UpdatedColumnNames is an empty list all non-key mapped columns will be updated, otherwise only the columns specified.
-* If KeyMemberNames is an empty list the primary key columns will be used to select which rows to update, otherwise the columns specified will be used.
+* If UpdatedPropertyNames is an empty list all non-key mapped columns will be updated, otherwise only the columns specified.
+* If KeyPropertyNames is an empty list the primary key columns will be used to select which rows to update, otherwise the columns specified will be used.
 
 ```csharp
  public static BulkOperationResponse BulkUpdateAll(
@@ -188,6 +186,19 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
+##### 2.0.3 (2023-09-05)
+ * Updated the README file to better reflect that there are two packages, one for EF6 and one for EF Core. No functional changes at all.
+##### 2.0.2 (2023-08-10)
+ * BulkInsert to tables having a DateTime foreign key did not work as expected.
+##### 2.0.1 (2023-08-07)
+ * Fixed a bug in BulkUpdateAll when column names are not identical with entity property names.
+ 
+##### 2.0.0 (2023-06-19)
+ * Merged EF6 and EF Core packages into one solution and one github project.
+ 
+##### 1.4.1 (2021-11-12)
+ * Added support for retrieving values from the database (updating the local entities that have matching data in the database) when doing a BulkSelectExisting.
+	
 ##### 1.4.0 (2020-06-15)
  * Added experimental support for TPH table inheritance.
  * The package now targets both netstandard2.1 and net45
@@ -221,9 +232,7 @@ NOT IMPLEMENTED
 
 ## Built With
 
-* Visual Studio 2019
-* netstandard2.1 and net45
-* Entity Framework 6.2.0
+* Visual Studio 2022
 
 ## Versioning
 
