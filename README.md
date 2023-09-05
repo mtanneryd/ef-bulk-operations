@@ -1,6 +1,6 @@
-# Tanneryd.BulkOperations.EF6
+# Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EFCore
 
-A nuget package that extends the DbContext in EF6 with bulk operations for both inserts and updates.
+Nuget packages that extend the DbContext in EF6/EFCore with bulk operations.
 
 ## Getting Started
 
@@ -8,10 +8,13 @@ A nuget package that extends the DbContext in EF6 with bulk operations for both 
 Read the CodeProject article [Bulk operations using Entity Framework](https://www.codeproject.com/Articles/1226978/Bulk-operations-using-Entity-Framework) if you are interested in some background.
 
 ### Prerequisites
-The extension is built for, and requires, Entity Framework 6.
+The extension is built for, and requires, Entity Framework 6 or EF Core.
 
 ### Installing
-Install the nuget package [Tanneryd.BulkOperations.EF6](https://www.nuget.org/packages/Tanneryd.BulkOperations.EF6). This will make the following methods available on the DbContext.
+ * EF6: Install the nuget package [Tanneryd.BulkOperations.EF6](https://www.nuget.org/packages/Tanneryd.BulkOperations.EF6). 
+ * EFCore: Install the nuget package [Tanneryd.BulkOperations.EFCore](https://www.nuget.org/packages/Tanneryd.BulkOperations.EFCore). 
+
+This will make the following methods available on the DbContext.
 
 ### API
 
@@ -183,6 +186,10 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
+##### 2.0.3 (2023-09-05)
+ * Updated the README file to better reflect that there are two packages, one for EF6 and one for EF Core. No functional changes at all.
+##### 2.0.2 (2023-08-10)
+ * BulkInsert to tables having a DateTime foreign key did not work as expected.
 ##### 2.0.1 (2023-08-07)
  * Fixed a bug in BulkUpdateAll when column names are not identical with entity property names.
  
@@ -226,8 +233,6 @@ NOT IMPLEMENTED
 ## Built With
 
 * Visual Studio 2022
-* netstandard2.1 and net45
-* Entity Framework 6.4.0
 
 ## Versioning
 
