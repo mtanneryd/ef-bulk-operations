@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net45</TargetFrameworks>
-		<Version>2.0.2</Version>
+		<Version>2.0.3</Version>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<PackageId>Tanneryd.BulkOperations.EF6</PackageId>
@@ -17,7 +17,7 @@
 		<EmbedAllSources>True</EmbedAllSources>
 		<LangVersion>Latest</LangVersion>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-  </PropertyGroup>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<None Remove="nuget_api.txt" />
