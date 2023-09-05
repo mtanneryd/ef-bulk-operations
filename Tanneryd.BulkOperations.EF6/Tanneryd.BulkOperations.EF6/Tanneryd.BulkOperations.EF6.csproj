@@ -16,11 +16,16 @@
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedAllSources>True</EmbedAllSources>
 		<LangVersion>Latest</LangVersion>
-  </PropertyGroup>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+	</PropertyGroup>
 
 	<ItemGroup>
 		<None Remove="nuget_api.txt" />
 		<None Include="LICENSE-2.0.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="..\..\README.md">
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>
 		</None>
