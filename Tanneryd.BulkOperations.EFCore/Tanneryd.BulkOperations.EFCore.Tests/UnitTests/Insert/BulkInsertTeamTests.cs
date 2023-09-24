@@ -42,7 +42,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void OrderOfNExpected()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var coaches = new List<CoachWithUserGeneratedGuid>();
                 for (int i = 0; i < 1000; i++)
@@ -89,7 +89,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void AlreadyExistingEntityWithUserGeneratedKeyShouldNotBeInserted()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var team1 = new TeamWithUserGeneratedGuid()
                 {
@@ -118,7 +118,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void AlreadyExistingEntityWithDbGeneratedKeyShouldNotBeInserted()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var team1 = new TeamWithDbGeneratedGuid()
                 {

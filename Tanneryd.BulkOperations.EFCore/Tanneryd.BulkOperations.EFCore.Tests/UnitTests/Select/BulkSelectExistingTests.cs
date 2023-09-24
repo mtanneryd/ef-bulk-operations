@@ -42,7 +42,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void ZeroShouldNotMatchNullWhenSelectExisting()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 1), Name = "ERICB", Value = 80 });
                 db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 2), Name = "ERICB", Value = 81 });
@@ -73,7 +73,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void ZeroShouldNotMatchNullWhenSelectNotExisting()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 1), Name = "ERICB", Value = 80 });
                 db.Prices.Add(new Price() { Date = new DateTime(2019, 1, 2), Name = "ERICB", Value = 81 });
@@ -100,7 +100,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void SelectExistingFromTableWithUserGeneratedGuidAsPrimaryKey()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var teams = new List<TeamWithUserGeneratedGuid>();
 
@@ -139,7 +139,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void SelectNotExistingFromTableWithUserGeneratedGuidAsPrimaryKeyShouldWork()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var teams = new List<TeamWithUserGeneratedGuid>();
 
@@ -177,7 +177,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void SelectExistingFromTableWithDbGeneratedGuidAsPrimaryKeyShouldWork()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var teams = new List<TeamWithDbGeneratedGuid>();
 
@@ -215,7 +215,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void SelectNotExistingFromTableWithDbGeneratedGuidAsPrimaryKeyShouldWork()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var teams = new List<TeamWithDbGeneratedGuid>();
 
@@ -253,7 +253,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void PrimitiveTypeValuesMatchingExistingEntitiesShouldBeSelected()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var now = DateTime.Now;
 
@@ -295,7 +295,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void EntitiesOfDifferentTypeMatchingExistingEntitiesShouldBeSelected()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var now = DateTime.Now;
 
@@ -337,7 +337,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void EntitiesOfSameTypeMatchingExistingEntitiesShouldBeSelected()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var now = DateTime.Now;
 
@@ -377,7 +377,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void ExistingEntitiesShouldBeSelectedUsingRuntimeTypes()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var now = DateTime.Now;
 

@@ -42,7 +42,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void JoinTablesWithGuidKeysShouldBeProperlyInserted()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var blog = new Blog {Name = "My Blog"};
                 var firstPost = new Post
@@ -74,7 +74,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void StackOverflowTest()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var i1 = new Instructor
                 {
@@ -145,7 +145,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void InstructorsWithMulitpleCoursesShouldBeBulkInserted()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var instructors = GetInstructors().ToArray();
                 var courses = GetCourses().ToArray();
@@ -185,7 +185,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void CoursesWithSingleInstructorShouldBeBulkInserted()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var instructors = GetInstructors().ToArray();
                 var courses = GetCourses().ToArray();

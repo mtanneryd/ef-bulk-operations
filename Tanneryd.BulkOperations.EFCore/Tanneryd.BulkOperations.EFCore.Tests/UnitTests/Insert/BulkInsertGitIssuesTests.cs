@@ -24,7 +24,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void BulkInsertIntoTableWithoutNavPropertiesShouldWork()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var entities = new List<Price>
                 {

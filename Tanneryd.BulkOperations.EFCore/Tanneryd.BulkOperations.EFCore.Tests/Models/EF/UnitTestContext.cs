@@ -59,15 +59,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public DbSet<Visitor> Visitors { get; set; } // Visitor
         public DbSet<VisitorPost> VisitorPosts { get; set; } // VisitorPosts
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            if (!optionsBuilder.IsConfigured)
-            {
-                optionsBuilder.UseSqlServer(@"data source=.\SQLEXPRESS;initial catalog=Tanneryd.BulkOperations.EFCore.Tests.Models.EF.UnitTestContext;persist security info=True;Integrated Security=SSPI;MultipleActiveResultSets=True;TrustServerCertificate=true");
-                //optionsBuilder.UseSqlServer(@"data source=(localdb)\MSSQLLocalDB;initial catalog=Tanneryd.BulkOperations.EFCore.Tests.Models.EF.UnitTestContext;persist security info=True;Integrated Security=SSPI;MultipleActiveResultSets=True;TrustServerCertificate=true");
-            }
-        }
-
         public bool IsSqlParameterNull(SqlParameter param)
         {
             var sqlValue = param.SqlValue;

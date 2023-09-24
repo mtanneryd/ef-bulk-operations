@@ -25,10 +25,18 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
     [TestClass]
     public class BulkOperationTestBase
     {
+        static BulkOperationTestBase()
+        {
+            Factory = new MSSQLContextFactory();
+        }
+
+        public static readonly MSSQLContextFactory Factory;
+
 
         protected void InitializeUnitTestContext()
         {
-            using (var ctx = new UnitTestContext())
+            //using (var ctx = Factory.CreateDbContext())
+            using(var ctx = Factory.CreateDbContext())
             {
                 ctx.Database.Migrate();
             }
@@ -37,7 +45,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
 
         protected void CleanupUnitTestContext()
         {
-            var db = new UnitTestContext();
+            var db = Factory.CreateDbContext();
             db.BatchInvoiceItems.RemoveRange(db.BatchInvoiceItems.ToArray());
             db.InvoiceItems.RemoveRange(db.InvoiceItems.ToArray());
             db.Invoices.RemoveRange(db.Invoices.ToArray());

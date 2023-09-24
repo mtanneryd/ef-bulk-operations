@@ -41,8 +41,8 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Update
         [TestMethod]
         public void ModifiedEntitiesWithNullableColumnShouldBeUpdated()
         {
-            using var db1 = new UnitTestContext();
-            using var db2 = new UnitTestContext();
+            using var db1 = Factory.CreateDbContext();
+            using var db2 = Factory.CreateDbContext();
             var initialPrices = new Price[]
             {
                 new Price
@@ -110,7 +110,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Update
         [TestMethod]
         public void ModifiedEntityShouldBeUpdated()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var blog = new Blog { Name = "My Blog" };
                 var firstPost = new Post

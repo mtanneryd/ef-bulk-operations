@@ -65,7 +65,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                     Name = "Adam",
                     Company = Company
                 };
-                using (var db = new UnitTestContext())
+                using (var db = Factory.CreateDbContext())
                 {
                     var request = new BulkInsertRequest<Employee>
                     {
@@ -109,7 +109,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                 Name = "Adam",
                 Company = Company
             };
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var request = new BulkInsertRequest<Employee>
                 {
@@ -149,7 +149,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
             Company.ParentCompany = Company;
             Company.Employees.Add(employee);
 
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var request = new BulkInsertRequest<Company>
                 {
@@ -183,7 +183,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
             Company.ParentCompany = Company;
             employee.Company = Company;
 
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var request = new BulkInsertRequest<Employee>
                 {
@@ -216,7 +216,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                 BirthDate = new DateTime(2018, 1, 1),
                 Mother = mother,
             };
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var request = new BulkInsertRequest<Person>
                 {
@@ -247,7 +247,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
             };
             mother.People.Add(child);
 
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var request = new BulkInsertRequest<Person>
                 {

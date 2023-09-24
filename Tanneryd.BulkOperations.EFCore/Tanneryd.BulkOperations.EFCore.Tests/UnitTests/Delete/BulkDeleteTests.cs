@@ -81,7 +81,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Delete
                 Mother = p0
             };
 
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 db.People.AddRange(new[] { p0, p1, p2, p3, p4, p5 });
                 db.SaveChanges();
@@ -140,7 +140,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Delete
                 Mother = p0
             };
 
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 db.People.AddRange(new[] { p0, p1, p2 });
                 db.SaveChanges();
@@ -201,7 +201,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Delete
                 Mother = p0
             };
 
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 db.People.AddRange(new[] { p0, p1, p2 });
                 db.SaveChanges();
@@ -269,7 +269,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Delete
                 EmployeeNumber = 0,
                 Mother = p3
             };
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 db.People.AddRange(new[] { p0, p1, p2, p3, p4 });
                 db.SaveChanges();

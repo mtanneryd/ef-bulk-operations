@@ -41,7 +41,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void FillingUpTableWithPrimaryKeyColumnOnlyShouldBePossible()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var entities = new List<EmptyTable>();
                 for (int i = 0; i < 1000; i++)
@@ -67,7 +67,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void AlreadyExistingEntityWithIdentityKeyShouldNotBeInserted()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var p = new Person
                 {
@@ -97,7 +97,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void PrimaryKeyColumnMappedToPropertyWithDifferentNameShouldBeAllowed()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var now = DateTime.Now;
 
@@ -119,7 +119,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void EntityHierarchyShouldBeInserted()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var now = DateTime.Now;
 
@@ -149,7 +149,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void RowWithReservedSqlKeywordAsColumnNameShouldBeInserted()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var e = new ReservedSqlKeyword
                 {
@@ -164,7 +164,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void RowWithCompositePrimaryKeyShouldBeInserted()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var x = new Coordinate
                 {

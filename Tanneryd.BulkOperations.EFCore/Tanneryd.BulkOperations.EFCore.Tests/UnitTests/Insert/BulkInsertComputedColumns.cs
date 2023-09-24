@@ -24,7 +24,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void InsertEntityWithComputedColumnInTableWithIdentityPrimaryKeyShouldWork()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var instructor = new Instructor
                 {
@@ -40,7 +40,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void InsertEntityWithComputedColumnInTableWithUserGeneratedPrimaryKeyShouldWork()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 for(int i = 0; i < 10; i++)
                 {

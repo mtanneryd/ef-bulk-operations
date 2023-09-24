@@ -33,7 +33,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         [TestMethod]
         public void SchoolTableNames()
         {
-            using (var ctx = new UnitTestContext())
+            using (var ctx = Factory.CreateDbContext())
             {
                 var timeout = ctx.Database.GetCommandTimeout();
                 var extractor = new MappingsExtractor(ctx);
@@ -59,7 +59,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         [TestMethod]
         public void SkipViewsInMappingExtractor()
         {
-            using (var ctx = new UnitTestContext())
+            using (var ctx = Factory.CreateDbContext())
             {
                 var extractor = new MappingsExtractor(ctx);
                 var hasMappings = extractor.HasMappings(typeof(Contact));

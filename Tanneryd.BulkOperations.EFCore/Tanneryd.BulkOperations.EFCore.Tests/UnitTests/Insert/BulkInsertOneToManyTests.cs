@@ -50,7 +50,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void OneToManyWithGuidPrimaryKeyInsertingTheTopEntity()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var blog = new Blog { Name = "My Blog" };
                 var firstPost = new Post
@@ -91,7 +91,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void OneToManyWithGuidPrimaryKeyInsertingTheChildEntities()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var blog = new Blog { Name = "My Blog" };
                 var firstPost = new Post
@@ -133,7 +133,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void OneToManyWhereTheOneAlreadyExists()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var now = DateTime.Now;
 
@@ -164,7 +164,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         [TestMethod]
         public void OneToManyWhereAllIsNew()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var now = DateTime.Now;
 

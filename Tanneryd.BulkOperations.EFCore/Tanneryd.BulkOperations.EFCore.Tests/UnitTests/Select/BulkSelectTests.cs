@@ -41,7 +41,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void ExistingEntitiesShouldBeSelectedOnSingleKeyUsingSimpleType()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var now = DateTime.Now;
 
@@ -87,7 +87,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         [TestMethod]
         public void ExistingEntitiesShouldBeSelectedOnSingleKey()
         {
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var now = DateTime.Now;
 
