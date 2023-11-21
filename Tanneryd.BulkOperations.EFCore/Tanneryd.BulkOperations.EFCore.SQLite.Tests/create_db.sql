@@ -1,0 +1,1241 @@
+USE [Tanneryd.BulkOperations.EFCore.SQLite.Tests]
+GO
+ALTER TABLE [Teams].[PlayerWithUserGeneratedGuid] DROP CONSTRAINT [FK_dbo.PlayerWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId]
+GO
+ALTER TABLE [Teams].[PlayerWithDbGeneratedGuid] DROP CONSTRAINT [FK_dbo.PlayerWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId]
+GO
+ALTER TABLE [Teams].[CoachTeamsWithUserGeneratedGuid] DROP CONSTRAINT [FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId]
+GO
+ALTER TABLE [Teams].[CoachTeamsWithUserGeneratedGuid] DROP CONSTRAINT [FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.CoachWithUserGeneratedGuid_CoachId]
+GO
+ALTER TABLE [Teams].[CoachTeamsWithDbGeneratedGuid] DROP CONSTRAINT [FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId]
+GO
+ALTER TABLE [Teams].[CoachTeamsWithDbGeneratedGuid] DROP CONSTRAINT [FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.CoachWithDbGeneratedGuid_CoachId]
+GO
+ALTER TABLE [Schools].[OfficeAssignment] DROP CONSTRAINT [FK_dbo.OfficeAssignment_dbo.Instructor_InstructorID]
+GO
+ALTER TABLE [Schools].[CourseInstructor] DROP CONSTRAINT [FK_dbo.CourseInstructor_dbo.Instructor_InstructorID]
+GO
+ALTER TABLE [Schools].[CourseInstructor] DROP CONSTRAINT [FK_dbo.CourseInstructor_dbo.Course_CourseID]
+GO
+ALTER TABLE [Schools].[Course] DROP CONSTRAINT [FK_dbo.Course_dbo.Department_DepartmentID]
+GO
+ALTER TABLE [Reports].[SummaryReportFROMTableASExtent] DROP CONSTRAINT [FK_dbo.SummaryReportFROMTableASExtent_[Some.Complex_Schema Name]].Period_PeriodID]
+GO
+ALTER TABLE [People].[Person] DROP CONSTRAINT [FK_dbo.Person_dbo.Person_MotherId]
+GO
+ALTER TABLE [Numbers].[Prime] DROP CONSTRAINT [FK_dbo.Prime_dbo.Number_NumberId]
+GO
+ALTER TABLE [Numbers].[Number] DROP CONSTRAINT [FK_dbo.Number_dbo.Parity_ParityId]
+GO
+ALTER TABLE [Numbers].[CompositePrime] DROP CONSTRAINT [FK_dbo.CompositePrime_dbo.Prime_PrimeId]
+GO
+ALTER TABLE [Numbers].[CompositePrime] DROP CONSTRAINT [FK_dbo.CompositePrime_dbo.Composite_CompositeId]
+GO
+ALTER TABLE [Numbers].[Composite] DROP CONSTRAINT [FK_dbo.Composite_dbo.Number_NumberId]
+GO
+ALTER TABLE [Miscellaneous].[Point] DROP CONSTRAINT [FK_dbo.Point_dbo.Coordinate_YCoordinateId]
+GO
+ALTER TABLE [Miscellaneous].[Point] DROP CONSTRAINT [FK_dbo.Point_dbo.Coordinate_XCoordinateId]
+GO
+ALTER TABLE [Invoices].[InvoiceItem] DROP CONSTRAINT [FK_dbo.InvoiceItem_dbo.Journal_JournalId]
+GO
+ALTER TABLE [Invoices].[InvoiceItem] DROP CONSTRAINT [FK_dbo.InvoiceItem_dbo.Invoice_InvoiceId]
+GO
+ALTER TABLE [Invoices].[BatchInvoiceItem] DROP CONSTRAINT [FK_dbo.BatchInvoiceItem_dbo.Invoice_InvoiceId]
+GO
+ALTER TABLE [Invoices].[BatchInvoiceItem] DROP CONSTRAINT [FK_dbo.BatchInvoiceItem_dbo.BatchInvoice_BatchInvoiceId]
+GO
+ALTER TABLE [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1] DROP CONSTRAINT [FK_[In # Some.Complex_Schema @Name]].SELECT WORSE FROM NAMES AS Extent1_dbo.SummaryReportFROMTableASExtent_SummaryReportID]
+GO
+ALTER TABLE [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1] DROP CONSTRAINT [FK_[In # Some.Complex_Schema @Name]].SELECT WORSE FROM NAMES AS Extent1_[Some.Complex_Schema Name]].Period_PeriodID]
+GO
+ALTER TABLE [Companies].[Employee] DROP CONSTRAINT [FK_dbo.Employee_dbo.Company_EmployerId]
+GO
+ALTER TABLE [Companies].[Company] DROP CONSTRAINT [FK_dbo.Company_dbo.Company_ParentCompanyId]
+GO
+ALTER TABLE [Blogs].[VisitorPosts] DROP CONSTRAINT [FK_dbo.VisitorPosts_dbo.Visitor_VisitorId]
+GO
+ALTER TABLE [Blogs].[VisitorPosts] DROP CONSTRAINT [FK_dbo.VisitorPosts_dbo.Post_PostId]
+GO
+ALTER TABLE [Blogs].[Post] DROP CONSTRAINT [FK_dbo.Post_dbo.Blog_BlogId]
+GO
+ALTER TABLE [Blogs].[Keyword] DROP CONSTRAINT [FK_dbo.Keyword_dbo.Post_PostId]
+GO
+ALTER TABLE [Teams].[TeamWithDbGeneratedGuid] DROP CONSTRAINT [DF__TeamWithDbGe__Id__00AA174D]
+GO
+ALTER TABLE [Teams].[PlayerWithDbGeneratedGuid] DROP CONSTRAINT [DF__PlayerWithDb__Id__7EC1CEDB]
+GO
+ALTER TABLE [Teams].[CoachWithDbGeneratedGuid] DROP CONSTRAINT [DF__CoachWithDbG__Id__7CD98669]
+GO
+ALTER TABLE [Blogs].[Visitor] DROP CONSTRAINT [DF__Visitor__Id__019E3B86]
+GO
+ALTER TABLE [Blogs].[Post] DROP CONSTRAINT [DF__Post__Id__7FB5F314]
+GO
+ALTER TABLE [Blogs].[Keyword] DROP CONSTRAINT [DF__Keyword__Id__7DCDAAA2]
+GO
+ALTER TABLE [Blogs].[Blog] DROP CONSTRAINT [DF__Blog__Id__7BE56230]
+GO
+DROP INDEX [IX_TeamId] ON [Teams].[PlayerWithUserGeneratedGuid]
+GO
+DROP INDEX [IX_TeamId] ON [Teams].[PlayerWithDbGeneratedGuid]
+GO
+DROP INDEX [IX_TeamId] ON [Teams].[CoachTeamsWithUserGeneratedGuid]
+GO
+DROP INDEX [IX_CoachId] ON [Teams].[CoachTeamsWithUserGeneratedGuid]
+GO
+DROP INDEX [IX_TeamId] ON [Teams].[CoachTeamsWithDbGeneratedGuid]
+GO
+DROP INDEX [IX_CoachId] ON [Teams].[CoachTeamsWithDbGeneratedGuid]
+GO
+DROP INDEX [IX_InstructorID] ON [Schools].[OfficeAssignment]
+GO
+DROP INDEX [IX_InstructorID] ON [Schools].[CourseInstructor]
+GO
+DROP INDEX [IX_CourseID] ON [Schools].[CourseInstructor]
+GO
+DROP INDEX [IX_DepartmentID] ON [Schools].[Course]
+GO
+DROP INDEX [IX_PeriodID] ON [Reports].[SummaryReportFROMTableASExtent]
+GO
+DROP INDEX [IX_MotherId] ON [People].[Person]
+GO
+DROP INDEX [IX_NumberId] ON [Numbers].[Prime]
+GO
+DROP INDEX [IX_ParityId] ON [Numbers].[Number]
+GO
+DROP INDEX [IX_PrimeId] ON [Numbers].[CompositePrime]
+GO
+DROP INDEX [IX_CompositeId] ON [Numbers].[CompositePrime]
+GO
+DROP INDEX [IX_NumberId] ON [Numbers].[Composite]
+GO
+DROP INDEX [IX_YCoordinateId] ON [Miscellaneous].[Point]
+GO
+DROP INDEX [IX_XCoordinateId] ON [Miscellaneous].[Point]
+GO
+DROP INDEX [IX_JournalId] ON [Invoices].[InvoiceItem]
+GO
+DROP INDEX [IX_InvoiceId] ON [Invoices].[InvoiceItem]
+GO
+DROP INDEX [IX_InvoiceId] ON [Invoices].[BatchInvoiceItem]
+GO
+DROP INDEX [IX_BatchInvoiceId] ON [Invoices].[BatchInvoiceItem]
+GO
+DROP INDEX [IX_SummaryReportID] ON [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1]
+GO
+DROP INDEX [IX_PeriodID] ON [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1]
+GO
+DROP INDEX [IX_EmployerId] ON [Companies].[Employee]
+GO
+DROP INDEX [IX_ParentCompanyId] ON [Companies].[Company]
+GO
+DROP INDEX [IX_VisitorId] ON [Blogs].[VisitorPosts]
+GO
+DROP INDEX [IX_PostId] ON [Blogs].[VisitorPosts]
+GO
+DROP INDEX [IX_BlogId] ON [Blogs].[Post]
+GO
+DROP INDEX [IX_PostId] ON [Blogs].[Keyword]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Teams].[TeamWithUserGeneratedGuid]') AND type in (N'U'))
+DROP TABLE [Teams].[TeamWithUserGeneratedGuid]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Teams].[TeamWithDbGeneratedGuid]') AND type in (N'U'))
+DROP TABLE [Teams].[TeamWithDbGeneratedGuid]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Teams].[PlayerWithUserGeneratedGuid]') AND type in (N'U'))
+DROP TABLE [Teams].[PlayerWithUserGeneratedGuid]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Teams].[PlayerWithDbGeneratedGuid]') AND type in (N'U'))
+DROP TABLE [Teams].[PlayerWithDbGeneratedGuid]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Teams].[CoachWithUserGeneratedGuid]') AND type in (N'U'))
+DROP TABLE [Teams].[CoachWithUserGeneratedGuid]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Teams].[CoachWithDbGeneratedGuid]') AND type in (N'U'))
+DROP TABLE [Teams].[CoachWithDbGeneratedGuid]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Teams].[CoachTeamsWithUserGeneratedGuid]') AND type in (N'U'))
+DROP TABLE [Teams].[CoachTeamsWithUserGeneratedGuid]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Teams].[CoachTeamsWithDbGeneratedGuid]') AND type in (N'U'))
+DROP TABLE [Teams].[CoachTeamsWithDbGeneratedGuid]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Some.Complex_Schema Name].[Period]') AND type in (N'U'))
+DROP TABLE [Some.Complex_Schema Name].[Period]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Schools].[OfficeAssignment]') AND type in (N'U'))
+DROP TABLE [Schools].[OfficeAssignment]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Schools].[Instructor]') AND type in (N'U'))
+DROP TABLE [Schools].[Instructor]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Schools].[Department]') AND type in (N'U'))
+DROP TABLE [Schools].[Department]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Schools].[CourseInstructor]') AND type in (N'U'))
+DROP TABLE [Schools].[CourseInstructor]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Schools].[Course]') AND type in (N'U'))
+DROP TABLE [Schools].[Course]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Reports].[SummaryReportFROMTableASExtent]') AND type in (N'U'))
+DROP TABLE [Reports].[SummaryReportFROMTableASExtent]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Prices].[Price]') AND type in (N'U'))
+DROP TABLE [Prices].[Price]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[People].[Person]') AND type in (N'U'))
+DROP TABLE [People].[Person]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Numbers].[Prime]') AND type in (N'U'))
+DROP TABLE [Numbers].[Prime]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Numbers].[Parity]') AND type in (N'U'))
+DROP TABLE [Numbers].[Parity]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Numbers].[Number]') AND type in (N'U'))
+DROP TABLE [Numbers].[Number]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Numbers].[CompositePrime]') AND type in (N'U'))
+DROP TABLE [Numbers].[CompositePrime]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Numbers].[Composite]') AND type in (N'U'))
+DROP TABLE [Numbers].[Composite]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Miscellaneous].[Point]') AND type in (N'U'))
+DROP TABLE [Miscellaneous].[Point]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Miscellaneous].[EmptyTable]') AND type in (N'U'))
+DROP TABLE [Miscellaneous].[EmptyTable]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Miscellaneous].[Coordinate]') AND type in (N'U'))
+DROP TABLE [Miscellaneous].[Coordinate]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Logs].[LogItem]') AND type in (N'U'))
+DROP TABLE [Logs].[LogItem]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Invoices].[Journal]') AND type in (N'U'))
+DROP TABLE [Invoices].[Journal]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Invoices].[InvoiceItem]') AND type in (N'U'))
+DROP TABLE [Invoices].[InvoiceItem]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Invoices].[Invoice]') AND type in (N'U'))
+DROP TABLE [Invoices].[Invoice]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Invoices].[BatchInvoiceItem]') AND type in (N'U'))
+DROP TABLE [Invoices].[BatchInvoiceItem]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Invoices].[BatchInvoice]') AND type in (N'U'))
+DROP TABLE [Invoices].[BatchInvoice]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1]') AND type in (N'U'))
+DROP TABLE [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Companies].[Employee]') AND type in (N'U'))
+DROP TABLE [Companies].[Employee]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Companies].[Company]') AND type in (N'U'))
+DROP TABLE [Companies].[Company]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Blogs].[VisitorPosts]') AND type in (N'U'))
+DROP TABLE [Blogs].[VisitorPosts]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Blogs].[Visitor]') AND type in (N'U'))
+DROP TABLE [Blogs].[Visitor]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Blogs].[ReservedSqlKeyword]') AND type in (N'U'))
+DROP TABLE [Blogs].[ReservedSqlKeyword]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Blogs].[Post]') AND type in (N'U'))
+DROP TABLE [Blogs].[Post]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Blogs].[Keyword]') AND type in (N'U'))
+DROP TABLE [Blogs].[Keyword]
+GO
+IF  EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[Blogs].[Blog]') AND type in (N'U'))
+DROP TABLE [Blogs].[Blog]
+GO
+DROP SCHEMA [Teams]
+GO
+DROP SCHEMA [Some.Complex_Schema Name]
+GO
+DROP SCHEMA [Schools]
+GO
+DROP SCHEMA [Reports]
+GO
+DROP SCHEMA [Prices]
+GO
+DROP SCHEMA [People]
+GO
+DROP SCHEMA [Numbers]
+GO
+DROP SCHEMA [Miscellaneous]
+GO
+DROP SCHEMA [Logs]
+GO
+DROP SCHEMA [Invoices]
+GO
+DROP SCHEMA [In # Some.Complex_Schema @Name]
+GO
+DROP SCHEMA [Companies]
+GO
+DROP SCHEMA [Blogs]
+GO
+CREATE SCHEMA [Blogs]
+GO
+CREATE SCHEMA [Companies]
+GO
+CREATE SCHEMA [In # Some.Complex_Schema @Name]
+GO
+CREATE SCHEMA [Invoices]
+GO
+CREATE SCHEMA [Logs]
+GO
+CREATE SCHEMA [Miscellaneous]
+GO
+CREATE SCHEMA [Numbers]
+GO
+CREATE SCHEMA [People]
+GO
+CREATE SCHEMA [Prices]
+GO
+CREATE SCHEMA [Reports]
+GO
+CREATE SCHEMA [Schools]
+GO
+CREATE SCHEMA [Some.Complex_Schema Name]
+GO
+CREATE SCHEMA [Teams]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Blogs].[Blog](
+	[Id] [uniqueidentifier] NOT NULL,
+	[Name] [nvarchar](max) NOT NULL,
+ CONSTRAINT [PK_dbo.Blog] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Blogs].[Keyword](
+	[Id] [uniqueidentifier] NOT NULL,
+	[PostId] [uniqueidentifier] NOT NULL,
+	[Text] [nvarchar](max) NOT NULL,
+ CONSTRAINT [PK_dbo.Keyword] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Blogs].[Post](
+	[Id] [uniqueidentifier] NOT NULL,
+	[BlogId] [uniqueidentifier] NOT NULL,
+	[Text] [nvarchar](max) NOT NULL,
+ CONSTRAINT [PK_dbo.Post] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Blogs].[ReservedSqlKeyword](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Key] [int] NULL,
+	[Identity] [int] NULL,
+	[Select] [nvarchar](max) NULL,
+ CONSTRAINT [PK_dbo.ReservedSqlKeyword] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Blogs].[Visitor](
+	[Id] [uniqueidentifier] NOT NULL,
+	[Name] [nvarchar](max) NOT NULL,
+ CONSTRAINT [PK_dbo.Visitor] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Blogs].[VisitorPosts](
+	[VisitorId] [uniqueidentifier] NOT NULL,
+	[PostId] [uniqueidentifier] NOT NULL,
+ CONSTRAINT [PK_dbo.VisitorPosts] PRIMARY KEY CLUSTERED 
+(
+	[VisitorId] ASC,
+	[PostId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Companies].[Company](
+	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](max) NOT NULL,
+	[ParentCompanyId] [bigint] NOT NULL,
+ CONSTRAINT [PK_dbo.Company] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Companies].[Employee](
+	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](max) NOT NULL,
+	[EmployerId] [bigint] NOT NULL,
+ CONSTRAINT [PK_dbo.Employee] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1](
+	[ReportID] [int] IDENTITY(1,1) NOT NULL,
+	[Title] [nvarchar](max) NULL,
+	[Entry] [nvarchar](max) NULL,
+	[Date] [datetime] NOT NULL,
+	[Level1] [nvarchar](max) NULL,
+	[Level2] [nvarchar](max) NULL,
+	[Level3] [nvarchar](max) NULL,
+	[I am Bad Column Name 1 ] [nvarchar](max) NULL,
+	[A #_@ Abc 123 Абв$] [nvarchar](max) NULL,
+	[SELECT WORSE FROM NAMES AS Extent ] [nvarchar](max) NULL,
+	[Volume] [decimal](18, 2) NOT NULL,
+	[Amount] [decimal](18, 2) NOT NULL,
+	[PeriodID] [int] NOT NULL,
+	[SummaryReportID] [int] NOT NULL,
+ CONSTRAINT [PK_[In # Some.Complex_Schema @Name]].SELECT WORSE FROM NAMES AS Extent1] PRIMARY KEY CLUSTERED 
+(
+	[ReportID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Invoices].[BatchInvoice](
+	[PrimaryKey] [uniqueidentifier] NOT NULL,
+ CONSTRAINT [PK_dbo.BatchInvoice] PRIMARY KEY CLUSTERED 
+(
+	[PrimaryKey] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Invoices].[BatchInvoiceItem](
+	[PrimaryKey] [uniqueidentifier] NOT NULL,
+	[BatchInvoiceId] [uniqueidentifier] NOT NULL,
+	[InvoiceId] [uniqueidentifier] NOT NULL,
+ CONSTRAINT [PK_dbo.BatchInvoiceItem] PRIMARY KEY CLUSTERED 
+(
+	[PrimaryKey] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Invoices].[Invoice](
+	[PrimaryKey] [uniqueidentifier] NOT NULL,
+	[Net] [decimal](18, 2) NOT NULL,
+	[Gross] [decimal](18, 2) NOT NULL,
+	[Tax]  AS ([Gross]-[Net]) PERSISTED NOT NULL,
+ CONSTRAINT [PK_dbo.Invoice] PRIMARY KEY CLUSTERED 
+(
+	[PrimaryKey] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Invoices].[InvoiceItem](
+	[PrimaryKey] [int] IDENTITY(1,1) NOT NULL,
+	[JournalId] [uniqueidentifier] NOT NULL,
+	[InvoiceId] [uniqueidentifier] NOT NULL,
+ CONSTRAINT [PK_dbo.InvoiceItem] PRIMARY KEY CLUSTERED 
+(
+	[PrimaryKey] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Invoices].[Journal](
+	[PrimaryKey] [uniqueidentifier] NOT NULL,
+ CONSTRAINT [PK_dbo.Journal] PRIMARY KEY CLUSTERED 
+(
+	[PrimaryKey] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Logs].[LogItem](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Message] [nvarchar](max) NULL,
+	[Timestamp] [datetime] NOT NULL,
+	[Severity] [int] NULL,
+	[Recommendation] [nvarchar](max) NULL,
+	[LogType] [nvarchar](128) NULL,
+ CONSTRAINT [PK_dbo.LogItem] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Miscellaneous].[Coordinate](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Value] [int] NOT NULL,
+ CONSTRAINT [PK_dbo.Coordinate] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Miscellaneous].[EmptyTable](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+ CONSTRAINT [PK_dbo.EmptyTable] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Miscellaneous].[Point](
+	[XCoordinateId] [int] NOT NULL,
+	[YCoordinateId] [int] NOT NULL,
+	[Value] [float] NOT NULL,
+ CONSTRAINT [PK_dbo.Point] PRIMARY KEY CLUSTERED 
+(
+	[XCoordinateId] ASC,
+	[YCoordinateId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Numbers].[Composite](
+	[NumberId] [bigint] NOT NULL,
+	[UpdatedAt] [datetime] NOT NULL,
+	[UpdatedBy] [nvarchar](max) NULL,
+ CONSTRAINT [PK_dbo.Composite] PRIMARY KEY CLUSTERED 
+(
+	[NumberId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Numbers].[CompositePrime](
+	[CompositeId] [bigint] NOT NULL,
+	[PrimeId] [bigint] NOT NULL,
+ CONSTRAINT [PK_dbo.CompositePrime] PRIMARY KEY CLUSTERED 
+(
+	[CompositeId] ASC,
+	[PrimeId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Numbers].[Number](
+	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[Value] [bigint] NOT NULL,
+	[ParityId] [int] NOT NULL,
+	[PrimeId] [int] NULL,
+	[CompositeId] [int] NULL,
+	[UpdatedAt] [datetime] NOT NULL,
+	[UpdatedBy] [nvarchar](max) NULL,
+ CONSTRAINT [PK_dbo.Number] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Numbers].[Parity](
+	[Key] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](max) NOT NULL,
+	[UpdatedAt] [datetime] NOT NULL,
+	[UpdatedBy] [nvarchar](max) NULL,
+ CONSTRAINT [PK_dbo.Parity] PRIMARY KEY CLUSTERED 
+(
+	[Key] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Numbers].[Prime](
+	[NumberId] [bigint] NOT NULL,
+	[UpdatedAt] [datetime] NOT NULL,
+	[UpdatedBy] [nvarchar](max) NULL,
+ CONSTRAINT [PK_dbo.Prime] PRIMARY KEY CLUSTERED 
+(
+	[NumberId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [People].[Person](
+	[Id] [bigint] IDENTITY(1,1) NOT NULL,
+	[FirstName] [nvarchar](max) NOT NULL,
+	[LastName] [nvarchar](max) NOT NULL,
+	[BirthDate] [datetime] NOT NULL,
+	[MotherId] [bigint] NULL,
+	[EmployeeNumber] [int] NULL,
+ CONSTRAINT [PK_dbo.Person] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Prices].[Price](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Date] [datetime] NOT NULL,
+	[Name] [nvarchar](max) NOT NULL,
+	[Value] [decimal](18, 2) NULL,
+ CONSTRAINT [PK_dbo.Price] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Reports].[SummaryReportFROMTableASExtent](
+	[ReportID] [int] IDENTITY(1,1) NOT NULL,
+	[Title] [nvarchar](max) NULL,
+	[Entry] [nvarchar](max) NULL,
+	[Volume] [decimal](18, 2) NOT NULL,
+	[Amount] [decimal](18, 2) NOT NULL,
+	[PeriodID] [int] NOT NULL,
+ CONSTRAINT [PK_dbo.SummaryReportFROMTableASExtent] PRIMARY KEY CLUSTERED 
+(
+	[ReportID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Schools].[Course](
+	[CourseID] [int] IDENTITY(1,1) NOT NULL,
+	[Title] [nvarchar](max) NULL,
+	[Credits] [int] NOT NULL,
+	[DepartmentID] [int] NOT NULL,
+ CONSTRAINT [PK_dbo.Course] PRIMARY KEY CLUSTERED 
+(
+	[CourseID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Schools].[CourseInstructor](
+	[CourseID] [int] NOT NULL,
+	[InstructorID] [int] NOT NULL,
+ CONSTRAINT [PK_dbo.CourseInstructor] PRIMARY KEY CLUSTERED 
+(
+	[CourseID] ASC,
+	[InstructorID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Schools].[Department](
+	[DepartmentID] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](max) NULL,
+	[Budget] [decimal](18, 2) NOT NULL,
+	[Administrator] [int] NULL,
+ CONSTRAINT [PK_dbo.Department] PRIMARY KEY CLUSTERED 
+(
+	[DepartmentID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Schools].[Instructor](
+	[InstructorID] [int] IDENTITY(1,1) NOT NULL,
+	[LastName] [nvarchar](max) NULL,
+	[FirstName] [nvarchar](max) NULL,
+	[HireDate] [datetime] NOT NULL,
+	[FullName]  AS (([FirstName]+' ')+[LastName]) PERSISTED NOT NULL,
+ CONSTRAINT [PK_dbo.Instructor] PRIMARY KEY CLUSTERED 
+(
+	[InstructorID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Schools].[OfficeAssignment](
+	[InstructorID] [int] NOT NULL,
+	[Location] [nvarchar](max) NULL,
+	[Timestamp] [varbinary](max) NULL,
+ CONSTRAINT [PK_dbo.OfficeAssignment] PRIMARY KEY CLUSTERED 
+(
+	[InstructorID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Some.Complex_Schema Name].[Period](
+	[PeriodID] [int] IDENTITY(1,1) NOT NULL,
+	[Name] [nvarchar](max) NULL,
+ CONSTRAINT [PK_[Some.Complex_Schema Name]].Period] PRIMARY KEY CLUSTERED 
+(
+	[PeriodID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Teams].[CoachTeamsWithDbGeneratedGuid](
+	[CoachId] [uniqueidentifier] NOT NULL,
+	[TeamId] [uniqueidentifier] NOT NULL,
+ CONSTRAINT [PK_dbo.CoachTeamsWithDbGeneratedGuid] PRIMARY KEY CLUSTERED 
+(
+	[CoachId] ASC,
+	[TeamId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Teams].[CoachTeamsWithUserGeneratedGuid](
+	[CoachId] [uniqueidentifier] NOT NULL,
+	[TeamId] [uniqueidentifier] NOT NULL,
+ CONSTRAINT [PK_dbo.CoachTeamsWithUserGeneratedGuid] PRIMARY KEY CLUSTERED 
+(
+	[CoachId] ASC,
+	[TeamId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Teams].[CoachWithDbGeneratedGuid](
+	[Id] [uniqueidentifier] NOT NULL,
+	[Firstname] [nvarchar](max) NOT NULL,
+	[Lastname] [nvarchar](max) NOT NULL,
+ CONSTRAINT [PK_dbo.CoachWithDbGeneratedGuid] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Teams].[CoachWithUserGeneratedGuid](
+	[Id] [uniqueidentifier] NOT NULL,
+	[Firstname] [nvarchar](max) NOT NULL,
+	[Lastname] [nvarchar](max) NOT NULL,
+ CONSTRAINT [PK_dbo.CoachWithUserGeneratedGuid] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Teams].[PlayerWithDbGeneratedGuid](
+	[Id] [uniqueidentifier] NOT NULL,
+	[Firstname] [nvarchar](max) NOT NULL,
+	[Lastname] [nvarchar](max) NOT NULL,
+	[TeamId] [uniqueidentifier] NOT NULL,
+ CONSTRAINT [PK_dbo.PlayerWithDbGeneratedGuid] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Teams].[PlayerWithUserGeneratedGuid](
+	[Id] [uniqueidentifier] NOT NULL,
+	[Firstname] [nvarchar](max) NOT NULL,
+	[Lastname] [nvarchar](max) NOT NULL,
+	[TeamId] [uniqueidentifier] NOT NULL,
+ CONSTRAINT [PK_dbo.PlayerWithUserGeneratedGuid] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Teams].[TeamWithDbGeneratedGuid](
+	[Id] [uniqueidentifier] NOT NULL,
+	[Name] [nvarchar](max) NOT NULL,
+ CONSTRAINT [PK_dbo.TeamWithDbGeneratedGuid] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+CREATE TABLE [Teams].[TeamWithUserGeneratedGuid](
+	[Id] [uniqueidentifier] NOT NULL,
+	[Name] [nvarchar](max) NOT NULL,
+ CONSTRAINT [PK_dbo.TeamWithUserGeneratedGuid] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_PostId] ON [Blogs].[Keyword]
+(
+	[PostId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_BlogId] ON [Blogs].[Post]
+(
+	[BlogId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_PostId] ON [Blogs].[VisitorPosts]
+(
+	[PostId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_VisitorId] ON [Blogs].[VisitorPosts]
+(
+	[VisitorId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_ParentCompanyId] ON [Companies].[Company]
+(
+	[ParentCompanyId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_EmployerId] ON [Companies].[Employee]
+(
+	[EmployerId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_PeriodID] ON [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1]
+(
+	[PeriodID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_SummaryReportID] ON [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1]
+(
+	[SummaryReportID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_BatchInvoiceId] ON [Invoices].[BatchInvoiceItem]
+(
+	[BatchInvoiceId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_InvoiceId] ON [Invoices].[BatchInvoiceItem]
+(
+	[InvoiceId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_InvoiceId] ON [Invoices].[InvoiceItem]
+(
+	[InvoiceId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_JournalId] ON [Invoices].[InvoiceItem]
+(
+	[JournalId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_XCoordinateId] ON [Miscellaneous].[Point]
+(
+	[XCoordinateId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_YCoordinateId] ON [Miscellaneous].[Point]
+(
+	[YCoordinateId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_NumberId] ON [Numbers].[Composite]
+(
+	[NumberId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_CompositeId] ON [Numbers].[CompositePrime]
+(
+	[CompositeId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_PrimeId] ON [Numbers].[CompositePrime]
+(
+	[PrimeId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_ParityId] ON [Numbers].[Number]
+(
+	[ParityId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_NumberId] ON [Numbers].[Prime]
+(
+	[NumberId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_MotherId] ON [People].[Person]
+(
+	[MotherId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_PeriodID] ON [Reports].[SummaryReportFROMTableASExtent]
+(
+	[PeriodID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_DepartmentID] ON [Schools].[Course]
+(
+	[DepartmentID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_CourseID] ON [Schools].[CourseInstructor]
+(
+	[CourseID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_InstructorID] ON [Schools].[CourseInstructor]
+(
+	[InstructorID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_InstructorID] ON [Schools].[OfficeAssignment]
+(
+	[InstructorID] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_CoachId] ON [Teams].[CoachTeamsWithDbGeneratedGuid]
+(
+	[CoachId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_TeamId] ON [Teams].[CoachTeamsWithDbGeneratedGuid]
+(
+	[TeamId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_CoachId] ON [Teams].[CoachTeamsWithUserGeneratedGuid]
+(
+	[CoachId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_TeamId] ON [Teams].[CoachTeamsWithUserGeneratedGuid]
+(
+	[TeamId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_TeamId] ON [Teams].[PlayerWithDbGeneratedGuid]
+(
+	[TeamId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+CREATE NONCLUSTERED INDEX [IX_TeamId] ON [Teams].[PlayerWithUserGeneratedGuid]
+(
+	[TeamId] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+GO
+ALTER TABLE [Blogs].[Blog] ADD  DEFAULT (newsequentialid()) FOR [Id]
+GO
+ALTER TABLE [Blogs].[Keyword] ADD  DEFAULT (newsequentialid()) FOR [Id]
+GO
+ALTER TABLE [Blogs].[Post] ADD  DEFAULT (newsequentialid()) FOR [Id]
+GO
+ALTER TABLE [Blogs].[Visitor] ADD  DEFAULT (newsequentialid()) FOR [Id]
+GO
+ALTER TABLE [Teams].[CoachWithDbGeneratedGuid] ADD  DEFAULT (newsequentialid()) FOR [Id]
+GO
+ALTER TABLE [Teams].[PlayerWithDbGeneratedGuid] ADD  DEFAULT (newsequentialid()) FOR [Id]
+GO
+ALTER TABLE [Teams].[TeamWithDbGeneratedGuid] ADD  DEFAULT (newsequentialid()) FOR [Id]
+GO
+ALTER TABLE [Blogs].[Keyword]  WITH CHECK ADD  CONSTRAINT [FK_dbo.Keyword_dbo.Post_PostId] FOREIGN KEY([PostId])
+REFERENCES [Blogs].[Post] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Blogs].[Keyword] CHECK CONSTRAINT [FK_dbo.Keyword_dbo.Post_PostId]
+GO
+ALTER TABLE [Blogs].[Post]  WITH CHECK ADD  CONSTRAINT [FK_dbo.Post_dbo.Blog_BlogId] FOREIGN KEY([BlogId])
+REFERENCES [Blogs].[Blog] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Blogs].[Post] CHECK CONSTRAINT [FK_dbo.Post_dbo.Blog_BlogId]
+GO
+ALTER TABLE [Blogs].[VisitorPosts]  WITH CHECK ADD  CONSTRAINT [FK_dbo.VisitorPosts_dbo.Post_PostId] FOREIGN KEY([PostId])
+REFERENCES [Blogs].[Post] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Blogs].[VisitorPosts] CHECK CONSTRAINT [FK_dbo.VisitorPosts_dbo.Post_PostId]
+GO
+ALTER TABLE [Blogs].[VisitorPosts]  WITH CHECK ADD  CONSTRAINT [FK_dbo.VisitorPosts_dbo.Visitor_VisitorId] FOREIGN KEY([VisitorId])
+REFERENCES [Blogs].[Visitor] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Blogs].[VisitorPosts] CHECK CONSTRAINT [FK_dbo.VisitorPosts_dbo.Visitor_VisitorId]
+GO
+ALTER TABLE [Companies].[Company]  WITH NOCHECK ADD  CONSTRAINT [FK_dbo.Company_dbo.Company_ParentCompanyId] FOREIGN KEY([ParentCompanyId])
+REFERENCES [Companies].[Company] ([Id])
+GO
+ALTER TABLE [Companies].[Company] NOCHECK CONSTRAINT [FK_dbo.Company_dbo.Company_ParentCompanyId]
+GO
+ALTER TABLE [Companies].[Employee]  WITH NOCHECK ADD  CONSTRAINT [FK_dbo.Employee_dbo.Company_EmployerId] FOREIGN KEY([EmployerId])
+REFERENCES [Companies].[Company] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Companies].[Employee] NOCHECK CONSTRAINT [FK_dbo.Employee_dbo.Company_EmployerId]
+GO
+ALTER TABLE [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1]  WITH CHECK ADD  CONSTRAINT [FK_[In # Some.Complex_Schema @Name]].SELECT WORSE FROM NAMES AS Extent1_[Some.Complex_Schema Name]].Period_PeriodID] FOREIGN KEY([PeriodID])
+REFERENCES [Some.Complex_Schema Name].[Period] ([PeriodID])
+ON DELETE CASCADE
+GO
+ALTER TABLE [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1] CHECK CONSTRAINT [FK_[In # Some.Complex_Schema @Name]].SELECT WORSE FROM NAMES AS Extent1_[Some.Complex_Schema Name]].Period_PeriodID]
+GO
+ALTER TABLE [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1]  WITH CHECK ADD  CONSTRAINT [FK_[In # Some.Complex_Schema @Name]].SELECT WORSE FROM NAMES AS Extent1_dbo.SummaryReportFROMTableASExtent_SummaryReportID] FOREIGN KEY([SummaryReportID])
+REFERENCES [Reports].[SummaryReportFROMTableASExtent] ([ReportID])
+GO
+ALTER TABLE [In # Some.Complex_Schema @Name].[SELECT WORSE FROM NAMES AS Extent1] CHECK CONSTRAINT [FK_[In # Some.Complex_Schema @Name]].SELECT WORSE FROM NAMES AS Extent1_dbo.SummaryReportFROMTableASExtent_SummaryReportID]
+GO
+ALTER TABLE [Invoices].[BatchInvoiceItem]  WITH NOCHECK ADD  CONSTRAINT [FK_dbo.BatchInvoiceItem_dbo.BatchInvoice_BatchInvoiceId] FOREIGN KEY([BatchInvoiceId])
+REFERENCES [Invoices].[BatchInvoice] ([PrimaryKey])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Invoices].[BatchInvoiceItem] CHECK CONSTRAINT [FK_dbo.BatchInvoiceItem_dbo.BatchInvoice_BatchInvoiceId]
+GO
+ALTER TABLE [Invoices].[BatchInvoiceItem]  WITH NOCHECK ADD  CONSTRAINT [FK_dbo.BatchInvoiceItem_dbo.Invoice_InvoiceId] FOREIGN KEY([InvoiceId])
+REFERENCES [Invoices].[Invoice] ([PrimaryKey])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Invoices].[BatchInvoiceItem] CHECK CONSTRAINT [FK_dbo.BatchInvoiceItem_dbo.Invoice_InvoiceId]
+GO
+ALTER TABLE [Invoices].[InvoiceItem]  WITH CHECK ADD  CONSTRAINT [FK_dbo.InvoiceItem_dbo.Invoice_InvoiceId] FOREIGN KEY([InvoiceId])
+REFERENCES [Invoices].[Invoice] ([PrimaryKey])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Invoices].[InvoiceItem] CHECK CONSTRAINT [FK_dbo.InvoiceItem_dbo.Invoice_InvoiceId]
+GO
+ALTER TABLE [Invoices].[InvoiceItem]  WITH CHECK ADD  CONSTRAINT [FK_dbo.InvoiceItem_dbo.Journal_JournalId] FOREIGN KEY([JournalId])
+REFERENCES [Invoices].[Journal] ([PrimaryKey])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Invoices].[InvoiceItem] CHECK CONSTRAINT [FK_dbo.InvoiceItem_dbo.Journal_JournalId]
+GO
+ALTER TABLE [Miscellaneous].[Point]  WITH NOCHECK ADD  CONSTRAINT [FK_dbo.Point_dbo.Coordinate_XCoordinateId] FOREIGN KEY([XCoordinateId])
+REFERENCES [Miscellaneous].[Coordinate] ([Id])
+GO
+ALTER TABLE [Miscellaneous].[Point] CHECK CONSTRAINT [FK_dbo.Point_dbo.Coordinate_XCoordinateId]
+GO
+ALTER TABLE [Miscellaneous].[Point]  WITH NOCHECK ADD  CONSTRAINT [FK_dbo.Point_dbo.Coordinate_YCoordinateId] FOREIGN KEY([YCoordinateId])
+REFERENCES [Miscellaneous].[Coordinate] ([Id])
+GO
+ALTER TABLE [Miscellaneous].[Point] CHECK CONSTRAINT [FK_dbo.Point_dbo.Coordinate_YCoordinateId]
+GO
+ALTER TABLE [Numbers].[Composite]  WITH CHECK ADD  CONSTRAINT [FK_dbo.Composite_dbo.Number_NumberId] FOREIGN KEY([NumberId])
+REFERENCES [Numbers].[Number] ([Id])
+GO
+ALTER TABLE [Numbers].[Composite] CHECK CONSTRAINT [FK_dbo.Composite_dbo.Number_NumberId]
+GO
+ALTER TABLE [Numbers].[CompositePrime]  WITH CHECK ADD  CONSTRAINT [FK_dbo.CompositePrime_dbo.Composite_CompositeId] FOREIGN KEY([CompositeId])
+REFERENCES [Numbers].[Composite] ([NumberId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Numbers].[CompositePrime] CHECK CONSTRAINT [FK_dbo.CompositePrime_dbo.Composite_CompositeId]
+GO
+ALTER TABLE [Numbers].[CompositePrime]  WITH CHECK ADD  CONSTRAINT [FK_dbo.CompositePrime_dbo.Prime_PrimeId] FOREIGN KEY([PrimeId])
+REFERENCES [Numbers].[Prime] ([NumberId])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Numbers].[CompositePrime] CHECK CONSTRAINT [FK_dbo.CompositePrime_dbo.Prime_PrimeId]
+GO
+ALTER TABLE [Numbers].[Number]  WITH CHECK ADD  CONSTRAINT [FK_dbo.Number_dbo.Parity_ParityId] FOREIGN KEY([ParityId])
+REFERENCES [Numbers].[Parity] ([Key])
+GO
+ALTER TABLE [Numbers].[Number] CHECK CONSTRAINT [FK_dbo.Number_dbo.Parity_ParityId]
+GO
+ALTER TABLE [Numbers].[Prime]  WITH NOCHECK ADD  CONSTRAINT [FK_dbo.Prime_dbo.Number_NumberId] FOREIGN KEY([NumberId])
+REFERENCES [Numbers].[Number] ([Id])
+GO
+ALTER TABLE [Numbers].[Prime] CHECK CONSTRAINT [FK_dbo.Prime_dbo.Number_NumberId]
+GO
+ALTER TABLE [People].[Person]  WITH CHECK ADD  CONSTRAINT [FK_dbo.Person_dbo.Person_MotherId] FOREIGN KEY([MotherId])
+REFERENCES [People].[Person] ([Id])
+GO
+ALTER TABLE [People].[Person] CHECK CONSTRAINT [FK_dbo.Person_dbo.Person_MotherId]
+GO
+ALTER TABLE [Reports].[SummaryReportFROMTableASExtent]  WITH CHECK ADD  CONSTRAINT [FK_dbo.SummaryReportFROMTableASExtent_[Some.Complex_Schema Name]].Period_PeriodID] FOREIGN KEY([PeriodID])
+REFERENCES [Some.Complex_Schema Name].[Period] ([PeriodID])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Reports].[SummaryReportFROMTableASExtent] CHECK CONSTRAINT [FK_dbo.SummaryReportFROMTableASExtent_[Some.Complex_Schema Name]].Period_PeriodID]
+GO
+ALTER TABLE [Schools].[Course]  WITH CHECK ADD  CONSTRAINT [FK_dbo.Course_dbo.Department_DepartmentID] FOREIGN KEY([DepartmentID])
+REFERENCES [Schools].[Department] ([DepartmentID])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Schools].[Course] CHECK CONSTRAINT [FK_dbo.Course_dbo.Department_DepartmentID]
+GO
+ALTER TABLE [Schools].[CourseInstructor]  WITH CHECK ADD  CONSTRAINT [FK_dbo.CourseInstructor_dbo.Course_CourseID] FOREIGN KEY([CourseID])
+REFERENCES [Schools].[Course] ([CourseID])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Schools].[CourseInstructor] CHECK CONSTRAINT [FK_dbo.CourseInstructor_dbo.Course_CourseID]
+GO
+ALTER TABLE [Schools].[CourseInstructor]  WITH CHECK ADD  CONSTRAINT [FK_dbo.CourseInstructor_dbo.Instructor_InstructorID] FOREIGN KEY([InstructorID])
+REFERENCES [Schools].[Instructor] ([InstructorID])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Schools].[CourseInstructor] CHECK CONSTRAINT [FK_dbo.CourseInstructor_dbo.Instructor_InstructorID]
+GO
+ALTER TABLE [Schools].[OfficeAssignment]  WITH NOCHECK ADD  CONSTRAINT [FK_dbo.OfficeAssignment_dbo.Instructor_InstructorID] FOREIGN KEY([InstructorID])
+REFERENCES [Schools].[Instructor] ([InstructorID])
+GO
+ALTER TABLE [Schools].[OfficeAssignment] CHECK CONSTRAINT [FK_dbo.OfficeAssignment_dbo.Instructor_InstructorID]
+GO
+ALTER TABLE [Teams].[CoachTeamsWithDbGeneratedGuid]  WITH CHECK ADD  CONSTRAINT [FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.CoachWithDbGeneratedGuid_CoachId] FOREIGN KEY([CoachId])
+REFERENCES [Teams].[CoachWithDbGeneratedGuid] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Teams].[CoachTeamsWithDbGeneratedGuid] CHECK CONSTRAINT [FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.CoachWithDbGeneratedGuid_CoachId]
+GO
+ALTER TABLE [Teams].[CoachTeamsWithDbGeneratedGuid]  WITH CHECK ADD  CONSTRAINT [FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId] FOREIGN KEY([TeamId])
+REFERENCES [Teams].[TeamWithDbGeneratedGuid] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Teams].[CoachTeamsWithDbGeneratedGuid] CHECK CONSTRAINT [FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId]
+GO
+ALTER TABLE [Teams].[CoachTeamsWithUserGeneratedGuid]  WITH CHECK ADD  CONSTRAINT [FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.CoachWithUserGeneratedGuid_CoachId] FOREIGN KEY([CoachId])
+REFERENCES [Teams].[CoachWithUserGeneratedGuid] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Teams].[CoachTeamsWithUserGeneratedGuid] CHECK CONSTRAINT [FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.CoachWithUserGeneratedGuid_CoachId]
+GO
+ALTER TABLE [Teams].[CoachTeamsWithUserGeneratedGuid]  WITH CHECK ADD  CONSTRAINT [FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId] FOREIGN KEY([TeamId])
+REFERENCES [Teams].[TeamWithUserGeneratedGuid] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Teams].[CoachTeamsWithUserGeneratedGuid] CHECK CONSTRAINT [FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId]
+GO
+ALTER TABLE [Teams].[PlayerWithDbGeneratedGuid]  WITH CHECK ADD  CONSTRAINT [FK_dbo.PlayerWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId] FOREIGN KEY([TeamId])
+REFERENCES [Teams].[TeamWithDbGeneratedGuid] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Teams].[PlayerWithDbGeneratedGuid] CHECK CONSTRAINT [FK_dbo.PlayerWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId]
+GO
+ALTER TABLE [Teams].[PlayerWithUserGeneratedGuid]  WITH CHECK ADD  CONSTRAINT [FK_dbo.PlayerWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId] FOREIGN KEY([TeamId])
+REFERENCES [Teams].[TeamWithUserGeneratedGuid] ([Id])
+ON DELETE CASCADE
+GO
+ALTER TABLE [Teams].[PlayerWithUserGeneratedGuid] CHECK CONSTRAINT [FK_dbo.PlayerWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId]
+GO

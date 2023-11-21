@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
-namespace Tanneryd.BulkOperations.EFCore.Tests
+namespace Tanneryd.BulkOperations.EFCore.SQLite.Tests
 {
     public class SQLiteContextFactory : IDbContextFactory<UnitTestContext>, IDisposable
     {

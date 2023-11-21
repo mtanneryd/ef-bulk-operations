@@ -1,0 +1,59 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <RootNamespace>Tanneryd.BulkOperations.EFCore.SQLite.Tests</RootNamespace>
+        <IsPackable>false</IsPackable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Remove="UnitTests\Delete\**" />
+      <Compile Remove="UnitTests\Insert\**" />
+      <Compile Remove="UnitTests\Update\**" />
+      <EmbeddedResource Remove="UnitTests\Delete\**" />
+      <EmbeddedResource Remove="UnitTests\Insert\**" />
+      <EmbeddedResource Remove="UnitTests\Update\**" />
+      <None Remove="UnitTests\Delete\**" />
+      <None Remove="UnitTests\Insert\**" />
+      <None Remove="UnitTests\Update\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="7.0.11" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.11">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.11" />
+        <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.11">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.2" />
+        <PackageReference Include="MSTest.TestAdapter" Version="3.1.1" />
+        <PackageReference Include="MSTest.TestFramework" Version="3.1.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="Database.tt">
+        <Generator>TextTemplatingFileGenerator</Generator>
+        <LastGenOutput>Database.cs</LastGenOutput>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Database.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Database.tt</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+</Project>

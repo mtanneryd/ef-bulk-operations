@@ -1,30 +1,22 @@
 ﻿/*
-* Copyright ©  2017-2019 Tånneryd IT AB
-* 
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-* 
-*   http://www.apache.org/licenses/LICENSE-2.0
-* 
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright ©  2017-2019 Tånneryd IT AB
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Tanneryd.BulkOperations.EF6.Model;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Companies;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.People;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF;
 
-namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
+namespace Tanneryd.BulkOperations.EFCore.SQLite.Tests.UnitTests.Insert
 {
     /// <summary>
     /// These tests primarily assert that we can insert entities with NOT NULL
@@ -48,26 +40,26 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
         }
 
         [TestMethod]
-        [ExpectedException(typeof(System.Data.SqlClient.SqlException))]
+        [ExpectedException(typeof(SqlException))]
         public void AddingEmployeeToCompanyWithoutParentCompanySet()
         {
             try
             {
-                var employer = new Company
+                var Company = new Company
                 {
                     Name = "World Inc",
                 };
                 var john = new Employee
                 {
                     Name = "John",
-                    Employer = employer
+                    Company = Company
                 };
                 var adam = new Employee
                 {
                     Name = "Adam",
-                    Employer = employer
+                    Company = Company
                 };
-                using (var db = new UnitTestContext())
+                using (var db = Factory.CreateDbContext())
                 {
                     var request = new BulkInsertRequest<Employee>
                     {
@@ -78,10 +70,10 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
                     db.BulkInsertAll(request);
                 }
             }
-            catch (System.Data.SqlClient.SqlException e)
+            catch (SqlException e)
             {
                 var expectedMessage =
-                    @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EF6.NET47.Tests.UnitTestContext"", table ""dbo.Company"", column 'Id'.";
+                    @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EFCore.Tests.Models.EF.UnitTestContext"", table ""dbo.Company"", column 'Id'.";
                 Assert.AreEqual(expectedMessage, e.Message);
                 throw;
             }
@@ -95,23 +87,23 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
                 Name = "Global Corporation Inc",
             };
             corporateGroup.ParentCompany = corporateGroup;
-            var employer = new Company
+            var Company = new Company
             {
                 Name = "Subsidiary Corporation Inc",
             };
-            employer.ParentCompany = corporateGroup;
+            Company.ParentCompany = corporateGroup;
 
             var john = new Employee
             {
                 Name = "John",
-                Employer = employer
+                Company = Company
             };
             var adam = new Employee
             {
                 Name = "Adam",
-                Employer = employer
+                Company = Company
             };
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var request = new BulkInsertRequest<Employee>
                 {
@@ -122,18 +114,18 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
                 db.BulkInsertAll(request);
 
                 var actual = db.Employees
-                    .Include(e => e.Employer.ParentCompany)
+                    .Include(e => e.Company.ParentCompany)
                     .OrderBy(e => e.Name).ToArray();
                 Assert.AreEqual("Adam", actual[0].Name);
-                Assert.AreEqual("Subsidiary Corporation Inc", actual[0].Employer.Name);
-                Assert.AreSame(actual[0].Employer, actual[1].Employer);
+                Assert.AreEqual("Subsidiary Corporation Inc", actual[0].Company.Name);
+                Assert.AreSame(actual[0].Company, actual[1].Company);
 
                 Assert.AreEqual("John", actual[1].Name);
-                Assert.AreEqual("Subsidiary Corporation Inc", actual[1].Employer.Name);
+                Assert.AreEqual("Subsidiary Corporation Inc", actual[1].Company.Name);
 
-                Assert.AreEqual("Global Corporation Inc", actual[0].Employer.ParentCompany.Name);
-                Assert.AreEqual("Global Corporation Inc", actual[1].Employer.ParentCompany.Name);
-                Assert.AreSame(actual[0].Employer.ParentCompany, actual[1].Employer.ParentCompany);
+                Assert.AreEqual("Global Corporation Inc", actual[0].Company.ParentCompany.Name);
+                Assert.AreEqual("Global Corporation Inc", actual[1].Company.ParentCompany.Name);
+                Assert.AreSame(actual[0].Company.ParentCompany, actual[1].Company.ParentCompany);
             }
         }
 
@@ -144,24 +136,26 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
             {
                 Name = "John",
             };
-            var employer = new Company
+            var Company = new Company
             {
                 Name = "World Inc",
             };
-            employer.ParentCompany = employer;
-            employer.Employees.Add(employee);
+            Company.ParentCompany = Company;
+            Company.Employees.Add(employee);
 
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var request = new BulkInsertRequest<Company>
                 {
-                    Entities = new List<Company> { employer },
+                    Entities = new List<Company> { Company },
                     EnableRecursiveInsert = EnableRecursiveInsert.Yes,
                     AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
                 };
                 db.BulkInsertAll(request);
 
-                var actual = db.Companies.Include(e => e.Employees).Single();
+                var actual = db.Companies
+                    .Include(e => e.Employees)
+                    .Single();
                 Assert.AreEqual("World Inc", actual.Name);
                 Assert.AreSame(actual, actual.ParentCompany);
                 Assert.AreEqual("John", actual.Employees.Single().Name);
@@ -176,14 +170,14 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
             {
                 Name = "John",
             };
-            var employer = new Company
+            var Company = new Company
             {
                 Name = "World Inc",
             };
-            employer.ParentCompany = employer;
-            employee.Employer = employer;
+            Company.ParentCompany = Company;
+            employee.Company = Company;
 
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var request = new BulkInsertRequest<Employee>
                 {
@@ -216,7 +210,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
                 BirthDate = new DateTime(2018, 1, 1),
                 Mother = mother,
             };
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var request = new BulkInsertRequest<Person>
                 {
@@ -245,9 +239,9 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
                 LastName = "Andersson",
                 BirthDate = new DateTime(1980, 1, 1),
             };
-            mother.Children.Add(child);
+            mother.People.Add(child);
 
-            using (var db = new UnitTestContext())
+            using (var db = Factory.CreateDbContext())
             {
                 var request = new BulkInsertRequest<Person>
                 {

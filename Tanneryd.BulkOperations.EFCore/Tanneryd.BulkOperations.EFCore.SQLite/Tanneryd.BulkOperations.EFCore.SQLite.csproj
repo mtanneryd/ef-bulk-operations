@@ -1,0 +1,49 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<Version>2.0.5</Version>
+		<Authors>Måns Tånneryd</Authors>
+		<Company>Tånneryd IT</Company>
+		<Description>Provides bulk operations for EF Core (SQLite)</Description>
+		<Product>BulkOperations for EFCore (SQLite)</Product>
+		<Copyright>Copyright ©  2017-2023 Tånneryd IT AB</Copyright>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
+		<PackageId>Tanneryd.BulkOperations.EFCore.SQLite</PackageId>
+		<PackageProjectUrl>https://www.nuget.org/packages/Tanneryd.BulkOperations.EFCore.SQLite</PackageProjectUrl>
+		<PackageReleaseNotes></PackageReleaseNotes>
+		<IncludeSymbols>true</IncludeSymbols>
+		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
+		<EmbedAllSources>True</EmbedAllSources>
+		<LangVersion>Latest</LangVersion>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Remove="OptionRecompileInterceptor.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="7.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="7.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.11">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="LICENSE-2.0.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+		<None Include="..\..\README.md">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+</Project>
