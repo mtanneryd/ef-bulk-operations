@@ -186,6 +186,8 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
+##### 2.0.5 (2023-11-22)
+ * Added .NET8 target for EF Core.
 ##### 2.0.3 (2023-09-05)
  * Updated the README file to better reflect that there are two packages, one for EF6 and one for EF Core. No functional changes at all.
 ##### 2.0.2 (2023-08-10)
