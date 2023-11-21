@@ -96,7 +96,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Update
             {
                 Entities = updatedPrices,
                 KeyPropertyNames = new[] { "Date", "Name" },
-                UpdatedColumnNames = new[] { "Value" },
+                UpdatedPropertyNames = new[] { "Value" },
             });
             var prices = db2.Prices.OrderBy(p => p.Name).ToArray();
             Assert.AreEqual("A", prices[0].Name);

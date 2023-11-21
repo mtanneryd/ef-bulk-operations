@@ -24,13 +24,13 @@ namespace Tanneryd.BulkOperations.EF6.Model
     {
         public BulkUpdateRequest()
         {
-            UpdatedColumnNames = new string[0];
+            UpdatedPropertyNames = new string[0];
             KeyPropertyNames = new string[0];
             InsertIfNew = false;
         }
 
         public IList Entities { get; set; }
-        public string[] UpdatedColumnNames { get; set; }
+        public string[] UpdatedPropertyNames { get; set; }
         public string[] KeyPropertyNames { get; set; }
         public SqlTransaction Transaction { get; set; }
         public bool InsertIfNew { get; set; }

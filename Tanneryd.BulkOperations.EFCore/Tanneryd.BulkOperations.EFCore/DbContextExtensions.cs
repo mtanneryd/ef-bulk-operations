@@ -1035,8 +1035,6 @@ namespace Tanneryd.BulkOperations.EFCore
         {
             var rowsAffected = 0;
 
-            var keyMemberNames = request.KeyPropertyNames;
-            var updatedColumnNames = request.UpdatedColumnNames;
             var entities = request.Entities;
             var transaction = request.Transaction;
 
@@ -1044,17 +1042,21 @@ namespace Tanneryd.BulkOperations.EFCore
             var mappings = _mappingExtractor.GetMappings(t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
-
+            var keyPropertyNames = request.KeyPropertyNames;
+            var updatedPropertyNames = request.UpdatedPropertyNames;
+            var keyColumnNames = keyPropertyNames.Select(n=>columnMappings[n].TableColumn.Column.Name).ToArray();
+            var updatedColumnNames = updatedPropertyNames.Select(n=>columnMappings[n].TableColumn.Column.Name).ToArray();
+            
             //
             // Check to see if the table has a primary key. If so,
             // get a clr property name to table column name mapping.
             //
             var primaryKeyMembers = GetPrimaryKeyMembers(columnMappings);
 
-            var selectedKeyMembers = keyMemberNames.Any() ? keyMemberNames : primaryKeyMembers.ToArray();
+            var selectedKeyMembers = keyColumnNames.Any() ? keyColumnNames : primaryKeyMembers.ToArray();
             var allKeyMembers = new List<string>();
             allKeyMembers.AddRange(primaryKeyMembers);
-            allKeyMembers.AddRange(keyMemberNames);
+            allKeyMembers.AddRange(keyColumnNames);
 
             var selectedKeyMappings = columnMappings.Values
                 .Where(m => selectedKeyMembers.Contains(m.TableColumn.Column.Name))
@@ -1201,18 +1203,21 @@ namespace Tanneryd.BulkOperations.EFCore
                                 PropertyInfo toPropertyInfo = t.GetProperty(foreignKeyRelation.ToProperty);
                                 var navPropertyKeyType = toPropertyInfo.PropertyType;
                                 var isGuid = IsGuid(navPropertyKeyType);
+                                var isDateTime = IsDateTime(navPropertyKeyType);
                                 var navPropertyKey = GetProperty(t, foreignKeyRelation.ToProperty, entity);
 
                                 // we do nothing unless the one-to-one
                                 // nav property in previously unknown
-                                if (navPropertyKey == null ||
-                                    (isGuid && navPropertyKey == Guid.Empty) ||
+                                if (navPropertyKey == null ||                                    
+                                    (isGuid && navPropertyKey == default(Guid)) ||
+                                    (isDateTime && navPropertyKey == default(DateTime)) ||
                                     navPropertyKey == 0)
                                 {
                                     var currentValue = GetProperty(navPropertyType, foreignKeyRelation.FromProperty,
                                         navProperty);
-                                    if ((isGuid && navPropertyKey != Guid.Empty) ||
-                                        (!isGuid && currentValue > 0))
+                                    if ((isGuid && navPropertyKey != default(Guid)) ||
+                                        (isDateTime && navPropertyKey != default(DateTime)) ||
+                                        (!(isGuid || isDateTime) && currentValue > 0))
                                     {
                                         SetProperty(foreignKeyRelation.ToProperty, entity, currentValue);
                                     }
@@ -1417,7 +1422,7 @@ namespace Tanneryd.BulkOperations.EFCore
                         var request = new BulkUpdateRequest
                         {
                             Entities = navPropertySelfReferences.Select(e => e.Entity).Distinct().ToArray(),
-                            UpdatedColumnNames = navPropertySelfReferences.SelectMany(e => e.ForeignKeyProperties)
+                            UpdatedPropertyNames = navPropertySelfReferences.SelectMany(e => e.ForeignKeyProperties)
                                 .Distinct().ToArray(),
                             Transaction = sqlTransaction
                         };
@@ -2384,6 +2389,12 @@ namespace Tanneryd.BulkOperations.EFCore
         {
             var isGuid = (t == typeof(Guid) || t == typeof(Guid?));
             return isGuid;
+        }
+
+        private static bool IsDateTime(Type t)
+        {
+            var isDateTime = (t == typeof(DateTime) || t == typeof(DateTime?));
+            return isDateTime;
         }
 
         /// <summary>
