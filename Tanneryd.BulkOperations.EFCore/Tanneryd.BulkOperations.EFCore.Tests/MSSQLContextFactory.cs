@@ -6,7 +6,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests;
 
 public class MSSQLContextFactory : IDbContextFactory<UnitTestContext>
 {
-    private readonly string _connectionString = @"data source=.\SQLEXPRESS;initial catalog=Tanneryd.BulkOperations.EFCore.Tests.Models.EF.UnitTestContext;persist security info=True;Integrated Security=SSPI;MultipleActiveResultSets=True;TrustServerCertificate=true";
+    private readonly string _connectionString = @"data source=.;initial catalog=Tanneryd.BulkOperations.EFCore.Tests.Models.EF.UnitTestContext;persist security info=True;Integrated Security=SSPI;MultipleActiveResultSets=True;TrustServerCertificate=true";
 
     public UnitTestContext CreateDbContext()
     {
