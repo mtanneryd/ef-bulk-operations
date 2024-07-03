@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.1;net45</TargetFrameworks>
+		<TargetFrameworks>netstandard2.1;net45;net48</TargetFrameworks>
 		<Version>2.1.0</Version>
 		<Authors>Måns Tånneryd</Authors>
 		<Company>Tånneryd IT AB</Company>
