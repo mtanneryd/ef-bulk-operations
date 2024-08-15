@@ -1077,7 +1077,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 if (updatedColumnNames.Any())
                 {
                     modifiedColumnMappingCandidates = modifiedColumnMappingCandidates
-                        .Where(c => updatedColumnNames.Contains(c.EntityProperty.Name)).ToArray();
+                        .Where(c => updatedColumnNames.Contains(c.TableColumn.Column.Name)).ToArray();
                 }
 
                 var modifiedColumnMappings = modifiedColumnMappingCandidates.ToArray();
