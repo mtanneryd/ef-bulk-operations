@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net8.0</TargetFramework>
-		<Version>2.1.0</Version>
+		<Version>2.1.1</Version>
 		<Authors>Måns Tånneryd</Authors>
 		<Company>Tånneryd IT</Company>
 		<Description>Provides bulk operations for EF Core</Description>
