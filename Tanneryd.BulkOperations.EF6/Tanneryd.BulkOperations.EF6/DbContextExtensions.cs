@@ -980,7 +980,7 @@ namespace Tanneryd.BulkOperations.EF6
                 if (updatedColumnNames.Any())
                 {
                     modifiedColumnMappingCandidates = modifiedColumnMappingCandidates
-                        .Where(c => updatedColumnNames.Contains(c.EntityProperty.Name)).ToArray();
+                        .Where(c => updatedColumnNames.Contains(c.TableColumn.Name)).ToArray();
                 }
 
                 var modifiedColumnMappings = modifiedColumnMappingCandidates.ToArray();

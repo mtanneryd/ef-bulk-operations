@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>netstandard2.1;net45;net48</TargetFrameworks>
-		<Version>2.1.0</Version>
+		<Version>2.1.1</Version>
 		<Authors>Måns Tånneryd</Authors>
 		<Company>Tånneryd IT AB</Company>
 		<Description>Provides bulk operations for EF6</Description>
