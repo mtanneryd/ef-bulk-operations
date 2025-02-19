@@ -1,3 +1,5 @@
+# THIS IS A FORK CHANGING EF6 PROVIDER FROM System.Data.SqlClient TO Microsoft.Data.SqlClient
+
 # Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EFCore
 
 Nuget packages that extend the DbContext in EF6/EFCore with bulk operations.

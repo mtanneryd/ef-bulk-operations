@@ -48,7 +48,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Insert
         }
 
         [TestMethod]
-        [ExpectedException(typeof(System.Data.SqlClient.SqlException))]
+        [ExpectedException(typeof(Microsoft.Data.SqlClient.SqlException))]
         public void AddingEmployeeToCompanyWithoutParentCompanySet()
         {
             try
@@ -78,7 +78,7 @@ namespace Tanneryd.BulkOperations.EF6.NETCore.Tests.Tests.Insert
                     db.BulkInsertAll(request);
                 }
             }
-            catch (System.Data.SqlClient.SqlException e)
+            catch (Microsoft.Data.SqlClient.SqlException e)
             {
                 var expectedMessage =
                     @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF.UnitTestContext"", table ""dbo.Company"", column 'Id'.";

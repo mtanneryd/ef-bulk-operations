@@ -15,15 +15,26 @@
 */
 
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Data.Common;
+using System.Data.Entity.SqlServer;
+using System.Data.Entity;
 using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.Report;
 using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.DM.School;
 using Tanneryd.BulkOperations.EF6.NETCore.Tests.Models.EF;
+using Microsoft.Data.SqlClient;
 
 namespace Tanneryd.BulkOperations.EF6.NETCore.Tests
 {
     [TestClass]
     public class DbContextExtensionsTests
     {
+        [AssemblyInitialize]
+        public static void AssemblyInit(TestContext context)
+        {
+            DbProviderFactories.RegisterFactory(MicrosoftSqlProviderServices.ProviderInvariantName, SqlClientFactory.Instance);
+            DbConfiguration.SetConfiguration(new MicrosoftSqlDbConfiguration());
+        }
+
         [TestMethod]
         public void TableNameForGitHubIssue17ShouldPass()
         {
