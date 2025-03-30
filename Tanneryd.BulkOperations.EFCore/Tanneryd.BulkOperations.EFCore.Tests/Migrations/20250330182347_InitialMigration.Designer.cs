@@ -7,19 +7,23 @@ using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tanneryd.BulkOperations.EFCore.Tests;
 
+#nullable disable
+
 namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
 {
     [DbContext(typeof(UnitTestContext))]
-    [Migration("20210922065142_InitialMigration")]
+    [Migration("20250330182347_InitialMigration")]
     partial class InitialMigration
     {
+        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.10")
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                .HasAnnotation("ProductVersion", "8.0.6")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
             modelBuilder.Entity("PostVisitor", b =>
                 {
@@ -33,7 +37,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
 
                     b.HasIndex("VisitorsId");
 
-                    b.ToTable("PostVisitor");
+                    b.ToTable("PostVisitor", "dbo");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.BatchInvoice", b =>
@@ -43,8 +47,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("PrimaryKey");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.BatchInvoice")
-                        .IsClustered();
+                        .HasName("PK_dbo.BatchInvoice");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("BatchInvoice", "dbo");
                 });
@@ -64,8 +69,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("InvoiceId");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.BatchInvoiceItem")
-                        .IsClustered();
+                        .HasName("PK_dbo.BatchInvoiceItem");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.HasIndex("BatchInvoiceId")
                         .HasDatabaseName("IX_BatchInvoiceId");
@@ -89,8 +95,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Name");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Blog")
-                        .IsClustered();
+                        .HasName("PK_dbo.Blog");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("Blog", "dbo");
                 });
@@ -106,8 +113,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("TeamId");
 
                     b.HasKey("CoachId", "TeamId")
-                        .HasName("PK_dbo.CoachTeamsWithDbGeneratedGuid")
-                        .IsClustered();
+                        .HasName("PK_dbo.CoachTeamsWithDbGeneratedGuid");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("CoachId", "TeamId"));
 
                     b.HasIndex("CoachId")
                         .HasDatabaseName("IX_CoachId");
@@ -129,8 +137,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("TeamId");
 
                     b.HasKey("CoachId", "TeamId")
-                        .HasName("PK_dbo.CoachTeamsWithUserGeneratedGuid")
-                        .IsClustered();
+                        .HasName("PK_dbo.CoachTeamsWithUserGeneratedGuid");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("CoachId", "TeamId"));
 
                     b.HasIndex("CoachId")
                         .HasDatabaseName("IX_CoachId");
@@ -159,8 +168,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Lastname");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.CoachWithDbGeneratedGuid")
-                        .IsClustered();
+                        .HasName("PK_dbo.CoachWithDbGeneratedGuid");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("CoachWithDbGeneratedGuid", "dbo");
                 });
@@ -182,8 +192,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Lastname");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.CoachWithUserGeneratedGuid")
-                        .IsClustered();
+                        .HasName("PK_dbo.CoachWithUserGeneratedGuid");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("CoachWithUserGeneratedGuid", "dbo");
                 });
@@ -193,10 +204,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasColumnName("Id")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -208,8 +218,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("ParentCompanyId");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Company")
-                        .IsClustered();
+                        .HasName("PK_dbo.Company");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.HasIndex("ParentCompanyId")
                         .HasDatabaseName("IX_ParentCompanyId");
@@ -232,8 +243,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("UpdatedBy");
 
                     b.HasKey("NumberId")
-                        .HasName("PK_dbo.Composite")
-                        .IsClustered();
+                        .HasName("PK_dbo.Composite");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("NumberId"));
 
                     b.HasIndex("NumberId")
                         .HasDatabaseName("IX_NumberId");
@@ -252,8 +264,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("PrimeId");
 
                     b.HasKey("CompositeId", "PrimeId")
-                        .HasName("PK_dbo.CompositePrime")
-                        .IsClustered();
+                        .HasName("PK_dbo.CompositePrime");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("CompositeId", "PrimeId"));
 
                     b.HasIndex("CompositeId")
                         .HasDatabaseName("IX_CompositeId");
@@ -276,6 +289,8 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("LastName");
 
+                    b.ToTable((string)null);
+
                     b.ToView("Contact", "dbo");
                 });
 
@@ -284,18 +299,18 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("Id")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int>("Value")
                         .HasColumnType("int")
                         .HasColumnName("Value");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Coordinate")
-                        .IsClustered();
+                        .HasName("PK_dbo.Coordinate");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("Coordinate", "dbo");
                 });
@@ -305,10 +320,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<int>("CourseId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("CourseID")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("CourseID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CourseId"));
 
                     b.Property<int>("Credits")
                         .HasColumnType("int")
@@ -323,8 +337,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Title");
 
                     b.HasKey("CourseId")
-                        .HasName("PK_dbo.Course")
-                        .IsClustered();
+                        .HasName("PK_dbo.Course");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("CourseId"));
 
                     b.HasIndex("DepartmentId")
                         .HasDatabaseName("IX_DepartmentID");
@@ -343,8 +358,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("InstructorID");
 
                     b.HasKey("CourseId", "InstructorId")
-                        .HasName("PK_dbo.CourseInstructor")
-                        .IsClustered();
+                        .HasName("PK_dbo.CourseInstructor");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("CourseId", "InstructorId"));
 
                     b.HasIndex("CourseId")
                         .HasDatabaseName("IX_CourseID");
@@ -360,10 +376,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<int>("DepartmentId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("DepartmentID")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("DepartmentID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DepartmentId"));
 
                     b.Property<int?>("Administrator")
                         .HasColumnType("int")
@@ -378,8 +393,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Name");
 
                     b.HasKey("DepartmentId")
-                        .HasName("PK_dbo.Department")
-                        .IsClustered();
+                        .HasName("PK_dbo.Department");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("DepartmentId"));
 
                     b.ToTable("Department", "dbo");
                 });
@@ -389,10 +405,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasColumnName("Id")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<long>("EmployerId")
                         .HasColumnType("bigint")
@@ -404,8 +419,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Name");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Employee")
-                        .IsClustered();
+                        .HasName("PK_dbo.Employee");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.HasIndex("EmployerId")
                         .HasDatabaseName("IX_EmployerId");
@@ -418,14 +434,14 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("Id")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.EmptyTable")
-                        .IsClustered();
+                        .HasName("PK_dbo.EmptyTable");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("EmptyTable", "dbo");
                 });
@@ -435,10 +451,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<int>("InstructorId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("InstructorID")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("InstructorID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("InstructorId"));
 
                     b.Property<string>("FirstName")
                         .HasColumnType("nvarchar(max)")
@@ -459,8 +474,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("LastName");
 
                     b.HasKey("InstructorId")
-                        .HasName("PK_dbo.Instructor")
-                        .IsClustered();
+                        .HasName("PK_dbo.Instructor");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("InstructorId"));
 
                     b.ToTable("Instructor", "dbo");
                 });
@@ -485,8 +501,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Tax");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Invoice")
-                        .IsClustered();
+                        .HasName("PK_dbo.Invoice");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("Invoice", "dbo");
                 });
@@ -496,10 +513,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<int>("PrimaryKey")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("PrimaryKey")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("PrimaryKey");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PrimaryKey"));
 
                     b.Property<Guid>("InvoiceId")
                         .HasColumnType("uniqueidentifier")
@@ -510,8 +526,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("JournalId");
 
                     b.HasKey("PrimaryKey")
-                        .HasName("PK_dbo.InvoiceItem")
-                        .IsClustered();
+                        .HasName("PK_dbo.InvoiceItem");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("PrimaryKey"));
 
                     b.HasIndex("InvoiceId")
                         .HasDatabaseName("IX_InvoiceId");
@@ -529,8 +546,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("PrimaryKey");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Journal")
-                        .IsClustered();
+                        .HasName("PK_dbo.Journal");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("Journal", "dbo");
                 });
@@ -552,8 +570,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Text");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Keyword")
-                        .IsClustered();
+                        .HasName("PK_dbo.Keyword");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.HasIndex("PostId")
                         .HasDatabaseName("IX_PostId");
@@ -566,10 +585,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("Id")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("LogType")
                         .HasMaxLength(128)
@@ -593,8 +611,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Timestamp");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.LogItem")
-                        .IsClustered();
+                        .HasName("PK_dbo.LogItem");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("LogItem", "dbo");
                 });
@@ -604,10 +623,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasColumnName("Id")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<int?>("CompositeId")
                         .HasColumnType("int")
@@ -634,8 +652,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Value");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Number")
-                        .IsClustered();
+                        .HasName("PK_dbo.Number");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.HasIndex("ParityId")
                         .HasDatabaseName("IX_ParityId");
@@ -658,8 +677,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Timestamp");
 
                     b.HasKey("InstructorId")
-                        .HasName("PK_dbo.OfficeAssignment")
-                        .IsClustered();
+                        .HasName("PK_dbo.OfficeAssignment");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("InstructorId"));
 
                     b.HasIndex("InstructorId")
                         .HasDatabaseName("IX_InstructorID");
@@ -672,10 +692,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("Key")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("Key");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -691,8 +710,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("UpdatedBy");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Parity")
-                        .IsClustered();
+                        .HasName("PK_dbo.Parity");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("Parity", "dbo");
                 });
@@ -702,10 +722,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
-                        .HasColumnName("Id")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<DateTime>("BirthDate")
                         .HasColumnType("datetime")
@@ -730,8 +749,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("MotherId");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Person")
-                        .IsClustered();
+                        .HasName("PK_dbo.Person");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.HasIndex("MotherId")
                         .HasDatabaseName("IX_MotherId");
@@ -761,8 +781,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("TeamId");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.PlayerWithDbGeneratedGuid")
-                        .IsClustered();
+                        .HasName("PK_dbo.PlayerWithDbGeneratedGuid");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.HasIndex("TeamId")
                         .HasDatabaseName("IX_TeamId");
@@ -791,8 +812,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("TeamId");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.PlayerWithUserGeneratedGuid")
-                        .IsClustered();
+                        .HasName("PK_dbo.PlayerWithUserGeneratedGuid");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.HasIndex("TeamId")
                         .HasDatabaseName("IX_TeamId");
@@ -815,8 +837,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Value");
 
                     b.HasKey("XCoordinateId", "YCoordinateId")
-                        .HasName("PK_dbo.Point")
-                        .IsClustered();
+                        .HasName("PK_dbo.Point");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("XCoordinateId", "YCoordinateId"));
 
                     b.HasIndex("XCoordinateId")
                         .HasDatabaseName("IX_XCoordinateId");
@@ -844,8 +867,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Text");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Post")
-                        .IsClustered();
+                        .HasName("PK_dbo.Post");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.HasIndex("BlogId")
                         .HasDatabaseName("IX_BlogId");
@@ -858,10 +882,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("Id")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("Date")
                         .HasColumnType("datetime")
@@ -877,8 +900,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Value");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Price")
-                        .IsClustered();
+                        .HasName("PK_dbo.Price");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("Price", "dbo");
                 });
@@ -898,8 +922,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("UpdatedBy");
 
                     b.HasKey("NumberId")
-                        .HasName("PK_dbo.Prime")
-                        .IsClustered();
+                        .HasName("PK_dbo.Prime");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("NumberId"));
 
                     b.HasIndex("NumberId")
                         .HasDatabaseName("IX_NumberId");
@@ -912,10 +937,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("Id")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("Identity")
                         .HasColumnType("int")
@@ -930,8 +954,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Select");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.ReservedSqlKeyword")
-                        .IsClustered();
+                        .HasName("PK_dbo.ReservedSqlKeyword");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("ReservedSqlKeyword", "dbo");
                 });
@@ -941,10 +966,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Property<int>("ReportId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("ReportID")
-                        .HasAnnotation("SqlServer:IdentityIncrement", 1)
-                        .HasAnnotation("SqlServer:IdentitySeed", 1)
-                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                        .HasColumnName("ReportID");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReportId"));
 
                     b.Property<decimal>("Amount")
                         .HasColumnType("decimal(18,2)")
@@ -967,8 +991,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Volume");
 
                     b.HasKey("ReportId")
-                        .HasName("PK_dbo.SummaryReportFROMTableASExtent")
-                        .IsClustered();
+                        .HasName("PK_dbo.SummaryReportFROMTableASExtent");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("ReportId"));
 
                     b.HasIndex("PeriodId")
                         .HasDatabaseName("IX_PeriodID");
@@ -989,8 +1014,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Name");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.TeamWithDbGeneratedGuid")
-                        .IsClustered();
+                        .HasName("PK_dbo.TeamWithDbGeneratedGuid");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("TeamWithDbGeneratedGuid", "dbo");
                 });
@@ -1007,8 +1033,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Name");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.TeamWithUserGeneratedGuid")
-                        .IsClustered();
+                        .HasName("PK_dbo.TeamWithUserGeneratedGuid");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("TeamWithUserGeneratedGuid", "dbo");
                 });
@@ -1026,8 +1053,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("Name");
 
                     b.HasKey("Id")
-                        .HasName("PK_dbo.Visitor")
-                        .IsClustered();
+                        .HasName("PK_dbo.Visitor");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("Visitor", "dbo");
                 });
@@ -1043,8 +1071,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasColumnName("PostId");
 
                     b.HasKey("VisitorId", "PostId")
-                        .HasName("PK_dbo.VisitorPosts")
-                        .IsClustered();
+                        .HasName("PK_dbo.VisitorPosts");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("VisitorId", "PostId"));
 
                     b.HasIndex("PostId")
                         .HasDatabaseName("IX_PostId");
@@ -1075,16 +1104,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.BatchInvoice", "BatchInvoice")
                         .WithMany("Invoices")
                         .HasForeignKey("BatchInvoiceId")
-                        .HasConstraintName("FK_dbo.BatchInvoiceItem_dbo.BatchInvoice_BatchInvoiceId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.BatchInvoiceItem_dbo.BatchInvoice_BatchInvoiceId");
 
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Invoice", "Invoice")
                         .WithMany("BatchInvoices")
                         .HasForeignKey("InvoiceId")
-                        .HasConstraintName("FK_dbo.BatchInvoiceItem_dbo.Invoice_InvoiceId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.BatchInvoiceItem_dbo.Invoice_InvoiceId");
 
                     b.Navigation("BatchInvoice");
 
@@ -1096,16 +1125,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.CoachWithDbGeneratedGuid", "CoachWithDbGeneratedGuid")
                         .WithMany("CoachTeamsWithDbGeneratedGuids")
                         .HasForeignKey("CoachId")
-                        .HasConstraintName("FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.CoachWithDbGeneratedGuid_CoachId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.CoachWithDbGeneratedGuid_CoachId");
 
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.TeamWithDbGeneratedGuid", "TeamWithDbGeneratedGuid")
                         .WithMany("CoachTeamsWithDbGeneratedGuids")
                         .HasForeignKey("TeamId")
-                        .HasConstraintName("FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId");
 
                     b.Navigation("CoachWithDbGeneratedGuid");
 
@@ -1117,16 +1146,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.CoachWithUserGeneratedGuid", "CoachWithUserGeneratedGuid")
                         .WithMany("CoachTeamsWithUserGeneratedGuids")
                         .HasForeignKey("CoachId")
-                        .HasConstraintName("FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.CoachWithUserGeneratedGuid_CoachId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.CoachWithUserGeneratedGuid_CoachId");
 
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.TeamWithUserGeneratedGuid", "TeamWithUserGeneratedGuid")
                         .WithMany("CoachTeamsWithUserGeneratedGuids")
                         .HasForeignKey("TeamId")
-                        .HasConstraintName("FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId");
 
                     b.Navigation("CoachWithUserGeneratedGuid");
 
@@ -1138,8 +1167,8 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Company", "ParentCompany")
                         .WithMany("Companies")
                         .HasForeignKey("ParentCompanyId")
-                        .HasConstraintName("FK_dbo.Company_dbo.Company_ParentCompanyId")
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.Company_dbo.Company_ParentCompanyId");
 
                     b.Navigation("ParentCompany");
                 });
@@ -1149,8 +1178,8 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Number", "Number")
                         .WithOne("Composite")
                         .HasForeignKey("Tanneryd.BulkOperations.EFCore.Tests.Composite", "NumberId")
-                        .HasConstraintName("FK_dbo.Composite_dbo.Number_NumberId")
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.Composite_dbo.Number_NumberId");
 
                     b.Navigation("Number");
                 });
@@ -1160,16 +1189,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Composite", "Composite")
                         .WithMany("CompositePrimes")
                         .HasForeignKey("CompositeId")
-                        .HasConstraintName("FK_dbo.CompositePrime_dbo.Composite_CompositeId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CompositePrime_dbo.Composite_CompositeId");
 
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Prime", "Prime")
                         .WithMany("CompositePrimes")
                         .HasForeignKey("PrimeId")
-                        .HasConstraintName("FK_dbo.CompositePrime_dbo.Prime_PrimeId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CompositePrime_dbo.Prime_PrimeId");
 
                     b.Navigation("Composite");
 
@@ -1181,9 +1210,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Department", "Department")
                         .WithMany("Courses")
                         .HasForeignKey("DepartmentId")
-                        .HasConstraintName("FK_dbo.Course_dbo.Department_DepartmentID")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.Course_dbo.Department_DepartmentID");
 
                     b.Navigation("Department");
                 });
@@ -1193,16 +1222,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Course", "Course")
                         .WithMany("CourseInstructors")
                         .HasForeignKey("CourseId")
-                        .HasConstraintName("FK_dbo.CourseInstructor_dbo.Course_CourseID")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CourseInstructor_dbo.Course_CourseID");
 
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Instructor", "Instructor")
                         .WithMany("CourseInstructors")
                         .HasForeignKey("InstructorId")
-                        .HasConstraintName("FK_dbo.CourseInstructor_dbo.Instructor_InstructorID")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CourseInstructor_dbo.Instructor_InstructorID");
 
                     b.Navigation("Course");
 
@@ -1214,9 +1243,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Company", "Company")
                         .WithMany("Employees")
                         .HasForeignKey("EmployerId")
-                        .HasConstraintName("FK_dbo.Employee_dbo.Company_EmployerId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.Employee_dbo.Company_EmployerId");
 
                     b.Navigation("Company");
                 });
@@ -1226,16 +1255,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Invoice", "Invoice")
                         .WithMany("Journals")
                         .HasForeignKey("InvoiceId")
-                        .HasConstraintName("FK_dbo.InvoiceItem_dbo.Invoice_InvoiceId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.InvoiceItem_dbo.Invoice_InvoiceId");
 
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Journal", "Journal")
                         .WithMany("InvoiceItems")
                         .HasForeignKey("JournalId")
-                        .HasConstraintName("FK_dbo.InvoiceItem_dbo.Journal_JournalId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.InvoiceItem_dbo.Journal_JournalId");
 
                     b.Navigation("Invoice");
 
@@ -1247,9 +1276,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Post", "Post")
                         .WithMany("Keywords")
                         .HasForeignKey("PostId")
-                        .HasConstraintName("FK_dbo.Keyword_dbo.Post_PostId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.Keyword_dbo.Post_PostId");
 
                     b.Navigation("Post");
                 });
@@ -1259,8 +1288,8 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Parity", "Parity")
                         .WithMany("Numbers")
                         .HasForeignKey("ParityId")
-                        .HasConstraintName("FK_dbo.Number_dbo.Parity_ParityId")
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.Number_dbo.Parity_ParityId");
 
                     b.Navigation("Parity");
                 });
@@ -1270,8 +1299,8 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Instructor", "Instructor")
                         .WithOne("OfficeAssignment")
                         .HasForeignKey("Tanneryd.BulkOperations.EFCore.Tests.OfficeAssignment", "InstructorId")
-                        .HasConstraintName("FK_dbo.OfficeAssignment_dbo.Instructor_InstructorID")
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.OfficeAssignment_dbo.Instructor_InstructorID");
 
                     b.Navigation("Instructor");
                 });
@@ -1291,9 +1320,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.TeamWithDbGeneratedGuid", "TeamWithDbGeneratedGuid")
                         .WithMany("PlayerWithDbGeneratedGuids")
                         .HasForeignKey("TeamId")
-                        .HasConstraintName("FK_dbo.PlayerWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.PlayerWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId");
 
                     b.Navigation("TeamWithDbGeneratedGuid");
                 });
@@ -1303,9 +1332,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.TeamWithUserGeneratedGuid", "TeamWithUserGeneratedGuid")
                         .WithMany("PlayerWithUserGeneratedGuids")
                         .HasForeignKey("TeamId")
-                        .HasConstraintName("FK_dbo.PlayerWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.PlayerWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId");
 
                     b.Navigation("TeamWithUserGeneratedGuid");
                 });
@@ -1315,14 +1344,14 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Coordinate", "XCoordinate")
                         .WithMany("Points_XCoordinateId")
                         .HasForeignKey("XCoordinateId")
-                        .HasConstraintName("FK_dbo.Point_dbo.Coordinate_XCoordinateId")
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.Point_dbo.Coordinate_XCoordinateId");
 
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Coordinate", "YCoordinate")
                         .WithMany("Points_YCoordinateId")
                         .HasForeignKey("YCoordinateId")
-                        .HasConstraintName("FK_dbo.Point_dbo.Coordinate_YCoordinateId")
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.Point_dbo.Coordinate_YCoordinateId");
 
                     b.Navigation("XCoordinate");
 
@@ -1334,9 +1363,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Blog", "Blog")
                         .WithMany("Posts")
                         .HasForeignKey("BlogId")
-                        .HasConstraintName("FK_dbo.Post_dbo.Blog_BlogId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.Post_dbo.Blog_BlogId");
 
                     b.Navigation("Blog");
                 });
@@ -1346,8 +1375,8 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Number", "Number")
                         .WithOne("Prime")
                         .HasForeignKey("Tanneryd.BulkOperations.EFCore.Tests.Prime", "NumberId")
-                        .HasConstraintName("FK_dbo.Prime_dbo.Number_NumberId")
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.Prime_dbo.Number_NumberId");
 
                     b.Navigation("Number");
                 });
@@ -1357,16 +1386,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Post", "Post")
                         .WithMany("VisitorPosts")
                         .HasForeignKey("PostId")
-                        .HasConstraintName("FK_dbo.VisitorPosts_dbo.Post_PostId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.VisitorPosts_dbo.Post_PostId");
 
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Visitor", "Visitor")
                         .WithMany("VisitorPosts")
                         .HasForeignKey("VisitorId")
-                        .HasConstraintName("FK_dbo.VisitorPosts_dbo.Visitor_VisitorId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.VisitorPosts_dbo.Visitor_VisitorId");
 
                     b.Navigation("Post");
 

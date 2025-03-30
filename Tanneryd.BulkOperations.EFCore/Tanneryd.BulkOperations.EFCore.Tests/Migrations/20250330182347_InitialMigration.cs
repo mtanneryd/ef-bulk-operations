@@ -1,10 +1,14 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
+#nullable disable
+
 namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
 {
+    /// <inheritdoc />
     public partial class InitialMigration : Migration
     {
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.EnsureSchema(
@@ -86,8 +90,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         column: x => x.ParentCompanyId,
                         principalSchema: "dbo",
                         principalTable: "Company",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -245,8 +248,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         column: x => x.MotherId,
                         principalSchema: "dbo",
                         principalTable: "Person",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -407,15 +409,13 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         column: x => x.XCoordinateId,
                         principalSchema: "dbo",
                         principalTable: "Coordinate",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_dbo.Point_dbo.Coordinate_YCoordinateId",
                         column: x => x.YCoordinateId,
                         principalSchema: "dbo",
                         principalTable: "Coordinate",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -460,8 +460,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         column: x => x.InstructorID,
                         principalSchema: "dbo",
                         principalTable: "Instructor",
-                        principalColumn: "InstructorID",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "InstructorID");
                 });
 
             migrationBuilder.CreateTable(
@@ -546,8 +545,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         column: x => x.ParityId,
                         principalSchema: "dbo",
                         principalTable: "Parity",
-                        principalColumn: "Key",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Key");
                 });
 
             migrationBuilder.CreateTable(
@@ -775,8 +773,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         column: x => x.NumberId,
                         principalSchema: "dbo",
                         principalTable: "Number",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -797,8 +794,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         column: x => x.NumberId,
                         principalSchema: "dbo",
                         principalTable: "Number",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -1009,9 +1005,10 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 table: "VisitorPosts",
                 column: "VisitorId");
 
-            migrationBuilder.Sql("CREATE VIEW Contact AS SELECT FirstName, LastName FROM Person");
+            migrationBuilder.Sql("CREATE VIEW PersonView AS SELECT FirstName, LastName FROM Person");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
