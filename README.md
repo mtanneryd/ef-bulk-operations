@@ -186,6 +186,42 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
+##### 3.0.0 (2025-04-30)
+ * Using Microsoft.Data.SqlClient instead of System.Data.SqlClient for EF6.
+ * Added support for .NET4.8
+ * Removed support for .NET Standard, .NET Framework 4.5 and .NET Framework 4.7.
+ * Removed support for edmx model first in EF6.
+ 
+ To make EF6 work with Microsoft.Data.SqlClient you need to have the following in your config file:
+
+```xml
+	<entityFramework>
+		<providers>
+			<provider invariantName="Microsoft.Data.SqlClient" type="System.Data.Entity.SqlServer.MicrosoftSqlProviderServices, Microsoft.EntityFramework.SqlServer" />
+		</providers>
+	</entityFramework>
+```
+
+```xml
+ <system.data>
+		<DbProviderFactories>
+			<add name="Microsoft.Data.SqlClient" 
+				 invariant="Microsoft.Data.SqlClient" 
+				 description=".NET Framework Data Provider for SqlServer" 
+				 type="Microsoft.Data.SqlClient.SqlClientFactory, Microsoft.Data.SqlClient" />
+		</DbProviderFactories>
+	</system.data>
+```
+
+You also need to set the providerName in your connection string to "Microsoft.Data.SqlClient"
+
+And finally. Make sure that you have the following nuget packages installed:
+```xml
+	<PackageReference Include="EntityFramework" Version="6.5.1" />
+	<PackageReference Include="Microsoft.EntityFramework.SqlServer" Version="6.5.1" />
+	<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+```
+
 ##### 2.0.5 (2023-11-22)
  * Added .NET8 target for EF Core.
 ##### 2.0.3 (2023-09-05)
