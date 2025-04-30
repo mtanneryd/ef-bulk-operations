@@ -15,16 +15,16 @@
 */
 
 using System;
-using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
+using System.Data.Entity;
+using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.Companies;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.DM.People;
-using Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF;
+using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Companies;
+using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.People;
+using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF;
 
-namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
+namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
 {
     /// <summary>
     /// These tests primarily assert that we can insert entities with NOT NULL
@@ -81,7 +81,7 @@ namespace Tanneryd.BulkOperations.EF6.NET47.Tests.Tests.Insert
             catch (Microsoft.Data.SqlClient.SqlException e)
             {
                 var expectedMessage =
-                    @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EF6.NET47.Tests.Models.EF.UnitTestContext"", table ""dbo.Company"", column 'Id'.";
+                    @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.UnitTestContext"", table ""dbo.Company"", column 'Id'.";
                 Assert.AreEqual(expectedMessage, e.Message);
                 throw;
             }

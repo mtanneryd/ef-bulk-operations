@@ -15,25 +15,19 @@
  */
 
 using System;
-using System.Collections;
-using Microsoft.Data.SqlClient;
+using System.Collections.Generic;
 
-namespace Tanneryd.BulkOperations.EF6.Model
+namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Teams.UsingUserGeneratedGuidKeys
 {
-    public class BulkUpdateRequest
+    public class TeamWithUserGeneratedGuidKey
     {
-        public BulkUpdateRequest()
+        public TeamWithUserGeneratedGuidKey()
         {
-            UpdatedPropertyNames = new string[0];
-            KeyPropertyNames = new string[0];
-            InsertIfNew = false;
+            Players = new HashSet<PlayerWithUserGeneratedGuidKey>();
         }
+        public Guid Id { get; set; }
+        public string Name { get; set; }
 
-        public IList Entities { get; set; }
-        public string[] UpdatedPropertyNames { get; set; }
-        public string[] KeyPropertyNames { get; set; }
-        public SqlTransaction Transaction { get; set; }
-        public bool InsertIfNew { get; set; }
-        public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(30);
+        public ICollection<PlayerWithUserGeneratedGuidKey> Players { get; set; }
     }
 }

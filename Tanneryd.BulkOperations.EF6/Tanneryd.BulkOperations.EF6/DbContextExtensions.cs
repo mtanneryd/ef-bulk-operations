@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
 using System.Data.Entity.Core.Metadata.Edm;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
@@ -188,7 +188,7 @@ namespace Tanneryd.BulkOperations.EF6
 
 
         /// <summary>
-        /// Insert all entities using System.Data.SqlClient.SqlBulkCopy. 
+        /// Insert all entities using Microsoft.Data.SqlClient.SqlBulkCopy. 
         /// </summary>
         /// <param name="ctx"></param>
         /// <param name="entities"></param>
