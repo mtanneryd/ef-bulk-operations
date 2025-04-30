@@ -19,31 +19,19 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
-using System.Data.Entity.Core.Mapping;
 using System.Data.Entity.Core.Metadata.Edm;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using Tanneryd.BulkOperations.EF6.Model;
 
 namespace Tanneryd.BulkOperations.EF6
 {
     public static class DbContextExtensions
     {
-        private static readonly HashSet<Type> IntegerTypes = new HashSet<Type>
-        {
-            typeof(Int16),
-            typeof(Int32),
-            typeof(Int64),
-            typeof(UInt16),
-            typeof(UInt32),
-            typeof(UInt64),
-        };
-
-        private static readonly MappingsExtractor _mappingExtractor = new MappingsExtractor();
+        private static readonly MappingsExtractor MappingExtractor = new MappingsExtractor();
 
         #region Public API
 
@@ -181,7 +169,7 @@ namespace Tanneryd.BulkOperations.EF6
         /// KeyMemberNames - Specifies which columns to use as row selectors. An empty list will result
         ///                  in the primary key columns to be used.
         /// Transaction - If a transaction object is provided the update will be made within that transaction.
-        /// InsertIfNew - When set to true, any entities new to the table will be inserted. Otherwise they 
+        /// InsertIfNew - When set to true, any entities new to the table will be inserted. Otherwise, they 
         ///               will be ignored.
         /// 
         /// </summary>
@@ -250,11 +238,11 @@ namespace Tanneryd.BulkOperations.EF6
             try
             {
                 var t = request.Entities.First().GetType();
-                var tableName = _mappingExtractor.GetTableName(ctx, t);
+                var tableName = MappingExtractor.GetTableName(ctx, t);
                 var mappingsByType = new Dictionary<Type, Mappings>();
                 if (request.SortUsingClusteredIndex)
                 {
-                    var mappings = _mappingExtractor.GetMappings(ctx, t);
+                    var mappings = MappingExtractor.GetMappings(ctx, t);
                     mappingsByType.Add(t, mappings);
 
                     var s0 = new Stopwatch();
@@ -321,7 +309,7 @@ namespace Tanneryd.BulkOperations.EF6
         public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx, TimeSpan timeout)
         {
             var response = new BulkInsertResponse();
-            var tableName = _mappingExtractor.GetTableName(ctx, typeof(T));
+            var tableName = MappingExtractor.GetTableName(ctx, typeof(T));
 
             var s0 = new Stopwatch();
             s0.Start();
@@ -487,7 +475,7 @@ namespace Tanneryd.BulkOperations.EF6
             if (!request.Items.Any()) return new List<T1>();
 
             Type t = typeof(T2);
-            var mappings = _mappingExtractor.GetMappings(ctx, t);
+            var mappings = MappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertByEntityProperty =
@@ -592,7 +580,7 @@ namespace Tanneryd.BulkOperations.EF6
         private static void DoBulkDeleteNotExisting<T1, T2>(DbContext ctx, BulkDeleteRequest<T1> request)
         {
             Type t = typeof(T2);
-            var mappings = _mappingExtractor.GetMappings(ctx, t);
+            var mappings = MappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertyByEntityProperty =
@@ -700,7 +688,7 @@ namespace Tanneryd.BulkOperations.EF6
             if (!request.Items.Any()) return new List<T2>();
 
             Type t = typeof(T2);
-            var mappings = _mappingExtractor.GetMappings(ctx, t);
+            var mappings = MappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertByEntityProperty =
@@ -819,7 +807,7 @@ namespace Tanneryd.BulkOperations.EF6
             if (!request.Items.Any()) return new List<T1>();
 
             Type t = typeof(T2);
-            var mappings = _mappingExtractor.GetMappings(ctx, t);
+            var mappings = MappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertyByEntityProperty =
@@ -942,7 +930,7 @@ namespace Tanneryd.BulkOperations.EF6
             var transaction = request.Transaction;
 
             Type t = request.Entities[0].GetType();
-            var mappings = _mappingExtractor.GetMappings(ctx, t);
+            var mappings = MappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var keyPropertyNames = request.KeyPropertyNames;
@@ -1066,7 +1054,7 @@ namespace Tanneryd.BulkOperations.EF6
             Type t = entities[0].GetType();
             if (!mappingsByType.ContainsKey(t))
             {
-                mappingsByType.Add(t, _mappingExtractor.GetMappings(ctx, t));
+                mappingsByType.Add(t, MappingExtractor.GetMappings(ctx, t));
             }
 
             var mappings = mappingsByType[t];
@@ -1411,7 +1399,7 @@ namespace Tanneryd.BulkOperations.EF6
         {
             if (!mappingsByType.ContainsKey(t))
             {
-                mappingsByType.Add(t, _mappingExtractor.GetMappings(ctx, t));
+                mappingsByType.Add(t, MappingExtractor.GetMappings(ctx, t));
             }
 
             var mappings = mappingsByType[t];
