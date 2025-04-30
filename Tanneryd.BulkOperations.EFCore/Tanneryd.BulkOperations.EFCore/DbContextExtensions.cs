@@ -207,7 +207,7 @@ namespace Tanneryd.BulkOperations.EFCore
 
 
         /// <summary>
-        /// Insert all entities using System.Data.SqlClient.SqlBulkCopy. 
+        /// Insert all entities using Microsoft.Data.SqlClient.SqlBulkCopy. 
         /// </summary>
         /// <param name="ctx"></param>
         /// <param name="entities"></param>

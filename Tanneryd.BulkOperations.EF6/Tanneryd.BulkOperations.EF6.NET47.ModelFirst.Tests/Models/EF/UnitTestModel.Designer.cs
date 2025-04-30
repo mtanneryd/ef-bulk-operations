@@ -1,4 +1,4 @@
-﻿// T4 code generation is enabled for model 'C:\src\git_repos\ef6-bulk-operations\Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests\Models\EF\UnitTestModel.edmx'. 
+﻿// T4 code generation is enabled for model 'C:\development\mtanneryd\ef-bulk-operations\Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.NET47.ModelFirst.Tests\Models\EF\UnitTestModel.edmx'. 
 // To enable legacy code generation, change the value of the 'Code Generation Strategy' designer
 // property to 'Legacy ObjectContext'. This property is available in the Properties Window when the model
 // is open in the designer.
