@@ -2,12 +2,12 @@
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
-		<Version>3.0.0</Version>
+		<Version>3.0.1</Version>
 		<Authors>Måns Tånneryd</Authors>
 		<Company>Tånneryd IT</Company>
 		<Description>Provides bulk operations for EF Core</Description>
 		<Product>BulkOperations for EFCore</Product>
-		<Copyright>Copyright ©  2017-2023 Tånneryd IT AB</Copyright>
+		<Copyright>Copyright ©  2017-2026 Tånneryd IT AB</Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
@@ -26,10 +26,10 @@
 	</ItemGroup>
 
 	<ItemGroup> 
-		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.6" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.6" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.6" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.6">
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="10.0.8">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

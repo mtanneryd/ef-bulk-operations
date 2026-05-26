@@ -2,12 +2,12 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net48</TargetFrameworks>
-		<Version>3.0.0</Version>
+		<Version>3.0.1</Version>
 		<Authors>Måns Tånneryd</Authors>
 		<Company>Tånneryd IT AB</Company>
 		<Description>Provides bulk operations for EF6</Description>
 		<Product>Tanneryd.BulkOperations.EF6</Product>
-		<Copyright>Copyright ©  2017-2023 Tånneryd IT AB</Copyright>
+		<Copyright>Copyright ©  2017-2026 Tånneryd IT AB</Copyright>
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
@@ -34,9 +34,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="EntityFramework" Version="6.5.1" />
-		<PackageReference Include="Microsoft.EntityFramework.SqlServer" Version="6.5.1" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="6.0.2" />
+		<PackageReference Include="EntityFramework" Version="6.5.2" />
+		<PackageReference Include="Microsoft.EntityFramework.SqlServer" Version="6.5.2" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="7.0.1" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 	</ItemGroup>
 

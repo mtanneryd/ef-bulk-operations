@@ -1,0 +1,177 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build",
+            "detail": "Build the full solution (MSBuild, handles packages.config in the EF6.NET48 test project).",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "${workspaceFolder}\\BulkOperations.sln",
+                "/restore",
+                "/p:Configuration=Debug",
+                "/v:minimal",
+                "/nologo"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "build (Release)",
+            "detail": "Build the full solution in Release configuration.",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "${workspaceFolder}\\BulkOperations.sln",
+                "/restore",
+                "/p:Configuration=Release",
+                "/v:minimal",
+                "/nologo"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "build EFCore (dotnet)",
+            "detail": "Build only the EFCore library and its tests using the dotnet CLI.",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/Tanneryd.BulkOperations.EFCore/Tanneryd.BulkOperations.EFCore.sln",
+                "-c",
+                "Debug"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "build EF6 (dotnet)",
+            "detail": "Build only the EF6 library (SDK-style net48 project) using the dotnet CLI.",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "build",
+                "${workspaceFolder}/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.csproj",
+                "-c",
+                "Debug"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "clean",
+            "detail": "Clean all build outputs from the solution.",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "${workspaceFolder}/BulkOperations.sln",
+                "/t:Clean",
+                "/v:minimal",
+                "/nologo"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "restore",
+            "detail": "Restore NuGet packages for the solution (both packages.config and PackageReference).",
+            "type": "shell",
+            "command": "msbuild",
+            "args": [
+                "${workspaceFolder}/BulkOperations.sln",
+                "/t:Restore",
+                "/v:minimal",
+                "/nologo"
+            ],
+            "group": "build",
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "test: EFCore",
+            "detail": "Run unit tests in Tanneryd.BulkOperations.EFCore.Tests.",
+            "type": "shell",
+            "command": "dotnet",
+            "args": [
+                "test",
+                "${workspaceFolder}/Tanneryd.BulkOperations.EFCore/Tanneryd.BulkOperations.EFCore.Tests/Tanneryd.BulkOperations.EFCore.Tests.csproj",
+                "-c",
+                "Debug",
+                "--logger",
+                "console;verbosity=normal"
+            ],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "test: EF6 NET48",
+            "detail": "Run unit tests in Tanneryd.BulkOperations.EF6.NET48.Tests (builds with MSBuild first, then runs with vstest).",
+            "type": "shell",
+            "command": "vstest.console.exe",
+            "args": [
+                "${workspaceFolder}/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET48.Tests/bin/Debug/Tanneryd.BulkOperations.EF6.NET48.Tests.dll",
+                "/logger:console;verbosity=normal"
+            ],
+            "group": "test",
+            "dependsOn": "build",
+            "problemMatcher": "$msCompile",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared",
+                "clear": true
+            }
+        },
+        {
+            "label": "test: all",
+            "detail": "Run unit tests for both the EF6 and EFCore projects.",
+            "dependsOrder": "sequence",
+            "dependsOn": [
+                "test: EFCore",
+                "test: EF6 NET48"
+            ],
+            "group": "test",
+            "problemMatcher": []
+        }
+    ]
+}

@@ -48,10 +48,9 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
         }
 
         [TestMethod]
-        [ExpectedException(typeof(Microsoft.Data.SqlClient.SqlException))]
         public void AddingEmployeeToCompanyWithoutParentCompanySet()
         {
-            try
+            var ex = Assert.ThrowsExactly<Microsoft.Data.SqlClient.SqlException>(() =>
             {
                 var employer = new Company
                 {
@@ -67,24 +66,19 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
                     Name = "Adam",
                     Employer = employer
                 };
-                using (var db = new UnitTestContext())
+                using var db = new UnitTestContext();
+                var request = new BulkInsertRequest<Employee>
                 {
-                    var request = new BulkInsertRequest<Employee>
-                    {
-                        Entities = new List<Employee> { john, adam },
-                        EnableRecursiveInsert = EnableRecursiveInsert.Yes,
-                        AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
-                    };
-                    db.BulkInsertAll(request);
-                }
-            }
-            catch (Microsoft.Data.SqlClient.SqlException e)
-            {
-                var expectedMessage =
-                    @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.UnitTestContext"", table ""dbo.Company"", column 'Id'.";
-                Assert.AreEqual(expectedMessage, e.Message);
-                throw;
-            }
+                    Entities = [john, adam],
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
+                };
+                db.BulkInsertAll(request);
+            });
+
+            var expectedMessage =
+                @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.UnitTestContext"", table ""dbo.Company"", column 'Id'.";
+            Assert.AreEqual(expectedMessage, ex.Message);
         }
 
         [TestMethod]
@@ -98,8 +92,8 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
             var employer = new Company
             {
                 Name = "Subsidiary Corporation Inc",
+                ParentCompany = corporateGroup
             };
-            employer.ParentCompany = corporateGroup;
 
             var john = new Employee
             {
@@ -111,30 +105,28 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
                 Name = "Adam",
                 Employer = employer
             };
-            using (var db = new UnitTestContext())
+            using var db = new UnitTestContext();
+            var request = new BulkInsertRequest<Employee>
             {
-                var request = new BulkInsertRequest<Employee>
-                {
-                    Entities = new List<Employee> { john, adam },
-                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
-                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
-                };
-                db.BulkInsertAll(request);
+                Entities = [john, adam],
+                EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
+            };
+            db.BulkInsertAll(request);
 
-                var actual = db.Employees
-                    .Include(e => e.Employer.ParentCompany)
-                    .OrderBy(e => e.Name).ToArray();
-                Assert.AreEqual("Adam", actual[0].Name);
-                Assert.AreEqual("Subsidiary Corporation Inc", actual[0].Employer.Name);
-                Assert.AreSame(actual[0].Employer, actual[1].Employer);
+            var actual = db.Employees
+                .Include(e => e.Employer.ParentCompany)
+                .OrderBy(e => e.Name).ToArray();
+            Assert.AreEqual("Adam", actual[0].Name);
+            Assert.AreEqual("Subsidiary Corporation Inc", actual[0].Employer.Name);
+            Assert.AreSame(actual[0].Employer, actual[1].Employer);
 
-                Assert.AreEqual("John", actual[1].Name);
-                Assert.AreEqual("Subsidiary Corporation Inc", actual[1].Employer.Name);
+            Assert.AreEqual("John", actual[1].Name);
+            Assert.AreEqual("Subsidiary Corporation Inc", actual[1].Employer.Name);
 
-                Assert.AreEqual("Global Corporation Inc", actual[0].Employer.ParentCompany.Name);
-                Assert.AreEqual("Global Corporation Inc", actual[1].Employer.ParentCompany.Name);
-                Assert.AreSame(actual[0].Employer.ParentCompany, actual[1].Employer.ParentCompany);
-            }
+            Assert.AreEqual("Global Corporation Inc", actual[0].Employer.ParentCompany.Name);
+            Assert.AreEqual("Global Corporation Inc", actual[1].Employer.ParentCompany.Name);
+            Assert.AreSame(actual[0].Employer.ParentCompany, actual[1].Employer.ParentCompany);
         }
 
         [TestMethod]
@@ -151,21 +143,19 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
             employer.ParentCompany = employer;
             employer.Employees.Add(employee);
 
-            using (var db = new UnitTestContext())
+            using var db = new UnitTestContext();
+            var request = new BulkInsertRequest<Company>
             {
-                var request = new BulkInsertRequest<Company>
-                {
-                    Entities = new List<Company> { employer },
-                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
-                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
-                };
-                db.BulkInsertAll(request);
+                Entities = [employer],
+                EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
+            };
+            db.BulkInsertAll(request);
 
-                var actual = db.Companies.Include(e => e.Employees).Single();
-                Assert.AreEqual("World Inc", actual.Name);
-                Assert.AreSame(actual, actual.ParentCompany);
-                Assert.AreEqual("John", actual.Employees.Single().Name);
-            }
+            var actual = db.Companies.Include(e => e.Employees).Single();
+            Assert.AreEqual("World Inc", actual.Name);
+            Assert.AreSame(actual.ParentCompany, actual);
+            Assert.AreEqual("John", actual.Employees.Single().Name);
         }
 
         [TestMethod]
@@ -183,21 +173,19 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
             employer.ParentCompany = employer;
             employee.Employer = employer;
 
-            using (var db = new UnitTestContext())
+            using var db = new UnitTestContext();
+            var request = new BulkInsertRequest<Employee>
             {
-                var request = new BulkInsertRequest<Employee>
-                {
-                    Entities = new List<Employee> { employee },
-                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
-                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
-                };
-                db.BulkInsertAll(request);
+                Entities = [employee],
+                EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
+            };
+            db.BulkInsertAll(request);
 
-                var actual = db.Companies.Include(e => e.Employees).Single();
-                Assert.AreEqual("World Inc", actual.Name);
-                Assert.AreSame(actual, actual.ParentCompany);
-                Assert.AreEqual("John", actual.Employees.Single().Name);
-            }
+            var actual = db.Companies.Include(e => e.Employees).Single();
+            Assert.AreEqual("World Inc", actual.Name);
+            Assert.AreSame(actual.ParentCompany, actual);
+            Assert.AreEqual("John", actual.Employees.Single().Name);
         }
 
         [TestMethod]
@@ -216,18 +204,16 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
                 BirthDate = new DateTime(2018, 1, 1),
                 Mother = mother,
             };
-            using (var db = new UnitTestContext())
+            using var db = new UnitTestContext();
+            var request = new BulkInsertRequest<Person>
             {
-                var request = new BulkInsertRequest<Person>
-                {
-                    Entities = new List<Person> { child },
-                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
-                };
-                db.BulkInsertAll(request);
+                Entities = [child],
+                EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+            };
+            db.BulkInsertAll(request);
 
-                var people = db.People.ToArray();
-                Assert.AreEqual(2, people.Length);
-            }
+            var people = db.People.ToArray();
+            Assert.HasCount(2, people);
         }
 
         [TestMethod]
@@ -247,18 +233,16 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
             };
             mother.Children.Add(child);
 
-            using (var db = new UnitTestContext())
+            using var db = new UnitTestContext();
+            var request = new BulkInsertRequest<Person>
             {
-                var request = new BulkInsertRequest<Person>
-                {
-                    Entities = new List<Person> { mother },
-                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
-                };
-                db.BulkInsertAll(request);
+                Entities = [mother],
+                EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+            };
+            db.BulkInsertAll(request);
 
-                var people = db.People.ToArray();
-                Assert.AreEqual(2, people.Length);
-            }
+            var people = db.People.ToArray();
+            Assert.HasCount(2, people);
         }
     }
 }
