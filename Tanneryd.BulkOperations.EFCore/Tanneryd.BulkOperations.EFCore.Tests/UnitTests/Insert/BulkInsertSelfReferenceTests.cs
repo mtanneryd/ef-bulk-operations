@@ -46,10 +46,12 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         }
 
         [TestMethod]
-        [ExpectedException(typeof(SqlException))]
         public void AddingEmployeeToCompanyWithoutParentCompanySet()
         {
-            try
+            var expectedMessage =
+                @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EFCore.Tests.Models.EF.UnitTestContext"", table ""dbo.Company"", column 'Id'.";
+
+            var exception = Assert.ThrowsExactly<SqlException>(() =>
             {
                 var Company = new Company
                 {
@@ -75,14 +77,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                     };
                     db.BulkInsertAll(request);
                 }
-            }
-            catch (SqlException e)
-            {
-                var expectedMessage =
-                    @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EFCore.Tests.Models.EF.UnitTestContext"", table ""dbo.Company"", column 'Id'.";
-                Assert.AreEqual(expectedMessage, e.Message);
-                throw;
-            }
+            });
+
+            Assert.AreEqual(expectedMessage, exception.Message);
         }
 
         [TestMethod]
