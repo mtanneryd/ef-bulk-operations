@@ -1603,7 +1603,7 @@ namespace Tanneryd.BulkOperations.EFCore
             if (pkColumnMappings.Length == 0)
             {
                 throw new ArgumentException(
-                    "No primary key found. This should not be possible since EF6 has no support for tables without a primary key.");
+                    "No primary key found. This should not be possible since EF Core has no support for tables without a primary key.");
             }
 
             // Join tables are treated as a special case. However,

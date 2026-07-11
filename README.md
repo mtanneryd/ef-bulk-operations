@@ -25,14 +25,28 @@ public class BulkInsertRequest<T>
     public IList<T> Entities { get; set; }
     public SqlTransaction Transaction { get; set; }
     public bool UpdateStatistics { get; set; } = false;
-    public bool Recursive { get; set; } = false;
-    public bool AllowNotNullSelfReferences { get; set; } = false;
+    public EnableRecursiveInsert EnableRecursiveInsert { get; set; } = EnableRecursiveInsert.NoButRetrieveGeneratedPrimaryKeys;
+    public AllowNotNullSelfReferences AllowNotNullSelfReferences { get; set; } = AllowNotNullSelfReferences.No;
     public bool SortUsingClusteredIndex { get; set; } = true;
+    public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(30);
+}
+
+public enum EnableRecursiveInsert
+{
+    NoButRetrieveGeneratedPrimaryKeys,
+    NoAndIgnoreGeneratedPrimaryKeys,
+    Yes
+}
+
+public enum AllowNotNullSelfReferences
+{
+    No,
+    Yes
 }
 ```
-* When UpdateStatistics is set the command "UPDATE STATISTICS <tablename> WITH ALL" will be executed after the insert.
-* When Recursive is set to true the entire entity hierarchy will be inserted. 
-* When AllowNotNullSelfReferences is set to true, entities with self referencing foreign keys declared as NOT NULL will be properly inserted. But, this will only work if the database user has the required privileges to execute **ALTER TABLE \<table name\> NOCHECK CONSTRAINT ALL** and **ALTER TABLE \<table name\> CHECK CONSTRAINT ALL**.
+* When UpdateStatistics is set the command "UPDATE STATISTICS \<tablename\> WITH ALL" will be executed after the insert.
+* When EnableRecursiveInsert is set to Yes the entire entity hierarchy will be inserted.
+* When AllowNotNullSelfReferences is set to Yes, entities with self referencing foreign keys declared as NOT NULL will be properly inserted. But, this will only work if the database user has the required privileges to execute **ALTER TABLE \<table name\> NOCHECK CONSTRAINT ALL** and **ALTER TABLE \<table name\> CHECK CONSTRAINT ALL**.
 * When SortUsingClusteredIndex is set to true the entities will be sorted according to the clustered index of the target table.
 
 ```csharp
@@ -63,10 +77,17 @@ public class BulkUpdateRequest
 ```
 
 #### Select
-##### Select
+##### BulkSelect
+BulkSelect matches rows in the T2 table given a list of T1 items and their defined key properties, and returns the set of T2 items matched. This is particularly useful when you need to select rows using multiple selector columns. If there is only one column, you can use EF's `Contains()` instead.
 
-##### SelectExisting
-The select-existing feature provides a way to identify the subset of existing or non-existing items in a local collection where an item is considered as existing if it is equal to an entity saved in the database according to a set of defined key properties. This provides a very efficient way of figuring out which items in your local collection needs to be inserted and which to be updated. The item collection can be of the same type as the EF entity but it does not have to be.
+```csharp
+public static IList<T2> BulkSelect<T1, T2>(
+    this DbContext ctx,
+    BulkSelectRequest<T1> request) where T2 : new()
+```
+
+##### BulkSelectExisting
+The select-existing feature provides a way to identify the subset of existing items in a local collection where an item is considered as existing if it is equal to an entity saved in the database according to a set of defined key properties. This provides a very efficient way of figuring out which items in your local collection needs to be inserted and which to be updated. The item collection can be of the same type as the EF entity but it does not have to be.
 ```csharp
 public class BulkSelectRequest<T>
 {
@@ -74,23 +95,21 @@ public class BulkSelectRequest<T>
 				 IList<T> items = null,
 				 SqlTransaction transaction = null)
 	{
-        KeyPropertyMappings = keyPropertyNames.Select(n => new KeyPropertyMapping
-            {
-                ItemPropertyName = n,
-                EntityPropertyName = n
-            })
-            .ToArray();
+        KeyPropertyMappings = KeyPropertyMapping.IdentityMappings(keyPropertyNames);
+        ColumnPropertyMappings = new KeyPropertyMapping[0];
         Items = items;
         Transaction = transaction;
     }
     public IList<T> Items { get; set; }
     public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
+    public KeyPropertyMapping[] ColumnPropertyMappings { get; set; }
     public SqlTransaction Transaction { get; set; }
-   
+    public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(1);
 
     public BulkSelectRequest()
     {
         KeyPropertyMappings = new KeyPropertyMapping[0];
+        ColumnPropertyMappings = new KeyPropertyMapping[0];
         Items = new T[0];
     }
 }
@@ -123,6 +142,15 @@ public class KeyPropertyMapping
 /// <param name="ctx"></param>
 /// <param name="request"></param>
 public static IList<T1> BulkSelectExisting<T1,T2>(
+    this DbContext ctx,
+    BulkSelectRequest<T1> request)
+```
+
+##### BulkSelectNotExisting
+Given a set of items, returns the subset that do **not** exist in the database according to the key selector used. This is the complement of BulkSelectExisting and is useful for determining which items need to be inserted.
+
+```csharp
+public static IList<T1> BulkSelectNotExisting<T1, T2>(
     this DbContext ctx,
     BulkSelectRequest<T1> request)
 ```
@@ -186,6 +214,11 @@ NOT IMPLEMENTED
             BulkDeleteRequest<T1> request)
 ```
 ## Release history
+##### 3.0.1 (2026-05-26)
+ * Updated NuGet package dependencies.
+ * Added VS Code build and test tasks.
+ * Minor code cleanup.
+
 ##### 3.0.0 (2025-04-30)
  * Using Microsoft.Data.SqlClient instead of System.Data.SqlClient for EF6.
  * Added support for .NET4.8
@@ -274,7 +307,7 @@ And finally. Make sure that you have the following nuget packages installed:
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/mtanneryd/ef-bulk-operations/tags). 
 
 ## Authors
 

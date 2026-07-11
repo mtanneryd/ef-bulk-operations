@@ -13,17 +13,13 @@
 		<PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
 		<PackageId>Tanneryd.BulkOperations.EFCore</PackageId>
 		<PackageProjectUrl>https://www.nuget.org/packages/Tanneryd.BulkOperations.EFCore</PackageProjectUrl>
-		<PackageReleaseNotes></PackageReleaseNotes>
+		<PackageReleaseNotes>Updated NuGet package dependencies. Added VS Code build and test tasks. Minor code cleanup.</PackageReleaseNotes>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedAllSources>True</EmbedAllSources>
 		<LangVersion>Latest</LangVersion>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<Compile Remove="OptionRecompileInterceptor.cs" />
-	</ItemGroup>
 
 	<ItemGroup> 
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />

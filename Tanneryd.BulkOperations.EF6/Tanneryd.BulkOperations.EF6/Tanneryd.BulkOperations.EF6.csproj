@@ -13,7 +13,7 @@
 		<PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
 		<PackageId>Tanneryd.BulkOperations.EF6</PackageId>
 		<PackageProjectUrl>https://www.nuget.org/packages/Tanneryd.BulkOperations.EF6</PackageProjectUrl>
-		<PackageReleaseNotes></PackageReleaseNotes>
+		<PackageReleaseNotes>Updated NuGet package dependencies. Added VS Code build and test tasks. Minor code cleanup.</PackageReleaseNotes>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedAllSources>True</EmbedAllSources>
