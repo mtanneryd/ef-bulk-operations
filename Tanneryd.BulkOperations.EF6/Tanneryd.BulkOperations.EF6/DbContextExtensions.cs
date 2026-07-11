@@ -37,6 +37,7 @@ namespace Tanneryd.BulkOperations.EF6
 
         public static void DeleteAllExecutionPlansFromCache(this DbContext ctx, SqlTransaction sqlTransaction)
         {
+            ValidateDbContext(ctx);
             var query = $@"DBCC FREEPROCCACHE WITH NO_INFOMSGS";
             var connection = GetSqlConnection(ctx);
             var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
@@ -65,6 +66,8 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkDeleteRequest<T1> request)
         {
+            ValidateDbContext(ctx);
+            ValidateBulkDeleteRequest(request);
             DoBulkDeleteNotExisting<T1, T2>(ctx, request);
         }
 
@@ -88,6 +91,8 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkSelectRequest<T1> request) where T2 : new()
         {
+            ValidateDbContext(ctx);
+            ValidateBulkSelectRequest(request);
             return DoBulkSelect<T1, T2>(ctx, request);
         }
 
@@ -104,6 +109,8 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkSelectRequest<T1> request)
         {
+            ValidateDbContext(ctx);
+            ValidateBulkSelectRequest(request);
             return DoBulkSelectExisting<T1, T2>(ctx, request);
         }
 
@@ -119,6 +126,8 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkSelectRequest<T1> request)
         {
+            ValidateDbContext(ctx);
+            ValidateBulkSelectRequest(request);
             return DoBulkSelectNotExisting<T1, T2>(ctx, request);
         }
 
@@ -152,6 +161,10 @@ namespace Tanneryd.BulkOperations.EF6
             IList entities,
             SqlTransaction transaction)
         {
+            ValidateDbContext(ctx);
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
             var request = new BulkUpdateRequest
             {
                 Entities = entities,
@@ -179,6 +192,9 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkUpdateRequest request)
         {
+            ValidateDbContext(ctx);
+            ValidateBulkUpdateRequest(request);
+
             var response = new BulkOperationResponse();
             if (request.Entities.Count == 0) return response;
             DoBulkUpdateAll(ctx, request, response);
@@ -200,6 +216,10 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction = null,
             bool recursive = false)
         {
+            ValidateDbContext(ctx);
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
             var request = new BulkInsertRequest<T>
             {
                 Entities = entities,
@@ -228,6 +248,9 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkInsertRequest<T> request)
         {
+            ValidateDbContext(ctx);
+            ValidateBulkInsertRequest(request);
+
             var response = new BulkInsertResponse();
 
             if (request.Entities.Count == 0) return response;
@@ -303,11 +326,13 @@ namespace Tanneryd.BulkOperations.EF6
 
         public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx)
         {
+            ValidateDbContext(ctx);
             return UpdateStatistics<T>(ctx, TimeSpan.FromMinutes(15));
         }
 
         public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx, TimeSpan timeout)
         {
+            ValidateDbContext(ctx);
             var response = new BulkInsertResponse();
             var tableName = MappingExtractor.GetTableName(ctx, typeof(T));
 
@@ -326,6 +351,101 @@ namespace Tanneryd.BulkOperations.EF6
         #endregion
 
         #region Private methods
+
+        private static void ValidateDbContext(DbContext ctx)
+        {
+            if (ctx == null)
+                throw new ArgumentNullException(nameof(ctx));
+
+            var connection = ResolveSqlConnection(ctx);
+            if (string.IsNullOrWhiteSpace(connection.ConnectionString))
+                throw new InvalidOperationException("The database connection string is not set.");
+        }
+
+        private static void ValidateBulkDeleteRequest<T>(BulkDeleteRequest<T> request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.SqlConditions == null || request.SqlConditions.Length == 0)
+                throw new ArgumentException("The SqlConditions request property must be set and contain at least one condition.");
+
+            if (request.Items == null)
+                throw new ArgumentNullException(nameof(request.Items));
+        }
+
+        private static void ValidateBulkSelectRequest<T>(BulkSelectRequest<T> request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.Items == null)
+                throw new ArgumentNullException(nameof(request.Items));
+
+            if (request.KeyPropertyMappings == null || request.KeyPropertyMappings.Length == 0)
+                throw new ArgumentException("The KeyPropertyMappings request property must be set and contain at least one name.");
+        }
+
+        private static void ValidateBulkUpdateRequest(BulkUpdateRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.Entities == null)
+                throw new ArgumentNullException(nameof(request.Entities));
+        }
+
+        private static void ValidateBulkInsertRequest<T>(BulkInsertRequest<T> request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.Entities == null)
+                throw new ArgumentNullException(nameof(request.Entities));
+        }
+
+        private static string ResolveSqlConditionColumnName(string columnName, Mappings mappings)
+        {
+            if (mappings.ColumnMappingByColumnName.ContainsKey(columnName))
+                return columnName;
+
+            if (mappings.ColumnMappingByPropertyName.TryGetValue(columnName, out var mapping))
+                return mapping.TableColumn.Name;
+
+            throw new ArgumentException(
+                $"Column '{columnName}' is not a mapped column on table '{mappings.TableName.Fullname}'.");
+        }
+
+        private static string BuildParameterizedSqlConditions(
+            SqlCondition[] sqlConditions,
+            Mappings mappings,
+            string tableAlias,
+            ICollection<SqlParameter> parameters,
+            string parameterPrefix)
+        {
+            var condStatements = new List<string>();
+            for (var i = 0; i < sqlConditions.Length; i++)
+            {
+                var condition = sqlConditions[i];
+                if (string.IsNullOrWhiteSpace(condition?.ColumnName))
+                    throw new ArgumentException("SqlCondition column names must be set.");
+
+                var columnName = ResolveSqlConditionColumnName(condition.ColumnName, mappings);
+                var paramName = $"@{parameterPrefix}{i}";
+
+                if (condition.ColumnValue == null || condition.ColumnValue is DBNull)
+                {
+                    condStatements.Add($"[{tableAlias}].[{columnName}] IS NULL");
+                }
+                else
+                {
+                    condStatements.Add($"[{tableAlias}].[{columnName}] = {paramName}");
+                    parameters.Add(new SqlParameter(paramName, condition.ColumnValue));
+                }
+            }
+
+            return string.Join(" AND ", condStatements);
+        }
 
         /// <summary>
         /// 
@@ -650,8 +770,13 @@ namespace Tanneryd.BulkOperations.EF6
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
-                var condStatements = request.SqlConditions.Select(c => $"[t0].[{c.ColumnName}] = {c.ColumnValue}");
-                var condStatementsSql = string.Join(" AND ", condStatements);
+                var parameters = new List<SqlParameter>();
+                var condStatementsSql = BuildParameterizedSqlConditions(
+                    request.SqlConditions,
+                    mappings,
+                    "t0",
+                    parameters,
+                    "deleteCond");
                 var conditionStatements = keyMappings.Values.Select(c =>
                 {
                     return
@@ -669,6 +794,8 @@ namespace Tanneryd.BulkOperations.EF6
                                )";
 
                 var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
+                foreach (var parameter in parameters)
+                    cmd.Parameters.Add(parameter);
                 cmd.ExecuteNonQuery();
 
                 DropTempTable(conn, request.Transaction, tempTableName);
@@ -2255,9 +2382,36 @@ namespace Tanneryd.BulkOperations.EF6
                 expandoDict.Add(propertyName, propertyValue);
         }
 
+        private static SqlConnection ResolveSqlConnection(DbContext ctx)
+        {
+            var connection = ctx.Database.Connection;
+            if (connection.State == ConnectionState.Closed)
+                connection.Open();
+
+            if (connection is SqlConnection sqlConnection)
+                return sqlConnection;
+
+            // EF6 may still surface the legacy System.Data.SqlClient provider at runtime.
+            if (connection is System.Data.SqlClient.SqlConnection legacySqlConnection)
+                return new SqlConnection(legacySqlConnection.ConnectionString);
+
+            if (connection is System.Data.Entity.Core.EntityClient.EntityConnection entityConnection)
+            {
+                var storeConnection = entityConnection.StoreConnection;
+                if (storeConnection is SqlConnection storeSqlConnection)
+                    return storeSqlConnection;
+
+                if (storeConnection is System.Data.SqlClient.SqlConnection legacyStoreSqlConnection)
+                    return new SqlConnection(legacyStoreSqlConnection.ConnectionString);
+            }
+
+            throw new NotSupportedException(
+                $"Bulk operations require a SQL Server connection. Actual connection type: {connection.GetType().FullName}.");
+        }
+
         public static SqlConnection GetSqlConnection(this DbContext ctx)
         {
-            var conn = (SqlConnection)ctx.Database.Connection;
+            var conn = ResolveSqlConnection(ctx);
             if (conn.State == ConnectionState.Closed)
                 conn.Open();
 

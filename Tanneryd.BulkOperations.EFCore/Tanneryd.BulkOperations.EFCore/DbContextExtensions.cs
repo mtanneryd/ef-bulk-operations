@@ -43,13 +43,14 @@ namespace Tanneryd.BulkOperations.EFCore
         };
 
         private static readonly object _mutex = new object();
-        private static MappingsExtractor _mappingExtractor;
+        private static readonly Dictionary<Type, MappingsExtractor> _mappingExtractorsByContextType =
+            new Dictionary<Type, MappingsExtractor>();
 
         #region Public API
 
         public static void DeleteAllExecutionPlansFromCache(this DbContext ctx, SqlTransaction sqlTransaction)
         {
-            InitializeExtractor(ctx);
+            ValidateDbContext(ctx);
             var query = $@"DBCC FREEPROCCACHE WITH NO_INFOMSGS";
             var connection = GetSqlConnection(ctx);
             var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
@@ -78,7 +79,8 @@ namespace Tanneryd.BulkOperations.EFCore
             this DbContext ctx,
             BulkDeleteRequest<T1> request)
         {
-            InitializeExtractor(ctx);
+            ValidateDbContext(ctx);
+            ValidateBulkDeleteRequest(request);
             DoBulkDeleteNotExisting<T1, T2>(ctx, request);
         }
 
@@ -102,7 +104,8 @@ namespace Tanneryd.BulkOperations.EFCore
             this DbContext ctx,
             BulkSelectRequest<T1> request) where T2 : new()
         {
-            InitializeExtractor(ctx);
+            ValidateDbContext(ctx);
+            ValidateBulkSelectRequest(request);
             return DoBulkSelect<T1, T2>(ctx, request);
         }
 
@@ -119,7 +122,8 @@ namespace Tanneryd.BulkOperations.EFCore
             this DbContext ctx,
             BulkSelectRequest<T1> request)
         {
-            InitializeExtractor(ctx);
+            ValidateDbContext(ctx);
+            ValidateBulkSelectRequest(request);
             return DoBulkSelectExisting<T1, T2>(ctx, request);
         }
 
@@ -135,7 +139,8 @@ namespace Tanneryd.BulkOperations.EFCore
             this DbContext ctx,
             BulkSelectRequest<T1> request)
         {
-            InitializeExtractor(ctx);
+            ValidateDbContext(ctx);
+            ValidateBulkSelectRequest(request);
             return DoBulkSelectNotExisting<T1, T2>(ctx, request);
         }
 
@@ -169,7 +174,10 @@ namespace Tanneryd.BulkOperations.EFCore
             IList entities,
             SqlTransaction transaction)
         {
-            InitializeExtractor(ctx);
+            ValidateDbContext(ctx);
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
             var request = new BulkUpdateRequest
             {
                 Entities = entities,
@@ -197,7 +205,9 @@ namespace Tanneryd.BulkOperations.EFCore
             this DbContext ctx,
             BulkUpdateRequest request)
         {
-            InitializeExtractor(ctx);
+            ValidateDbContext(ctx);
+            ValidateBulkUpdateRequest(request);
+
             var response = new BulkOperationResponse();
             if (request.Entities.Count == 0) return response;
             DoBulkUpdateAll(ctx, request, response);
@@ -219,7 +229,10 @@ namespace Tanneryd.BulkOperations.EFCore
             SqlTransaction transaction = null,
             bool recursive = false)
         {
-            InitializeExtractor(ctx);
+            ValidateDbContext(ctx);
+            if (entities == null)
+                throw new ArgumentNullException(nameof(entities));
+
             var request = new BulkInsertRequest<T>
             {
                 Entities = entities,
@@ -248,8 +261,9 @@ namespace Tanneryd.BulkOperations.EFCore
             this DbContext ctx,
             BulkInsertRequest<T> request)
         {
-            InitializeExtractor(ctx);
-            
+            ValidateDbContext(ctx);
+            ValidateBulkInsertRequest(request);
+
             var response = new BulkInsertResponse();
 
             if (request.Entities.Count == 0) return response;
@@ -260,11 +274,11 @@ namespace Tanneryd.BulkOperations.EFCore
             try
             {
                 var t = request.Entities.First().GetType();
-                var tableName = _mappingExtractor.GetTableName(ctx, t);
+                var tableName = GetMappingExtractor(ctx).GetTableName(ctx, t);
                 var mappingsByType = new Dictionary<Type, Mappings>();
                 if (request.SortUsingClusteredIndex)
                 {
-                    var mappings = _mappingExtractor.GetMappings(t);
+                    var mappings = GetMappingExtractor(ctx).GetMappings(t);
                     mappingsByType.Add(t, mappings);
 
                     var s0 = new Stopwatch();
@@ -325,16 +339,15 @@ namespace Tanneryd.BulkOperations.EFCore
 
         public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx)
         {
-            InitializeExtractor(ctx);
+            ValidateDbContext(ctx);
             return UpdateStatistics<T>(ctx, TimeSpan.FromMinutes(15));
         }
 
         public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx, TimeSpan timeout)
         {
-            InitializeExtractor(ctx);
-            
+            ValidateDbContext(ctx);
             var response = new BulkInsertResponse();
-            var tableName = _mappingExtractor.GetTableName(ctx, typeof(T));
+            var tableName = GetMappingExtractor(ctx).GetTableName(ctx, typeof(T));
 
             var s0 = new Stopwatch();
             s0.Start();
@@ -352,13 +365,119 @@ namespace Tanneryd.BulkOperations.EFCore
 
         #region Private methods
 
-        private static void InitializeExtractor(DbContext ctx)
+        private static MappingsExtractor GetMappingExtractor(DbContext ctx)
         {
+            var contextType = ctx.GetType();
             lock (_mutex)
             {
-                _mappingExtractor ??= new MappingsExtractor(ctx);
+                if (!_mappingExtractorsByContextType.TryGetValue(contextType, out var extractor))
+                {
+                    extractor = new MappingsExtractor(ctx);
+                    _mappingExtractorsByContextType[contextType] = extractor;
+                }
+
+                return extractor;
             }
         }
+
+        private static void ValidateDbContext(DbContext ctx)
+        {
+            if (ctx == null)
+                throw new ArgumentNullException(nameof(ctx));
+
+            var connection = ctx.Database.GetDbConnection();
+            if (connection is not SqlConnection)
+                throw new NotSupportedException("Bulk operations require a Microsoft.Data.SqlClient.SqlConnection.");
+
+            if (string.IsNullOrWhiteSpace(connection.ConnectionString))
+                throw new InvalidOperationException("The database connection string is not set.");
+        }
+
+        private static void ValidateBulkDeleteRequest<T>(BulkDeleteRequest<T> request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.SqlConditions == null || request.SqlConditions.Length == 0)
+                throw new ArgumentException("The SqlConditions request property must be set and contain at least one condition.");
+
+            if (request.Items == null)
+                throw new ArgumentNullException(nameof(request.Items));
+        }
+
+        private static void ValidateBulkSelectRequest<T>(BulkSelectRequest<T> request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.Items == null)
+                throw new ArgumentNullException(nameof(request.Items));
+
+            if (request.KeyPropertyMappings == null || request.KeyPropertyMappings.Length == 0)
+                throw new ArgumentException("The KeyPropertyMappings request property must be set and contain at least one name.");
+        }
+
+        private static void ValidateBulkUpdateRequest(BulkUpdateRequest request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.Entities == null)
+                throw new ArgumentNullException(nameof(request.Entities));
+        }
+
+        private static void ValidateBulkInsertRequest<T>(BulkInsertRequest<T> request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            if (request.Entities == null)
+                throw new ArgumentNullException(nameof(request.Entities));
+        }
+
+        private static string ResolveSqlConditionColumnName(string columnName, Mappings mappings)
+        {
+            if (mappings.ColumnMappingByColumnName.ContainsKey(columnName))
+                return columnName;
+
+            if (mappings.ColumnMappingByPropertyName.TryGetValue(columnName, out var mapping))
+                return mapping.TableColumn.Column.Name;
+
+            throw new ArgumentException(
+                $"Column '{columnName}' is not a mapped column on table '{mappings.TableName.Fullname}'.");
+        }
+
+        private static string BuildParameterizedSqlConditions(
+            SqlCondition[] sqlConditions,
+            Mappings mappings,
+            string tableAlias,
+            ICollection<SqlParameter> parameters,
+            string parameterPrefix)
+        {
+            var condStatements = new List<string>();
+            for (var i = 0; i < sqlConditions.Length; i++)
+            {
+                var condition = sqlConditions[i];
+                if (string.IsNullOrWhiteSpace(condition?.ColumnName))
+                    throw new ArgumentException("SqlCondition column names must be set.");
+
+                var columnName = ResolveSqlConditionColumnName(condition.ColumnName, mappings);
+                var paramName = $"@{parameterPrefix}{i}";
+
+                if (condition.ColumnValue == null || condition.ColumnValue is DBNull)
+                {
+                    condStatements.Add($"[{tableAlias}].[{columnName}] IS NULL");
+                }
+                else
+                {
+                    condStatements.Add($"[{tableAlias}].[{columnName}] = {paramName}");
+                    parameters.Add(new SqlParameter(paramName, condition.ColumnValue));
+                }
+            }
+
+            return string.Join(" AND ", condStatements);
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -509,7 +628,7 @@ namespace Tanneryd.BulkOperations.EFCore
             if (!request.Items.Any()) return new List<T1>();
 
             Type t = typeof(T2);
-            var mappings = _mappingExtractor.GetMappings(t);
+            var mappings = GetMappingExtractor(ctx).GetMappings(t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertByEntityProperty =
@@ -611,7 +730,7 @@ namespace Tanneryd.BulkOperations.EFCore
         private static void DoBulkDeleteNotExisting<T1, T2>(DbContext ctx, BulkDeleteRequest<T1> request)
         {
             Type t = typeof(T2);
-            var mappings = _mappingExtractor.GetMappings(t);
+            var mappings = GetMappingExtractor(ctx).GetMappings(t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertyByEntityProperty =
@@ -679,8 +798,13 @@ namespace Tanneryd.BulkOperations.EFCore
 
                 bulkCopy.WriteToServer(table.CreateDataReader());
 
-                var condStatements = request.SqlConditions.Select(c => $"[t0].[{c.ColumnName}] = {c.ColumnValue}");
-                var condStatementsSql = string.Join(" AND ", condStatements);
+                var parameters = new List<SqlParameter>();
+                var condStatementsSql = BuildParameterizedSqlConditions(
+                    request.SqlConditions,
+                    mappings,
+                    "t0",
+                    parameters,
+                    "deleteCond");
                 var conditionStatements = keyMappings.Values.Select(c =>
                 {
                     return
@@ -698,6 +822,8 @@ namespace Tanneryd.BulkOperations.EFCore
                                )";
 
                 var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
+                foreach (var parameter in parameters)
+                    cmd.Parameters.Add(parameter);
                 cmd.ExecuteNonQuery();
 
                 DropTempTable(conn, request.Transaction, tempTableName);
@@ -717,7 +843,7 @@ namespace Tanneryd.BulkOperations.EFCore
             if (!request.Items.Any()) return new List<T2>();
 
             Type t = typeof(T2);
-            var mappings = _mappingExtractor.GetMappings(t);
+            var mappings = GetMappingExtractor(ctx).GetMappings(t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertByEntityProperty =
@@ -851,9 +977,9 @@ namespace Tanneryd.BulkOperations.EFCore
 
                 var navigationProperty = dbTableEntityType.GetProperty(fkMapping.NavigationPropertyName);
                 var navigationPropertyType = navigationProperty.PropertyType;
-                var navigationPropertyTableMappings = _mappingExtractor.GetMappings(navigationPropertyType);
+                var navigationPropertyTableMappings = GetMappingExtractor(ctx).GetMappings(navigationPropertyType);
                 var selectPropertyTableColumnMapping = navigationPropertyTableMappings.ColumnMappingByPropertyName[selectPropertyName];
-                var navigationPropertyTableName = _mappingExtractor.GetTableName(ctx, navigationPropertyType);
+                var navigationPropertyTableName = GetMappingExtractor(ctx).GetTableName(ctx, navigationPropertyType);
                 var fromProperty = fkMapping.ForeignKeyRelations[0].FromProperty;
                 var toProperty = fkMapping.ForeignKeyRelations[0].ToProperty;
 
@@ -885,7 +1011,7 @@ namespace Tanneryd.BulkOperations.EFCore
             if (!request.Items.Any()) return new List<T1>();
 
             Type t = typeof(T2);
-            var mappings = _mappingExtractor.GetMappings(t);
+            var mappings = GetMappingExtractor(ctx).GetMappings(t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var itemPropertyByEntityProperty =
@@ -985,7 +1111,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     // Figure out the db table name of the table we want to join with.
                     //var joinTableMember = typeof(T2).GetProperty(selectMapping.ForeignKeyMapping.NavigationPropertyName);
                     //var joinTableType = joinTableMember.PropertyType;
-                    //var joinTableName = _mappingExtractor.GetTableName(ctx, joinTableType);
+                    //var joinTableName = GetMappingExtractor(ctx).GetTableName(ctx, joinTableType);
                     //var fromProperty = selectMapping.ForeignKeyMapping.ForeignKeyRelations[0].FromProperty;
                     //var toProperty = selectMapping.ForeignKeyMapping.ForeignKeyRelations[0].ToProperty;
                     var fkJoinStatement = $"INNER JOIN {selectMapping.TableName.Fullname} AS [t2] ON [t2].[{selectMapping.FkFromPropertyName}] = [t1].[{selectMapping.FkToPropertyName}]";
@@ -1039,7 +1165,7 @@ namespace Tanneryd.BulkOperations.EFCore
             var transaction = request.Transaction;
 
             Type t = request.Entities[0].GetType();
-            var mappings = _mappingExtractor.GetMappings(t);
+            var mappings = GetMappingExtractor(ctx).GetMappings(t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
             var keyPropertyNames = request.KeyPropertyNames;
@@ -1163,7 +1289,7 @@ namespace Tanneryd.BulkOperations.EFCore
             Type t = entities[0].GetType();
             if (!mappingsByType.ContainsKey(t))
             {
-                mappingsByType.Add(t, _mappingExtractor.GetMappings(t));
+                mappingsByType.Add(t, GetMappingExtractor(ctx).GetMappings(t));
             }
 
             var mappings = mappingsByType[t];
@@ -1495,7 +1621,7 @@ namespace Tanneryd.BulkOperations.EFCore
         {
             if (!mappingsByType.ContainsKey(t))
             {
-                mappingsByType.Add(t, _mappingExtractor.GetMappings(t));
+                mappingsByType.Add(t, GetMappingExtractor(ctx).GetMappings(t));
             }
 
             var mappings = mappingsByType[t];
