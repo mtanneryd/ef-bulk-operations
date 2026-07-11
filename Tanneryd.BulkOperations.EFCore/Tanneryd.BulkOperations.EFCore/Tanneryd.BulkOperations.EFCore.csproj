@@ -21,6 +21,10 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<Compile Include="..\..\Tanneryd.BulkOperations.Common\Sql\*.cs" Link="Common\Sql\%(Filename)%(Extension)" />
+	</ItemGroup>
+
 	<ItemGroup> 
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.8" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.8" />

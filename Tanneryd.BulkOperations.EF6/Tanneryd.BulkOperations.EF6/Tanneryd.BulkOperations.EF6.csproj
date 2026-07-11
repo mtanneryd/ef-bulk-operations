@@ -22,7 +22,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Remove="nuget_api.txt" />
+		<Compile Include="..\..\Tanneryd.BulkOperations.Common\Sql\*.cs" Link="Common\Sql\%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Include="LICENSE-2.0.txt">
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>

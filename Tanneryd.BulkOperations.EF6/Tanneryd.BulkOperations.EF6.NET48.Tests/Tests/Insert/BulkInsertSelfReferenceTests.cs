@@ -50,7 +50,8 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
         [TestMethod]
         public void AddingEmployeeToCompanyWithoutParentCompanySet()
         {
-            var ex = Assert.ThrowsExactly<Microsoft.Data.SqlClient.SqlException>(() =>
+            Exception ex = null;
+            try
             {
                 var employer = new Company
                 {
@@ -74,7 +75,18 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
                     AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
                 };
                 db.BulkInsertAll(request);
-            });
+                Assert.Fail("Expected SqlException was not thrown.");
+            }
+            catch (Microsoft.Data.SqlClient.SqlException microsoftSqlException)
+            {
+                ex = microsoftSqlException;
+            }
+            catch (System.Data.SqlClient.SqlException legacySqlException)
+            {
+                ex = legacySqlException;
+            }
+
+            Assert.IsNotNull(ex, "Expected SqlException was not thrown.");
 
             var expectedMessage =
                 @"The ALTER TABLE statement conflicted with the FOREIGN KEY SAME TABLE constraint ""FK_dbo.Company_dbo.Company_ParentCompanyId"". The conflict occurred in database ""Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.UnitTestContext"", table ""dbo.Company"", column 'Id'.";
