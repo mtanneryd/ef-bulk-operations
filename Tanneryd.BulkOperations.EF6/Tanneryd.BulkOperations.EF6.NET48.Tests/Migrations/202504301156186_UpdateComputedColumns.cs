@@ -16,7 +16,10 @@
             Sql("ALTER TABLE dbo.Instructor ADD FullName AS (FirstName + ' ' + LastName) PERSISTED");
 
             // Create the Contact view
-            Sql("CREATE VIEW Contact AS SELECT FirstName, LastName FROM Person");
+            Sql(@"IF OBJECT_ID(N'dbo.Contact', N'U') IS NOT NULL
+                  DROP TABLE dbo.Contact");
+            Sql(@"IF OBJECT_ID(N'dbo.Contact', N'V') IS NULL
+                  EXEC(N'CREATE VIEW dbo.Contact AS SELECT FirstName, LastName FROM dbo.Person')");
         }
 
         public override void Down()

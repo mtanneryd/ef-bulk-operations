@@ -21,8 +21,8 @@ Migrations (in order)
      Hand-written Sql() that:
        - Converts Invoice.Tax to (Gross - Net) PERSISTED
        - Converts Instructor.FullName to (FirstName + ' ' + LastName) PERSISTED
-       - Creates the Contact view over Person (used by EF Core tests; not mapped
-         in this EF6 context)
+       - Creates the Contact view over Person (mapped via ContactViewContext in tests;
+         ContactViewContext shares the UnitTestContext database via name=UnitTestContext)
 
 What happens when tests run
 ---------------------------
@@ -31,7 +31,8 @@ What happens when tests run
 
     1. Disables the database initializer (SetInitializer(null))
     2. Runs DbMigrator.Update() to apply any pending migrations
-    3. Deletes all rows via CleanupUnitTestContext() (schema is kept)
+    3. Ensures dbo.Contact is a view (drops a stray Contact table if present)
+    4. Deletes all rows via CleanupUnitTestContext() (schema is kept)
 
   Migrations are idempotent: after the first run, Update() is a no-op unless a
   new migration has been added. Tests do not drop or recreate the database.

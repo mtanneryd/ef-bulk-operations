@@ -38,7 +38,20 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
             var migrator = new DbMigrator(new Configuration());
             migrator.Update();
 
+            EnsureContactView();
+
             CleanupUnitTestContext();
+        }
+
+        private static void EnsureContactView()
+        {
+            using (var db = new UnitTestContext())
+            {
+                db.Database.ExecuteSqlCommand(@"IF OBJECT_ID(N'dbo.Contact', N'U') IS NOT NULL
+                    DROP TABLE dbo.Contact");
+                db.Database.ExecuteSqlCommand(@"IF OBJECT_ID(N'dbo.Contact', N'V') IS NULL
+                    EXEC(N'CREATE VIEW dbo.Contact AS SELECT FirstName, LastName FROM dbo.Person')");
+            }
         }
 
         protected void CleanupUnitTestContext()

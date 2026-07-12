@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.Entity;
+using System.Data.Entity.Core.EntityClient;
 using System.Data.Entity.Core.Mapping;
 using System.Data.Entity.Core.Metadata.Edm;
 using System.Data.Entity.Core.Objects;
 using System.Data.Entity.Infrastructure;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Tanneryd.BulkOperations.EF6.Model;
@@ -13,6 +16,22 @@ namespace Tanneryd.BulkOperations.EF6
 {
     public class MappingsExtractor
     {
+        public bool HasMappings(DbContext ctx, Type type)
+        {
+            if (IsDatabaseView(ctx, type))
+                return false;
+
+            try
+            {
+                GetMappings(ctx, type);
+                return true;
+            }
+            catch (Exception ex) when (ex is InvalidOperationException || ex is ArgumentException)
+            {
+                return false;
+            }
+        }
+
         public Mappings GetMappings(DbContext ctx, Type t)
         {
             Discriminator discriminator = null;
@@ -317,6 +336,69 @@ namespace Tanneryd.BulkOperations.EF6
             }
 
             throw new ArgumentException($"Failed to parse table name from {sql}. Bulk operation failed.");
+        }
+
+        private TableName GetStorageTableName(DbContext ctx, Type t)
+        {
+            var objectContext = ((IObjectContextAdapter)ctx).ObjectContext;
+            var workspace = objectContext.MetadataWorkspace;
+            var containerName = objectContext.DefaultContainerName;
+            t = ObjectContext.GetObjectType(t);
+            var entityName = t.Name;
+            var baseEntityName = t.BaseType?.Name;
+
+            var storageMapping =
+                (EntityContainerMapping)workspace.GetItem<GlobalItem>(containerName, DataSpace.CSSpace);
+            var entitySetMap = storageMapping.EntitySetMappings.Single(m =>
+                m.EntitySet.ElementType.Name == entityName ||
+                m.EntitySet.ElementType.Name == baseEntityName);
+            var storeEntitySet = entitySetMap.EntityTypeMappings[0].Fragments[0].StoreEntitySet;
+            return new TableName
+            {
+                Schema = storeEntitySet.Schema,
+                Name = storeEntitySet.Table ?? storeEntitySet.Name
+            };
+        }
+
+        private bool IsDatabaseView(DbContext ctx, Type type)
+        {
+            try
+            {
+                var tableName = GetStorageTableName(ctx, type);
+                var connection = ctx.Database.Connection;
+                if (connection is EntityConnection entityConnection)
+                    connection = entityConnection.StoreConnection;
+                var mustClose = connection.State != ConnectionState.Open;
+                if (mustClose)
+                    connection.Open();
+
+                try
+                {
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText =
+                            "SELECT COUNT(1) FROM INFORMATION_SCHEMA.VIEWS WHERE TABLE_SCHEMA = @p0 AND TABLE_NAME = @p1";
+                        var schemaParam = command.CreateParameter();
+                        schemaParam.ParameterName = "@p0";
+                        schemaParam.Value = tableName.Schema;
+                        command.Parameters.Add(schemaParam);
+                        var nameParam = command.CreateParameter();
+                        nameParam.ParameterName = "@p1";
+                        nameParam.Value = tableName.Name;
+                        command.Parameters.Add(nameParam);
+                        return Convert.ToInt32(command.ExecuteScalar(), CultureInfo.InvariantCulture) > 0;
+                    }
+                }
+                finally
+                {
+                    if (mustClose)
+                        connection.Close();
+                }
+            }
+            catch
+            {
+                return false;
+            }
         }
 
     }
