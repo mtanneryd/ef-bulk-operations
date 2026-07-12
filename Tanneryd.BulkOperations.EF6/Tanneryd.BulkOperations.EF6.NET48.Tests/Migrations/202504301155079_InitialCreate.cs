@@ -392,7 +392,7 @@
                         Timestamp = c.DateTime(nullable: false),
                         Severity = c.Int(),
                         Recommendation = c.String(),
-                        LogType = c.String(maxLength: 128),
+                        LogType = c.String(maxLength: 8),
                     })
                 .PrimaryKey(t => t.Id);
             

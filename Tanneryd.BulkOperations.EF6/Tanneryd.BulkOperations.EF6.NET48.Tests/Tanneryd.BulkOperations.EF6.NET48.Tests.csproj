@@ -347,6 +347,7 @@
     <Compile Include="Models\EF\UnitTestContext.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tests\BulkOperationTestBase.cs" />
+    <Compile Include="Tests\BulkOperationValidationTests.cs" />
     <Compile Include="Tests\Delete\BulkDeleteTests.cs" />
     <Compile Include="Tests\Insert\BulkInsertComputedColumns.cs" />
     <Compile Include="Tests\Insert\BulkInsertGitIssuesTests.cs" />

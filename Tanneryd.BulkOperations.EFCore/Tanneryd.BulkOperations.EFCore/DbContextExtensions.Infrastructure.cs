@@ -192,6 +192,29 @@ namespace Tanneryd.BulkOperations.EFCore
         /// <param name="options"></param>
         /// <param name="includeRowNumber"></param>
         /// <returns></returns>
+        private static TableColumn[] GetDiscriminatorExtraColumns(Discriminator discriminator)
+        {
+            if (discriminator == null)
+                return Array.Empty<TableColumn>();
+
+            var clrType = Nullable.GetUnderlyingType(discriminator.Column.ClrType) ?? discriminator.Column.ClrType;
+            var sqlType = clrType == typeof(string) ? "nvarchar(128)"
+                : clrType == typeof(int) ? "int"
+                : clrType == typeof(long) ? "bigint"
+                : "sql_variant";
+
+            return
+            [
+                new TableColumn
+                {
+                    Name = discriminator.Column.Name,
+                    Type = clrType,
+                    SqlType = sqlType,
+                    UseQuotes = clrType == typeof(string)
+                }
+            ];
+        }
+
         private static SqlBulkCopy CreateBulkCopy(
             DataTable table,
             BulkPropertyInfo[] properties,

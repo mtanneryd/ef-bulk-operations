@@ -41,6 +41,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public DbSet<Journal> Journals { get; set; } // Journal
         public DbSet<Keyword> Keywords { get; set; } // Keyword
         public DbSet<LogItem> LogItems { get; set; } // LogItem
+        public DbSet<LogWarning> LogWarnings { get; set; }
+        public DbSet<LogError> LogErrors { get; set; }
+        public DbSet<Level1> Levels { get; set; }
         public DbSet<Number> Numbers { get; set; } // Number
         public DbSet<OfficeAssignment> OfficeAssignments { get; set; } // OfficeAssignment
         public DbSet<Parity> Parities { get; set; } // Parity
@@ -94,6 +97,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
             modelBuilder.ApplyConfiguration(new JournalConfiguration());
             modelBuilder.ApplyConfiguration(new KeywordConfiguration());
             modelBuilder.ApplyConfiguration(new LogItemConfiguration());
+            modelBuilder.ApplyConfiguration(new LogWarningConfiguration());
+            modelBuilder.ApplyConfiguration(new LogErrorConfiguration());
+            modelBuilder.ApplyConfiguration(new Level1Configuration());
             modelBuilder.ApplyConfiguration(new NumberConfiguration());
             modelBuilder.ApplyConfiguration(new OfficeAssignmentConfiguration());
             modelBuilder.ApplyConfiguration(new ParityConfiguration());

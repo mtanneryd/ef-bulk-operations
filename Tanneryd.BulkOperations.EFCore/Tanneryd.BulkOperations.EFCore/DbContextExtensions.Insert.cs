@@ -410,6 +410,7 @@ namespace Tanneryd.BulkOperations.EFCore
 
             var rowsAffected = 0;
             bool hasComplexProperties = mappings.ComplexPropertyNames.Any();
+            var discriminatorExtraColumns = GetDiscriminatorExtraColumns(mappings.Discriminator);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
 
@@ -544,11 +545,11 @@ namespace Tanneryd.BulkOperations.EFCore
                             conn,
                             transaction,
                             tableName.Fullname,
-                            new TableColumn[0],
+                            discriminatorExtraColumns,
                             SqlBulkCopyOptions.Default,
                             IncludeRowNumber.No);
 
-                        AddEntitiesToTable(table, newEntities, properties, t, IncludeRowNumber.No);
+                        AddEntitiesToTable(table, newEntities, properties, t, mappings.Discriminator, IncludeRowNumber.No);
                         rowsAffected += newEntities.Count;
 
                         var s = new Stopwatch();
@@ -577,7 +578,7 @@ namespace Tanneryd.BulkOperations.EFCore
                                 transaction,
                                 tableName,
                                 allColumnNames,
-                                new TableColumn[0],
+                                discriminatorExtraColumns,
                                 IncludeRowNumber.Yes);
 
                         var bulkCopy = CreateBulkCopy(
@@ -587,11 +588,11 @@ namespace Tanneryd.BulkOperations.EFCore
                             conn,
                             transaction,
                             tempTableName,
-                            new TableColumn[0],
+                            discriminatorExtraColumns,
                             SqlBulkCopyOptions.Default,
                             IncludeRowNumber.Yes);
 
-                        AddEntitiesToTable(table, newEntities, properties, t,  IncludeRowNumber.Yes);
+                        AddEntitiesToTable(table, newEntities, properties, t, mappings.Discriminator, IncludeRowNumber.Yes);
 
                         var s = new Stopwatch();
                         s.Start();
@@ -623,6 +624,7 @@ namespace Tanneryd.BulkOperations.EFCore
                             newEntities,
                             pkProperty,
                             hasComplexProperties,
+                            mappings.Discriminator,
                             t);
                     }
                 }
@@ -636,13 +638,13 @@ namespace Tanneryd.BulkOperations.EFCore
                     conn,
                     transaction,
                     tableName.Fullname,
-                    new TableColumn[0],
+                    discriminatorExtraColumns,
                     SqlBulkCopyOptions.Default,
                     IncludeRowNumber.No);
 
                 // Make sure that we only insert entities not already in the database.
                 var notExistingEntities = BulkSelectNotExisting(ctx, t, entities, pkColumnMappings, transaction);
-                AddEntitiesToTable(table, notExistingEntities, properties, t, IncludeRowNumber.No);
+                AddEntitiesToTable(table, notExistingEntities, properties, t, mappings.Discriminator, IncludeRowNumber.No);
                 rowsAffected += notExistingEntities.Count;
 
                 var s = new Stopwatch();
@@ -786,6 +788,7 @@ namespace Tanneryd.BulkOperations.EFCore
             ArrayList newEntities,
             IProperty pkProperty,
             bool hasComplexProperties,
+            Discriminator discriminator,
             Type t)
         {
             var cmd = conn.CreateCommand();
@@ -804,6 +807,8 @@ namespace Tanneryd.BulkOperations.EFCore
             if (nonPrimaryKeyColumnMappings.Any())
             {
                 var columnNames = string.Join(",", nonPrimaryKeyColumnMappings.Select(p => $"[{p.TableColumn.Column.Name}]"));
+                if (discriminator != null)
+                    columnNames += $", [{discriminator.Column.Name}]";
 
                 query = $@"  
                         MERGE {tableName.Fullname}
@@ -821,7 +826,9 @@ namespace Tanneryd.BulkOperations.EFCore
             else
             {
                 var columnNames = "rowno";
-                
+                if (discriminator != null)
+                    columnNames = $"[{discriminator.Column.Name}]," + columnNames;
+
                 query = $@"  
                         MERGE {tableName.Fullname}
                         USING 
@@ -878,6 +885,7 @@ namespace Tanneryd.BulkOperations.EFCore
             IList entities,
             BulkPropertyInfo[] properties,
             Type t,
+            Discriminator discriminator,
             IncludeRowNumber includeRowNumber)
         {
             if (entities.Count == 0) return;
@@ -901,6 +909,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     var e = entity;
                     var columnValues = properties.Select(p => GetProperty(t, p.Name, e, DBNull.Value)).ToList();
 
+                    if (discriminator != null) columnValues.Add(discriminator.Value);
                     if (includeRowNumber == IncludeRowNumber.Yes) columnValues.Add(i++);
                     table.Rows.Add(columnValues.ToArray());
                 }
@@ -1129,7 +1138,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 IncludeRowNumber.Yes);
 
             var type = entities[0].GetType();
-            AddEntitiesToTable(table, entities, properties, type, IncludeRowNumber.Yes);
+            AddEntitiesToTable(table, entities, properties, type, null, IncludeRowNumber.Yes);
 
             //
             // Fill the temp table.

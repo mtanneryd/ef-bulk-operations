@@ -17,8 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Migrations;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Tanneryd.BulkOperations.EF6.NET48.Tests.Migrations;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Numbers;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF;
 
@@ -31,7 +33,11 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
 
         protected void InitializeUnitTestContext()
         {
-            Database.SetInitializer(new DropCreateDatabaseIfModelChanges<UnitTestContext>());
+            Database.SetInitializer<UnitTestContext>(null);
+
+            var migrator = new DbMigrator(new Configuration());
+            migrator.Update();
+
             CleanupUnitTestContext();
         }
 

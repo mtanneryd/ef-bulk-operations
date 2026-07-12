@@ -149,15 +149,13 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     LastName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FirstName = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     HireDate = table.Column<DateTime>(type: "datetime", nullable: false),
-                    //FullName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    FullName = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_dbo.Instructor", x => x.InstructorID)
                         .Annotation("SqlServer:Clustered", true);
                 });
-            // This replaces the out commented line for FullName in the create table above.
-            migrationBuilder.Sql("ALTER TABLE dbo.Instructor ADD FullName AS (FirstName + ' ' + LastName) PERSISTED NOT NULL");
 
             migrationBuilder.CreateTable(
                 name: "Invoice",
@@ -167,15 +165,13 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     PrimaryKey = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Net = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Gross = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    //Tax = table.Column<decimal>(type: "decimal(19,2)", nullable: false)
+                    Tax = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_dbo.Invoice", x => x.PrimaryKey)
                         .Annotation("SqlServer:Clustered", true);
                 });
-            // This replaces the out commented line for Tax in the create table above.
-            migrationBuilder.Sql("ALTER TABLE dbo.Invoice ADD Tax AS (Gross - Net) PERSISTED NOT NULL");
 
             migrationBuilder.CreateTable(
                 name: "Journal",
@@ -201,11 +197,29 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     Timestamp = table.Column<DateTime>(type: "datetime", nullable: false),
                     Severity = table.Column<int>(type: "int", nullable: true),
                     Recommendation = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LogType = table.Column<string>(type: "nvarchar(128)", maxLength: 128, nullable: true)
+                    LogType = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_dbo.LogItem", x => x.Id)
+                        .Annotation("SqlServer:Clustered", true);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Level1",
+                schema: "dbo",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Level1Name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Level2Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Level3Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Level2_Level3_Updated = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_dbo.Level1", x => x.Id)
                         .Annotation("SqlServer:Clustered", true);
                 });
 
@@ -1004,8 +1018,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 schema: "dbo",
                 table: "VisitorPosts",
                 column: "VisitorId");
-
-            migrationBuilder.Sql("CREATE VIEW PersonView AS SELECT FirstName, LastName FROM Person");
         }
 
         /// <inheritdoc />
@@ -1045,6 +1057,10 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
 
             migrationBuilder.DropTable(
                 name: "Keyword",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
+                name: "Level1",
                 schema: "dbo");
 
             migrationBuilder.DropTable(

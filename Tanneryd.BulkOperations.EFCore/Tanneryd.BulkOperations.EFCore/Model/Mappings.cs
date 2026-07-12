@@ -30,6 +30,7 @@ namespace Tanneryd.BulkOperations.EFCore.Model
         }
 
         public TableName TableName { get; set; }
+        public Discriminator Discriminator { get; set; }
         public string[] ComplexPropertyNames { get; set; }
         public Dictionary<string, TableColumnMapping> ColumnMappingByPropertyName { get; set; }
         public Dictionary<string, TableColumnMapping> ColumnMappingByColumnName { get; set; }

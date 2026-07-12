@@ -147,6 +147,39 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         }
 
         [TestMethod]
+        public void ComplexTypesShouldBeInserted()
+        {
+            using (var db = Factory.CreateDbContext())
+            {
+                var expectedLevels = new[]
+                {
+                    new Level1
+                    {
+                        Level2 = new Level2
+                        {
+                            Level2Name = "L2",
+                            Level3 = new Level3
+                            {
+                                Level3Name = "L3",
+                                Updated = new DateTime(2018, 1, 1)
+                            }
+                        }
+                    }
+                };
+                db.BulkInsertAll(expectedLevels);
+
+                var actualLevels = db.Levels.ToArray();
+                Assert.AreEqual(expectedLevels.Length, actualLevels.Length);
+                Assert.AreEqual(expectedLevels[0].Id, actualLevels[0].Id);
+                Assert.AreEqual(expectedLevels[0].Level2.Level2Name, actualLevels[0].Level2.Level2Name);
+                Assert.AreEqual(expectedLevels[0].Level2.Level3.Level3Name,
+                    actualLevels[0].Level2.Level3.Level3Name);
+                Assert.AreEqual(expectedLevels[0].Level2.Level3.Updated.Ticks,
+                    actualLevels[0].Level2.Level3.Updated.Ticks);
+            }
+        }
+
+        [TestMethod]
         public void RowWithReservedSqlKeywordAsColumnNameShouldBeInserted()
         {
             using (var db = Factory.CreateDbContext())

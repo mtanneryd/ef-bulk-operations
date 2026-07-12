@@ -1,18 +1,20 @@
-﻿using System;
-using Microsoft.Data.SqlClient;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests;
 
+internal static class TestDatabaseConnection
+{
+    public const string DefaultConnectionString =
+        @"data source=(localdb)\MSSQLLocalDB;initial catalog=Tanneryd.BulkOperations.EFCore.Tests.Models.EF.UnitTestContext;persist security info=True;Integrated Security=SSPI;MultipleActiveResultSets=True;TrustServerCertificate=true";
+}
+
 public class MSSQLDesignTimeContextFactory : IDesignTimeDbContextFactory<UnitTestContext>
 {
-    private readonly string _connectionString = @"data source=.;initial catalog=Tanneryd.BulkOperations.EFCore.Tests.Models.EF.UnitTestContext;persist security info=True;Integrated Security=SSPI;MultipleActiveResultSets=True;TrustServerCertificate=true";
-
     public UnitTestContext CreateDbContext(string[] args)
     {
         var optionsBuilder = new DbContextOptionsBuilder<UnitTestContext>();
-        optionsBuilder.UseSqlServer(_connectionString);
+        optionsBuilder.UseSqlServer(TestDatabaseConnection.DefaultConnectionString);
 
         return new UnitTestContext(optionsBuilder.Options);
     }
@@ -20,11 +22,9 @@ public class MSSQLDesignTimeContextFactory : IDesignTimeDbContextFactory<UnitTes
 
 public class MSSQLContextFactory : IDbContextFactory<UnitTestContext>
 {
-    private readonly string _connectionString = @"data source=.;initial catalog=Tanneryd.BulkOperations.EFCore.Tests.Models.EF.UnitTestContext;persist security info=True;Integrated Security=SSPI;MultipleActiveResultSets=True;TrustServerCertificate=true";
-
-    public UnitTestContext CreateDbContext()       
+    public UnitTestContext CreateDbContext()
     {
-        return CreateDbContext(_connectionString);
+        return CreateDbContext(TestDatabaseConnection.DefaultConnectionString);
     }
 
     public UnitTestContext CreateDbContext(string connectionString)

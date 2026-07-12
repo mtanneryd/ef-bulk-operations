@@ -13,15 +13,15 @@ using Tanneryd.BulkOperations.EFCore.Tests;
 namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
 {
     [DbContext(typeof(UnitTestContext))]
-    [Migration("20250330182347_InitialMigration")]
-    partial class InitialMigration
+    [Migration("20260712085219_UpdateComputedColumns")]
+    partial class UpdateComputedColumns
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.6")
+                .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
