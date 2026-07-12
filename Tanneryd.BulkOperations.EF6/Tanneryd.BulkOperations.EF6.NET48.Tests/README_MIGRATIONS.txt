@@ -1,42 +1,60 @@
-- Öppna Package Manager console
-- Ställ dig i ef-bulk-operations\Tanneryd.BulkOperations.EF6\Tanneryd.BulkOperations.EF6.NET48.Tests
-- Se till att Default project är Tanneryd.BulkOperations.EF6.NET48.Tests
+EF6 test database migrations
+=============================
 
-EntityFramework6\Enable-Migrations -ContextTypeName UnitTestContext -Verbose
-EntityFramework6\Add-Migration InitialCreate
-EntityFramework6\Update-Database
-EntityFramework6\Add-Migration UpdateComputedColumns
-EntityFramework6\Update-Database
+This project uses Code First migrations to create and maintain the SQL Server
+schema used by the integration tests.
 
-Tests apply migrations at runtime via DbMigrator.Update() in BulkOperationTestBase.InitializeUnitTestContext(),
-matching EF Core's Database.Migrate() behavior.
+Database
+--------
+  Server:   (localdb)\MSSQLLocalDB
+  Catalog:  Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.UnitTestContext
+  Config:   app.config connection string "UnitTestContext"
 
-        public partial class UpdateComputedColumns : DbMigration
-        {
-            public override void Up()
-            {
-                // Update dbo.Invoice.Tax to be a computed column
-                Sql("ALTER TABLE dbo.Invoice DROP COLUMN Tax");
-                Sql("ALTER TABLE dbo.Invoice ADD Tax AS (Gross - Net) PERSISTED");
+Migrations (in order)
+---------------------
+  1. InitialCreate
+     Scaffolds the full test schema. Invoice.Tax and Instructor.FullName are
+     created as ordinary columns because EF6 migrations cannot express computed
+     column formulas in CreateTable.
 
-                // Add computed column FullName to dbo.Instructor
-                Sql("ALTER TABLE dbo.Instructor DROP COLUMN FullName");
-                Sql("ALTER TABLE dbo.Instructor ADD FullName AS (FirstName + ' ' + LastName) PERSISTED");
+  2. UpdateComputedColumns
+     Hand-written Sql() that:
+       - Converts Invoice.Tax to (Gross - Net) PERSISTED
+       - Converts Instructor.FullName to (FirstName + ' ' + LastName) PERSISTED
+       - Creates the Contact view over Person (used by EF Core tests; not mapped
+         in this EF6 context)
 
-                // Create the Contact view
-                Sql("CREATE VIEW Contact AS SELECT FirstName, LastName FROM Person");
-            }
+What happens when tests run
+---------------------------
+  Each test class calls BulkOperationTestBase.InitializeUnitTestContext() from
+  [TestInitialize]. That method:
 
-            public override void Down()
-            {
-                // Drop the Contact view
-                Sql("DROP VIEW Contact");
+    1. Disables the database initializer (SetInitializer(null))
+    2. Runs DbMigrator.Update() to apply any pending migrations
+    3. Deletes all rows via CleanupUnitTestContext() (schema is kept)
 
-                // Revert dbo.Invoice.Tax to a regular column
-                Sql("ALTER TABLE dbo.Invoice DROP COLUMN Tax");
-                AddColumn("dbo.Invoice", "Tax", c => c.Decimal(nullable: false, precision: 18, scale: 2));
+  Migrations are idempotent: after the first run, Update() is a no-op unless a
+  new migration has been added. Tests do not drop or recreate the database.
 
-                // Remove the computed column FullName from dbo.Instructor
-                Sql("ALTER TABLE dbo.Instructor DROP COLUMN FullName");
-            }
-        }
+Creating a new migration (developer workflow)
+---------------------------------------------
+  Package Manager Console:
+    Default project: Tanneryd.BulkOperations.EF6.NET48.Tests
+    Working directory: ...\Tanneryd.BulkOperations.EF6.NET48.Tests
+
+    EntityFramework6\Add-Migration <Name>
+    EntityFramework6\Update-Database
+
+  Automatic migrations are disabled (see Migrations\Configuration.cs).
+
+  If the scaffolded migration cannot express what you need (computed columns,
+  views), add raw Sql() in the migration Up()/Down() methods. See
+  UpdateComputedColumns.cs for the pattern used in this project.
+
+Resetting a broken local database
+---------------------------------
+  If a previous setup left the database in an inconsistent state, drop it once:
+
+    DROP DATABASE [Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.UnitTestContext];
+
+  The next test run will recreate it by applying all migrations from scratch.
