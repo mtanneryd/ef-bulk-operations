@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Tanneryd.BulkOperations.EFCore.Model;
 
 namespace Tanneryd.BulkOperations.EFCore
@@ -16,6 +18,14 @@ namespace Tanneryd.BulkOperations.EFCore
     public static partial class DbContextExtensions
     {
         private static IList<T1> DoBulkSelectNotExisting<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request)
+        {
+            return DoBulkSelectNotExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task<IList<T1>> DoBulkSelectNotExistingAsync<T1, T2>(
+            DbContext ctx,
+            BulkSelectRequest<T1> request,
+            CancellationToken cancellationToken = default)
         {
             if (!request.Items.Any()) return new List<T1>();
 
@@ -26,7 +36,7 @@ namespace Tanneryd.BulkOperations.EFCore
             var itemPropertByEntityProperty =
                 request.KeyPropertyMappings.ToDictionary(p => p.EntityPropertyName, p => p.ItemPropertyName);
             var items = request.Items;
-            var conn = GetSqlConnection(ctx);
+            var conn = await GetSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
 
             if (!request.KeyPropertyMappings.Any())
             {
@@ -42,13 +52,14 @@ namespace Tanneryd.BulkOperations.EFCore
             {
                 var containsIdentityKey = keyMappings.Any(m => m.Value.IsIdentity);
 
-                var tempTableName = CreateTempTable(
+                var tempTableName = await CreateTempTableAsync(
                     conn,
                     request.Transaction,
                     tableName,
                     keyMappings.Select(m => m.Value.TableColumn.Column.Name).ToArray(),
                     new TableColumn[0],
-                    IncludeRowNumber.Yes);
+                    IncludeRowNumber.Yes,
+                    cancellationToken).ConfigureAwait(false);
 
                 // We only need the key columns and the 
                 // rowno column in our temp table.
@@ -66,7 +77,8 @@ namespace Tanneryd.BulkOperations.EFCore
                     new TableColumn[0],
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                     IncludeRowNumber.Yes);
-                if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
+                if (containsIdentityKey)
+                    await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
 
                 int i = 0;
                 var type = items[0].GetType();
@@ -80,7 +92,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     table.Rows.Add(columnValues.ToArray());
                 }
 
-                bulkCopy.WriteToServer(table.CreateDataReader());
+                await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
 
                 var conditionStatements = keyMappings.Values.Select(c =>
                 {
@@ -102,16 +114,16 @@ namespace Tanneryd.BulkOperations.EFCore
                 var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                 var existingEntities = new List<T1>();
-                using (var sqlDataReader = cmd.ExecuteReader())
+                using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    while (sqlDataReader.Read())
+                    while (await sqlDataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
                     {
                         var rowNo = (int)sqlDataReader[0];
                         existingEntities.Add(items[rowNo]);
                     }
                 }
 
-                DropTempTable(conn, request.Transaction, tempTableName);
+                await DropTempTableAsync(conn, request.Transaction, tempTableName, cancellationToken).ConfigureAwait(false);
 
                 return existingEntities;
             }
@@ -121,6 +133,14 @@ namespace Tanneryd.BulkOperations.EFCore
 
         private static void DoBulkDeleteNotExisting<T1, T2>(DbContext ctx, BulkDeleteRequest<T1> request)
         {
+            DoBulkDeleteNotExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task DoBulkDeleteNotExistingAsync<T1, T2>(
+            DbContext ctx,
+            BulkDeleteRequest<T1> request,
+            CancellationToken cancellationToken = default)
+        {
             Type t = typeof(T2);
             var mappings = GetMappingExtractor(ctx).GetMappings(t);
             var tableName = mappings.TableName;
@@ -128,7 +148,7 @@ namespace Tanneryd.BulkOperations.EFCore
             var itemPropertyByEntityProperty =
                 request.KeyPropertyMappings.ToDictionary(p => p.EntityPropertyName, p => p.ItemPropertyName);
             var items = request.Items;
-            var conn = GetSqlConnection(ctx);
+            var conn = await GetSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
 
             if (!itemPropertyByEntityProperty.Any())
             {
@@ -151,13 +171,14 @@ namespace Tanneryd.BulkOperations.EFCore
                 // ungodly reason WriteToServer does nothing, on
                 // some platforms, if we omit it. Need to figure
                 // that out at some point.
-                var tempTableName = CreateTempTable(
+                var tempTableName = await CreateTempTableAsync(
                     conn,
                     request.Transaction,
                     tableName,
                     keyMappings.Select(m => m.Value.TableColumn.Column.Name).ToArray(),
                     new TableColumn[0],
-                    IncludeRowNumber.Yes);
+                    IncludeRowNumber.Yes,
+                    cancellationToken).ConfigureAwait(false);
 
                 var properties = GetProperties(t);
                 var keyProperties = properties
@@ -174,7 +195,8 @@ namespace Tanneryd.BulkOperations.EFCore
                     new TableColumn[0],
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                     IncludeRowNumber.Yes);
-                if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
+                if (containsIdentityKey)
+                    await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
 
                 int i = 0;
                 var type = typeof(T1);
@@ -188,7 +210,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     table.Rows.Add(columnValues.ToArray());
                 }
 
-                bulkCopy.WriteToServer(table.CreateDataReader());
+                await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
 
                 var parameters = new List<SqlParameter>();
                 var condStatementsSql = BuildParameterizedSqlConditions(
@@ -216,9 +238,9 @@ namespace Tanneryd.BulkOperations.EFCore
                 var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
                 foreach (var parameter in parameters)
                     cmd.Parameters.Add(parameter);
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
-                DropTempTable(conn, request.Transaction, tempTableName);
+                await DropTempTableAsync(conn, request.Transaction, tempTableName, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -232,6 +254,14 @@ namespace Tanneryd.BulkOperations.EFCore
         /// <returns></returns>
         private static IList<T2> DoBulkSelect<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request) where T2 : new()
         {
+            return DoBulkSelectAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task<IList<T2>> DoBulkSelectAsync<T1, T2>(
+            DbContext ctx,
+            BulkSelectRequest<T1> request,
+            CancellationToken cancellationToken = default) where T2 : new()
+        {
             if (!request.Items.Any()) return new List<T2>();
 
             Type t = typeof(T2);
@@ -241,7 +271,7 @@ namespace Tanneryd.BulkOperations.EFCore
             var itemPropertByEntityProperty =
                 request.KeyPropertyMappings.ToDictionary(p => p.EntityPropertyName, p => p.ItemPropertyName);
             var items = request.Items;
-            var conn = GetSqlConnection(ctx);
+            var conn = await GetSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
 
             if (!itemPropertByEntityProperty.Any())
             {
@@ -263,13 +293,14 @@ namespace Tanneryd.BulkOperations.EFCore
                 // ungodly reason WriteToServer does nothing, on
                 // some platforms, if we omit it. Need to figure
                 // that out at some point.
-                var tempTableName = CreateTempTable(
+                var tempTableName = await CreateTempTableAsync(
                     conn,
                     request.Transaction,
                     tableName,
                     keyMappings.Select(m => m.Value.TableColumn.Column.Name).ToArray(),
                     new TableColumn[0],
-                    IncludeRowNumber.Yes);
+                    IncludeRowNumber.Yes,
+                    cancellationToken).ConfigureAwait(false);
 
                 var properties = GetProperties(t);
                 var keyProperties = properties
@@ -286,7 +317,8 @@ namespace Tanneryd.BulkOperations.EFCore
                     new TableColumn[0],
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                     IncludeRowNumber.Yes);
-                if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
+                if (containsIdentityKey)
+                    await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
 
                 int i = 0;
                 var type = items[0].GetType();
@@ -300,7 +332,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     table.Rows.Add(columnValues.ToArray());
                 }
 
-                bulkCopy.WriteToServer(table.CreateDataReader());
+                await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
 
                 var conditionStatements =
                     keyMappings.Values.Select(c => $"t0.[{c.TableColumn.Column.Name}] = t1.[{c.TableColumn.Column.Name}]");
@@ -313,9 +345,9 @@ namespace Tanneryd.BulkOperations.EFCore
                 var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                 var selectedEntities = new List<T2>();
-                using (var sqlDataReader = cmd.ExecuteReader())
+                using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    while (sqlDataReader.Read())
+                    while (await sqlDataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
                     {
                         var t2 = new T2();
                         selectedEntities.Add(t2);
@@ -329,7 +361,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     }
                 }
 
-                DropTempTable(conn, request.Transaction, tempTableName);
+                await DropTempTableAsync(conn, request.Transaction, tempTableName, cancellationToken).ConfigureAwait(false);
 
                 return selectedEntities;
             }
@@ -400,6 +432,14 @@ namespace Tanneryd.BulkOperations.EFCore
         /// <returns></returns>
         private static IList<T1> DoBulkSelectExisting<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request)
         {
+            return DoBulkSelectExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task<IList<T1>> DoBulkSelectExistingAsync<T1, T2>(
+            DbContext ctx,
+            BulkSelectRequest<T1> request,
+            CancellationToken cancellationToken = default)
+        {
             if (!request.Items.Any()) return new List<T1>();
 
             Type t = typeof(T2);
@@ -409,7 +449,7 @@ namespace Tanneryd.BulkOperations.EFCore
             var itemPropertyByEntityProperty =
                 request.KeyPropertyMappings.ToDictionary(p => p.EntityPropertyName, p => p.ItemPropertyName);
             var items = request.Items;
-            var conn = GetSqlConnection(ctx);
+            var conn = await GetSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
 
             if (!request.KeyPropertyMappings.Any())
             {
@@ -442,13 +482,14 @@ namespace Tanneryd.BulkOperations.EFCore
                     };
                     extraColumnNames.Add(extraColumn);
                 }
-                var tempTableName = CreateTempTable(
+                var tempTableName = await CreateTempTableAsync(
                     conn,
                     request.Transaction,
                     tableName,
                     columnNames.ToArray(),
                     extraColumnNames.ToArray(),
-                    IncludeRowNumber.Yes);
+                    IncludeRowNumber.Yes,
+                    cancellationToken).ConfigureAwait(false);
 
                 var keyProperties = GetProperties(t)
                     .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
@@ -464,7 +505,8 @@ namespace Tanneryd.BulkOperations.EFCore
                     extraColumnNames.ToArray(),
                     containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                     IncludeRowNumber.Yes);
-                if (containsIdentityKey) EnableIdentityInsert(tempTableName, conn, request.Transaction);
+                if (containsIdentityKey)
+                    await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
 
                 int i = 0;
                 var type = items[0].GetType();
@@ -480,7 +522,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     dataTable.Rows.Add(columnValues.ToArray());
                 }
 
-                bulkCopy.WriteToServer(dataTable.CreateDataReader());
+                await bulkCopy.WriteToServerAsync(dataTable.CreateDataReader(), cancellationToken).ConfigureAwait(false);
 
                 var conditionStatements = keyMappings.Values.Select(c =>
                 {
@@ -517,9 +559,9 @@ namespace Tanneryd.BulkOperations.EFCore
 
                 var existingEntities = new List<T1>();
 
-                using (var sqlDataReader = cmd.ExecuteReader())
+                using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
                 {
-                    while (sqlDataReader.Read())
+                    while (await sqlDataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
                     {
                         var rowNo = (int)sqlDataReader[0];
                         var item = items[rowNo];
@@ -532,7 +574,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     }
                 }
 
-                DropTempTable(conn, request.Transaction, tempTableName);
+                await DropTempTableAsync(conn, request.Transaction, tempTableName, cancellationToken).ConfigureAwait(false);
 
                 return existingEntities;
             }

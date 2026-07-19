@@ -213,11 +213,28 @@ NOT IMPLEMENTED
             this DbContext ctx,
             BulkDeleteRequest<T1> request)
 ```
+#### Async API
+
+Every bulk operation has an async counterpart that awaits SQL Server I/O (`OpenAsync`, `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, `WriteToServerAsync`) and accepts an optional `CancellationToken`:
+
+```csharp
+await ctx.BulkInsertAllAsync(request, cancellationToken);
+await ctx.BulkUpdateAllAsync(request, cancellationToken);
+await ctx.BulkSelectExistingAsync<TItem, TEntity>(request, cancellationToken);
+await ctx.BulkSelectNotExistingAsync<TItem, TEntity>(request, cancellationToken);
+await ctx.BulkSelectAsync<TItem, TEntity>(request, cancellationToken);
+await ctx.BulkDeleteNotExistingAsync<TItem, TEntity>(request, cancellationToken);
+await ctx.UpdateStatisticsAsync<T>(cancellationToken);
+```
+
+The existing synchronous methods remain unchanged and delegate to the async implementations.
+
 ## Release history
 ##### 3.0.1 (2026-05-26)
  * Updated NuGet package dependencies.
  * Added VS Code build and test tasks.
  * Minor code cleanup.
+ * Added async bulk operation APIs for EF6 and EF Core.
 
 ##### 3.0.0 (2025-04-30)
  * Using Microsoft.Data.SqlClient instead of System.Data.SqlClient for EF6.

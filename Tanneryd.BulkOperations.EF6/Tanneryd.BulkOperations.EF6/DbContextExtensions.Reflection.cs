@@ -12,6 +12,8 @@ using System.Data.Entity;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Tanneryd.BulkOperations.EF6.Model;
 
 namespace Tanneryd.BulkOperations.EF6
@@ -76,12 +78,27 @@ namespace Tanneryd.BulkOperations.EF6
 
         private static SqlServerConnection ResolveSqlConnection(DbContext ctx)
         {
-            return SqlServerConnection.Resolve(ctx);
+            return ResolveSqlConnectionAsync(ctx).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static Task<SqlServerConnection> ResolveSqlConnectionAsync(
+            DbContext ctx,
+            CancellationToken cancellationToken = default)
+        {
+            return SqlServerConnection.ResolveAsync(ctx, cancellationToken);
         }
 
         public static SqlConnection GetSqlConnection(this DbContext ctx)
         {
-            return ResolveSqlConnection(ctx).AsModernConnection();
+            return GetSqlConnectionAsync(ctx).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static async Task<SqlConnection> GetSqlConnectionAsync(
+            this DbContext ctx,
+            CancellationToken cancellationToken = default)
+        {
+            var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
+            return connection.AsModernConnection();
         }
 
  

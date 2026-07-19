@@ -25,6 +25,8 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Tanneryd.BulkOperations.EF6.Model;
 
 namespace Tanneryd.BulkOperations.EF6
@@ -37,11 +39,28 @@ namespace Tanneryd.BulkOperations.EF6
 
         public static void DeleteAllExecutionPlansFromCache(this DbContext ctx, SqlTransaction sqlTransaction)
         {
+            DeleteAllExecutionPlansFromCacheAsync(ctx, sqlTransaction).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static Task DeleteAllExecutionPlansFromCacheAsync(
+            this DbContext ctx,
+            SqlTransaction sqlTransaction,
+            CancellationToken cancellationToken = default)
+        {
             ValidateDbContext(ctx);
             var query = $@"DBCC FREEPROCCACHE WITH NO_INFOMSGS";
-            var connection = ResolveSqlConnection(ctx);
+            return DeleteAllExecutionPlansFromCacheCoreAsync(ctx, query, sqlTransaction, cancellationToken);
+        }
+
+        private static async Task DeleteAllExecutionPlansFromCacheCoreAsync(
+            DbContext ctx,
+            string query,
+            SqlTransaction sqlTransaction,
+            CancellationToken cancellationToken)
+        {
+            var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
             var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -66,9 +85,17 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkDeleteRequest<T1> request)
         {
+            BulkDeleteNotExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static Task BulkDeleteNotExistingAsync<T1, T2>(
+            this DbContext ctx,
+            BulkDeleteRequest<T1> request,
+            CancellationToken cancellationToken = default)
+        {
             ValidateDbContext(ctx);
             ValidateBulkDeleteRequest(request);
-            DoBulkDeleteNotExisting<T1, T2>(ctx, request);
+            return DoBulkDeleteNotExistingAsync<T1, T2>(ctx, request, cancellationToken);
         }
 
         /// <summary>
@@ -91,9 +118,17 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkSelectRequest<T1> request) where T2 : new()
         {
+            return BulkSelectAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static Task<IList<T2>> BulkSelectAsync<T1, T2>(
+            this DbContext ctx,
+            BulkSelectRequest<T1> request,
+            CancellationToken cancellationToken = default) where T2 : new()
+        {
             ValidateDbContext(ctx);
             ValidateBulkSelectRequest(request);
-            return DoBulkSelect<T1, T2>(ctx, request);
+            return DoBulkSelectAsync<T1, T2>(ctx, request, cancellationToken);
         }
 
         /// <summary>
@@ -109,9 +144,17 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkSelectRequest<T1> request)
         {
+            return BulkSelectExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static Task<IList<T1>> BulkSelectExistingAsync<T1, T2>(
+            this DbContext ctx,
+            BulkSelectRequest<T1> request,
+            CancellationToken cancellationToken = default)
+        {
             ValidateDbContext(ctx);
             ValidateBulkSelectRequest(request);
-            return DoBulkSelectExisting<T1, T2>(ctx, request);
+            return DoBulkSelectExistingAsync<T1, T2>(ctx, request, cancellationToken);
         }
 
         /// <summary>
@@ -126,9 +169,17 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkSelectRequest<T1> request)
         {
+            return BulkSelectNotExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static Task<IList<T1>> BulkSelectNotExistingAsync<T1, T2>(
+            this DbContext ctx,
+            BulkSelectRequest<T1> request,
+            CancellationToken cancellationToken = default)
+        {
             ValidateDbContext(ctx);
             ValidateBulkSelectRequest(request);
-            return DoBulkSelectNotExisting<T1, T2>(ctx, request);
+            return DoBulkSelectNotExistingAsync<T1, T2>(ctx, request, cancellationToken);
         }
 
         private static IList BulkSelectNotExisting(DbContext ctx, Type t, IList entities,
@@ -161,6 +212,15 @@ namespace Tanneryd.BulkOperations.EF6
             IList entities,
             SqlTransaction transaction)
         {
+            return BulkUpdateAllAsync(ctx, entities, transaction).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static Task<BulkOperationResponse> BulkUpdateAllAsync(
+            this DbContext ctx,
+            IList entities,
+            SqlTransaction transaction,
+            CancellationToken cancellationToken = default)
+        {
             ValidateDbContext(ctx);
             if (entities == null)
                 throw new ArgumentNullException(nameof(entities));
@@ -170,7 +230,7 @@ namespace Tanneryd.BulkOperations.EF6
                 Entities = entities,
                 Transaction = transaction,
             };
-            return BulkUpdateAll(ctx, request);
+            return BulkUpdateAllAsync(ctx, request, cancellationToken);
         }
 
         /// <summary>
@@ -192,12 +252,20 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkUpdateRequest request)
         {
+            return BulkUpdateAllAsync(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static async Task<BulkOperationResponse> BulkUpdateAllAsync(
+            this DbContext ctx,
+            BulkUpdateRequest request,
+            CancellationToken cancellationToken = default)
+        {
             ValidateDbContext(ctx);
             ValidateBulkUpdateRequest(request);
 
             var response = new BulkOperationResponse();
             if (request.Entities.Count == 0) return response;
-            DoBulkUpdateAll(ctx, request, response);
+            await DoBulkUpdateAllAsync(ctx, request, response, cancellationToken).ConfigureAwait(false);
 
             return response;
         }
@@ -216,6 +284,16 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction transaction = null,
             bool recursive = false)
         {
+            return BulkInsertAllAsync(ctx, entities, transaction, recursive).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static Task<BulkInsertResponse> BulkInsertAllAsync<T>(
+            this DbContext ctx,
+            IList<T> entities,
+            SqlTransaction transaction = null,
+            bool recursive = false,
+            CancellationToken cancellationToken = default)
+        {
             ValidateDbContext(ctx);
             if (entities == null)
                 throw new ArgumentNullException(nameof(entities));
@@ -226,7 +304,7 @@ namespace Tanneryd.BulkOperations.EF6
                 Transaction = transaction,
                 EnableRecursiveInsert = recursive ? EnableRecursiveInsert.Yes : EnableRecursiveInsert.NoButRetrieveGeneratedPrimaryKeys,
             };
-            return BulkInsertAll(ctx, request);
+            return BulkInsertAllAsync(ctx, request, cancellationToken);
         }
 
         /// <summary>
@@ -247,6 +325,14 @@ namespace Tanneryd.BulkOperations.EF6
         public static BulkInsertResponse BulkInsertAll<T>(
             this DbContext ctx,
             BulkInsertRequest<T> request)
+        {
+            return BulkInsertAllAsync(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static async Task<BulkInsertResponse> BulkInsertAllAsync<T>(
+            this DbContext ctx,
+            BulkInsertRequest<T> request,
+            CancellationToken cancellationToken = default)
         {
             ValidateDbContext(ctx);
             ValidateBulkInsertRequest(request);
@@ -270,12 +356,13 @@ namespace Tanneryd.BulkOperations.EF6
 
                     var s0 = new Stopwatch();
                     s0.Start();
-                    var clusteredIndexColumns = GetClusteredIndexColumns(
+                    var clusteredIndexColumns = await GetClusteredIndexColumnsAsync(
                         ctx,
                         tableName.Schema,
                         tableName.Name,
                         request.Transaction,
-                        mappings);
+                        mappings,
+                        cancellationToken).ConfigureAwait(false);
 
                     request.Entities = clusteredIndexColumns.Any()
                         ? Sort(request.Entities, clusteredIndexColumns)
@@ -284,7 +371,7 @@ namespace Tanneryd.BulkOperations.EF6
                     response.TimeElapsedDuringSorting = s0.Elapsed;
                 }
 
-                DoBulkInsertAll(
+                await DoBulkInsertAllAsync(
                     ctx,
                     request.Entities.Cast<dynamic>().ToList(),
                     request.Transaction,
@@ -293,16 +380,17 @@ namespace Tanneryd.BulkOperations.EF6
                     request.CommandTimeout,
                     new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
                     mappingsByType,
-                    response);
+                    response,
+                    cancellationToken).ConfigureAwait(false);
 
                 if (request.UpdateStatistics)
                 {
                     var s0 = new Stopwatch();
                     s0.Start();
                     var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
-                    var connection = ResolveSqlConnection(ctx);
+                    var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
                     var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                     s0.Stop();
                     response.TimeElapsedDuringUpdateStatistics = s0.Elapsed;
                 }
@@ -312,9 +400,9 @@ namespace Tanneryd.BulkOperations.EF6
                 foreach (var tableName in response.TablesWithNoCheckConstraints)
                 {
                     var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
-                    var connection = ResolveSqlConnection(ctx);
+                    var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
                     var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
 
@@ -326,11 +414,25 @@ namespace Tanneryd.BulkOperations.EF6
 
         public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx)
         {
-            ValidateDbContext(ctx);
-            return UpdateStatistics<T>(ctx, TimeSpan.FromMinutes(15));
+            return UpdateStatisticsAsync<T>(ctx).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static Task<BulkInsertResponse> UpdateStatisticsAsync<T>(
+            this DbContext ctx,
+            CancellationToken cancellationToken = default)
+        {
+            return UpdateStatisticsAsync<T>(ctx, TimeSpan.FromMinutes(15), cancellationToken);
         }
 
         public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx, TimeSpan timeout)
+        {
+            return UpdateStatisticsAsync<T>(ctx, timeout).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static async Task<BulkInsertResponse> UpdateStatisticsAsync<T>(
+            this DbContext ctx,
+            TimeSpan timeout,
+            CancellationToken cancellationToken = default)
         {
             ValidateDbContext(ctx);
             var response = new BulkInsertResponse();
@@ -339,9 +441,9 @@ namespace Tanneryd.BulkOperations.EF6
             var s0 = new Stopwatch();
             s0.Start();
             var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
-            var connection = ResolveSqlConnection(ctx);
+            var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
             var cmd = CreateSqlCommand(query, connection, null, timeout);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             s0.Stop();
             response.TimeElapsedDuringUpdateStatistics = s0.Elapsed;
 

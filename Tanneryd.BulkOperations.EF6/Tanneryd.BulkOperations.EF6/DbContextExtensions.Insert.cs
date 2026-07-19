@@ -14,6 +14,8 @@ using System.Diagnostics;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Tanneryd.BulkOperations.Common.Sql;
 using Tanneryd.BulkOperations.EF6.Model;
 
@@ -31,6 +33,30 @@ namespace Tanneryd.BulkOperations.EF6
             Dictionary<object, object> savedEntities,
             Dictionary<Type, Mappings> mappingsByType,
             BulkInsertResponse response)
+        {
+            DoBulkInsertAllAsync(
+                ctx,
+                entities,
+                sqlTransaction,
+                enableRecursiveInsert,
+                allowNotNullSelfReferences,
+                commandTimeout,
+                savedEntities,
+                mappingsByType,
+                response).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task DoBulkInsertAllAsync(
+            this DbContext ctx,
+            IList<dynamic> entities,
+            SqlTransaction sqlTransaction,
+            EnableRecursiveInsert enableRecursiveInsert,
+            AllowNotNullSelfReferences allowNotNullSelfReferences,
+            TimeSpan commandTimeout,
+            Dictionary<object, object> savedEntities,
+            Dictionary<Type, Mappings> mappingsByType,
+            BulkInsertResponse response,
+            CancellationToken cancellationToken = default)
         {
             if (entities.Count == 0) return;
 
@@ -115,7 +141,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                     if (!navProperties.Any()) continue;
 
-                    DoBulkInsertAll(
+                    await DoBulkInsertAllAsync(
                         ctx,
                         navProperties.ToList(),
                         sqlTransaction,
@@ -124,7 +150,8 @@ namespace Tanneryd.BulkOperations.EF6
                         commandTimeout,
                         savedEntities,
                         mappingsByType,
-                        response);
+                        response,
+                        cancellationToken).ConfigureAwait(false);
                     foreach (var modifiedEntity in modifiedEntities)
                     {
                         var e = modifiedEntity[0];
@@ -152,8 +179,17 @@ namespace Tanneryd.BulkOperations.EF6
                 savedEntities.Add(entity, entity);
             }
 
-            DoBulkCopy(ctx, validEntities, t, mappings, sqlTransaction, allowNotNullSelfReferences, enableRecursiveInsert, commandTimeout,
-                response);
+            await DoBulkCopyAsync(
+                ctx,
+                validEntities,
+                t,
+                mappings,
+                sqlTransaction,
+                allowNotNullSelfReferences,
+                enableRecursiveInsert,
+                commandTimeout,
+                response,
+                cancellationToken).ConfigureAwait(false);
 
             //
             // Any many-to-one (parent-child) foreign key related entities are found here. 
@@ -249,7 +285,7 @@ namespace Tanneryd.BulkOperations.EF6
                             joinTableNavProperties,
                             pkColumnMappings,
                             sqlTransaction);
-                        DoBulkInsertAll(ctx,
+                        await DoBulkInsertAllAsync(ctx,
                             notExistingNavProperties.ToArray(navPropertyType),
                             sqlTransaction,
                             enableRecursiveInsert,
@@ -257,7 +293,8 @@ namespace Tanneryd.BulkOperations.EF6
                             commandTimeout,
                             savedEntities,
                             mappingsByType,
-                            response);
+                            response,
+                            cancellationToken).ConfigureAwait(false);
 
                         foreach (var joinTableNavPropertiesForEntity in joinTableNavPropertiesByEntity)
                         {
@@ -303,10 +340,11 @@ namespace Tanneryd.BulkOperations.EF6
                                 .Distinct().ToArray(),
                             Transaction = sqlTransaction
                         };
-                        DoBulkUpdateAll(
+                        await DoBulkUpdateAllAsync(
                             ctx,
                             request,
-                            response);
+                            response,
+                            cancellationToken).ConfigureAwait(false);
                     }
 
                     if (navPropertyEntities.Any())
@@ -335,7 +373,7 @@ namespace Tanneryd.BulkOperations.EF6
                                     EntityProperty = fkMapping.AssociationMapping.Target.TableColumn,
                                     TableColumn = fkMapping.AssociationMapping.Target.TableColumn
                                 });
-                            DoBulkCopy(
+                            await DoBulkCopyAsync(
                                 ctx,
                                 navPropertyEntities.ToArray(),
                                 typeof(ExpandoObject),
@@ -344,10 +382,11 @@ namespace Tanneryd.BulkOperations.EF6
                                 allowNotNullSelfReferences,
                                 enableRecursiveInsert,
                                 commandTimeout,
-                                response);
+                                response,
+                                cancellationToken).ConfigureAwait(false);
                         }
                         else
-                            DoBulkInsertAll(
+                            await DoBulkInsertAllAsync(
                                 ctx,
                                 navPropertyEntities.ToArray(),
                                 sqlTransaction,
@@ -356,7 +395,8 @@ namespace Tanneryd.BulkOperations.EF6
                                 commandTimeout,
                                 savedEntities,
                                 mappingsByType,
-                                response);
+                                response,
+                                cancellationToken).ConfigureAwait(false);
                     }
                 }
             }
@@ -417,6 +457,30 @@ namespace Tanneryd.BulkOperations.EF6
             TimeSpan commandTimeout,
             BulkInsertResponse response)
         {
+            DoBulkCopyAsync(
+                ctx,
+                entities,
+                t,
+                mappings,
+                transaction,
+                allowNotNullSelfReferences,
+                enableRecursiveInsert,
+                commandTimeout,
+                response).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task DoBulkCopyAsync(
+            this DbContext ctx,
+            IList entities,
+            Type t,
+            Mappings mappings,
+            SqlTransaction transaction,
+            AllowNotNullSelfReferences allowNotNullSelfReferences,
+            EnableRecursiveInsert enableRecursiveInsert,
+            TimeSpan commandTimeout,
+            BulkInsertResponse response,
+            CancellationToken cancellationToken = default)
+        {
             // If we for some reason are called with an empty list we return immediately.
             if (entities.Count == 0) return;
 
@@ -426,7 +490,7 @@ namespace Tanneryd.BulkOperations.EF6
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
 
-            var conn = ResolveSqlConnection(ctx);
+            var conn = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
 
             // If we are dealing with entities with properties configured 
             // as complex types we need to flatten all entities. We use 
@@ -504,14 +568,15 @@ namespace Tanneryd.BulkOperations.EF6
                     .Values
                     .Except(pkColumnMappings)
                     .ToArray();
-                var tempTableName = FillTempTable(
+                var tempTableName = await FillTempTableAsync(
                     conn,
                     entities,
                     tableName,
                     columnMappings,
                     pkColumnMappings,
                     nonPrimaryKeyColumnMappings,
-                    transaction);
+                    transaction,
+                    cancellationToken).ConfigureAwait(false);
 
                 var conditionStatements =
                     pkColumnMappings.Select(c => $"[t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}]");
@@ -532,12 +597,12 @@ namespace Tanneryd.BulkOperations.EF6
                                  )
                                     ";
                 var cmd = CreateSqlCommand(cmdBody, conn, transaction, commandTimeout);
-                rowsAffected += cmd.ExecuteNonQuery();
+                rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
                 //
                 // Clean up. Delete the temp table.
                 //
-                DropTempTable(conn, transaction, tempTableName);
+                await DropTempTableAsync(conn, transaction, tempTableName, cancellationToken).ConfigureAwait(false);
             }
             else if (IsPrimaryKeyStoreGenerated(pkColumnMappings))
             {
@@ -566,7 +631,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                         var s = new Stopwatch();
                         s.Start();
-                        bulkCopy.WriteToServer(table.CreateDataReader());
+                        await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
                         s.Stop();
                         var stats = new BulkInsertStatistics
                         {
@@ -585,13 +650,14 @@ namespace Tanneryd.BulkOperations.EF6
                     {
                         var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Name).ToArray();
                         var tempTableName =
-                            CreateTempTable(
+                            await CreateTempTableAsync(
                                 conn,
                                 transaction,
                                 tableName,
                                 mappings.Discriminator,
                                 allColumnNames,
-                                IncludeRowNumber.Yes);
+                                IncludeRowNumber.Yes,
+                                cancellationToken).ConfigureAwait(false);
 
                         var bulkCopy = CreateBulkCopy(
                             table,
@@ -608,7 +674,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                         var s = new Stopwatch();
                         s.Start();
-                        bulkCopy.WriteToServer(table.CreateDataReader());
+                        await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
                         s.Stop();
                         var stats = new BulkInsertStatistics
                         {
@@ -623,7 +689,7 @@ namespace Tanneryd.BulkOperations.EF6
                             .Where(m => !m.TableColumn.IsStoreGeneratedIdentity)
                             .ToArray();
 
-                        rowsAffected += SelectIntoUsingOutputClause(
+                        rowsAffected += await SelectIntoUsingOutputClauseAsync(
                             conn,
                             transaction,
                             tableName,
@@ -639,7 +705,8 @@ namespace Tanneryd.BulkOperations.EF6
                             pkProperty,
                             hasComplexProperties,
                             mappings.Discriminator,
-                            t);
+                            t,
+                            cancellationToken).ConfigureAwait(false);
                     }
                 }
             }
@@ -663,7 +730,7 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var s = new Stopwatch();
                 s.Start();
-                bulkCopy.WriteToServer(table.CreateDataReader());
+                await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
                 s.Stop();
                 var stats = new BulkInsertStatistics
                 {
@@ -706,23 +773,59 @@ namespace Tanneryd.BulkOperations.EF6
             bool hasComplexProperties,
             Type t)
         {
+            return SelectIntoForIntegerTypePrimaryKeyAsync(
+                conn,
+                transaction,
+                tableName,
+                pkColumnType,
+                allowNotNullSelfReferences,
+                response,
+                nonPrimaryKeyColumnMappings,
+                pkColumn,
+                tempTableName,
+                s,
+                stats,
+                newEntities,
+                pkProperty,
+                hasComplexProperties,
+                t).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task<int> SelectIntoForIntegerTypePrimaryKeyAsync(
+            SqlServerConnection conn,
+            SqlTransaction transaction,
+            TableName tableName,
+            Type pkColumnType,
+            AllowNotNullSelfReferences allowNotNullSelfReferences,
+            BulkInsertResponse response,
+            TableColumnMapping[] nonPrimaryKeyColumnMappings,
+            EdmProperty pkColumn,
+            string tempTableName,
+            Stopwatch s,
+            BulkInsertStatistics stats,
+            ArrayList newEntities,
+            EdmProperty pkProperty,
+            bool hasComplexProperties,
+            Type t,
+            CancellationToken cancellationToken = default)
+        {
             var cmd = conn.CreateCommand();
             cmd.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
             cmd.Transaction = transaction;
 
             // Get the number of existing rows in the table.
             cmd.CommandText = $@"SELECT CASE WHEN EXISTS (SELECT TOP 1 * FROM {tableName.Fullname}) THEN 1 ELSE 0 END";
-            var result = cmd.ExecuteScalar();
+            var result = await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
             var count = Convert.ToInt64(result);
 
             // Get the identity increment value
             cmd.CommandText = $"SELECT IDENT_INCR('{tableName.Fullname}')";
-            result = cmd.ExecuteScalar();
+            result = await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
             dynamic identIncrement = Convert.ChangeType(result, pkColumnType);
 
             // Get the last identity value generated for our table
             cmd.CommandText = $"SELECT IDENT_CURRENT('{tableName.Fullname}')";
-            result = cmd.ExecuteScalar();
+            result = await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
             dynamic identcurrent = Convert.ChangeType(result, pkColumnType);
 
             var nextId = identcurrent + (count > 0 ? identIncrement : 0);
@@ -732,7 +835,7 @@ namespace Tanneryd.BulkOperations.EF6
             {
                 query = $"ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL";
                 cmd.CommandText = query;
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 response.TablesWithNoCheckConstraints.Add(tableName.Fullname);
             }
 
@@ -745,20 +848,20 @@ namespace Tanneryd.BulkOperations.EF6
                       ";
             cmd.CommandText = query;
             s.Restart();
-            int rowsAffected = cmd.ExecuteNonQuery();
+            int rowsAffected = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             s.Stop();
             stats.TimeElapsedDuringInsertInto = s.Elapsed;
             response.BulkInsertStatistics.Add(new Tuple<Type, BulkInsertStatistics>(t, stats));
 
             cmd.CommandText = $"SELECT SCOPE_IDENTITY()";
-            result = cmd.ExecuteScalar();
+            result = await cmd.ExecuteScalarAsync(cancellationToken).ConfigureAwait(false);
             dynamic lastId = Convert.ChangeType(result, pkColumnType);
 
             cmd.CommandText =
                 $"SELECT [{pkColumn.Name}] From {tableName.Fullname} WHERE [{pkColumn.Name}] >= {nextId} and [{pkColumn.Name}] <= {lastId}";
 
             object[] ids = null;
-            using (var sqlDataReader = cmd.ExecuteReader())
+            using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
             {
                 ids = (from IDataRecord r in sqlDataReader
                        let pk = r[pkColumn.Name]
@@ -806,6 +909,44 @@ namespace Tanneryd.BulkOperations.EF6
             Discriminator discriminator,
             Type t)
         {
+            return SelectIntoUsingOutputClauseAsync(
+                conn,
+                transaction,
+                tableName,
+                pkColumnType,
+                allowNotNullSelfReferences,
+                response,
+                nonPrimaryKeyColumnMappings,
+                pkColumn,
+                tempTableName,
+                s,
+                stats,
+                newEntities,
+                pkProperty,
+                hasComplexProperties,
+                discriminator,
+                t).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task<int> SelectIntoUsingOutputClauseAsync(
+            SqlServerConnection conn,
+            SqlTransaction transaction,
+            TableName tableName,
+            Type pkColumnType,
+            AllowNotNullSelfReferences allowNotNullSelfReferences,
+            BulkInsertResponse response,
+            TableColumnMapping[] nonPrimaryKeyColumnMappings,
+            EdmProperty pkColumn,
+            string tempTableName,
+            Stopwatch s,
+            BulkInsertStatistics stats,
+            ArrayList newEntities,
+            EdmProperty pkProperty,
+            bool hasComplexProperties,
+            Discriminator discriminator,
+            Type t,
+            CancellationToken cancellationToken = default)
+        {
             var cmd = conn.CreateCommand();
             cmd.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
             cmd.Transaction = transaction;
@@ -815,7 +956,7 @@ namespace Tanneryd.BulkOperations.EF6
             {
                 query = $"ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL";
                 cmd.CommandText = query;
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 response.TablesWithNoCheckConstraints.Add(tableName.Fullname);
             }
 
@@ -863,7 +1004,7 @@ namespace Tanneryd.BulkOperations.EF6
             cmd.CommandText = query;
             s.Restart();
             object[] ids = null;
-            using (var reader = cmd.ExecuteReader())
+            using (var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
             {
                 ids = (
                     from IDataRecord r in reader
@@ -1041,7 +1182,19 @@ namespace Tanneryd.BulkOperations.EF6
             SqlTransaction sqlTransaction,
             Mappings mappings)
         {
-            var connection = ResolveSqlConnection(ctx);
+            return GetClusteredIndexColumnsAsync(ctx, schema, tableName, sqlTransaction, mappings)
+                .ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task<string[]> GetClusteredIndexColumnsAsync(
+            DbContext ctx,
+            string schema,
+            string tableName,
+            SqlTransaction sqlTransaction,
+            Mappings mappings,
+            CancellationToken cancellationToken = default)
+        {
+            var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
 
             string query = $@"
                     SELECT  col.name
@@ -1061,7 +1214,7 @@ namespace Tanneryd.BulkOperations.EF6
             var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
 
             string[] clusteredColumns = null;
-            using (var reader = cmd.ExecuteReader())
+            using (var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
             {
                 clusteredColumns = (
                         from IDataRecord r in reader
@@ -1111,23 +1264,44 @@ namespace Tanneryd.BulkOperations.EF6
             TableColumnMapping[] nonKeyColumnMappings,
             SqlTransaction sqlTransaction)
         {
+            return FillTempTableAsync(
+                conn,
+                entities,
+                tableName,
+                columnMappings,
+                keyColumnMappings,
+                nonKeyColumnMappings,
+                sqlTransaction).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task<string> FillTempTableAsync(
+            SqlServerConnection conn,
+            IList entities,
+            TableName tableName,
+            Dictionary<string, TableColumnMapping> columnMappings,
+            TableColumnMapping[] keyColumnMappings,
+            TableColumnMapping[] nonKeyColumnMappings,
+            SqlTransaction sqlTransaction,
+            CancellationToken cancellationToken = default)
+        {
             var columnNames = keyColumnMappings.Select(m => m.TableColumn.Name)
                 .Concat(nonKeyColumnMappings.Select(m => m.TableColumn.Name)).ToArray();
 
-            var tempTableName = CreateTempTable(
+            var tempTableName = await CreateTempTableAsync(
                 conn,
                 sqlTransaction,
                 tableName,
                 null,
                 columnNames,
-                IncludeRowNumber.Yes);
+                IncludeRowNumber.Yes,
+                cancellationToken).ConfigureAwait(false);
 
             if (keyColumnMappings.Length == 1 &&
                 ((keyColumnMappings[0].TableColumn.IsStoreGeneratedIdentity &&
                   keyColumnMappings[0].TableColumn.TypeName != "uniqueidentifier") ||
                  keyColumnMappings[0].TableColumn.IsStoreGeneratedComputed))
             {
-                EnableIdentityInsert(tempTableName, conn, sqlTransaction);
+                await EnableIdentityInsertAsync(tempTableName, conn, sqlTransaction, cancellationToken).ConfigureAwait(false);
             }
 
             var allProperties = GetProperties(entities[0]);
@@ -1163,19 +1337,37 @@ namespace Tanneryd.BulkOperations.EF6
             //
             // Fill the temp table.
             //
-            bulkCopy.WriteToServer(table.CreateDataReader());
+            await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
 
             return tempTableName;
         }
 
         private static void EnableIdentityInsert(string tableName, SqlServerConnection conn, SqlTransaction sqlTransaction)
         {
-            conn.EnableIdentityInsert(tableName, sqlTransaction);
+            EnableIdentityInsertAsync(tableName, conn, sqlTransaction).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static Task EnableIdentityInsertAsync(
+            string tableName,
+            SqlServerConnection conn,
+            SqlTransaction sqlTransaction,
+            CancellationToken cancellationToken = default)
+        {
+            return conn.EnableIdentityInsertAsync(tableName, sqlTransaction, cancellationToken);
         }
 
         private static void DisableIdentityInsert(string tableName, SqlServerConnection conn, SqlTransaction sqlTransaction)
         {
-            conn.DisableIdentityInsert(tableName, sqlTransaction);
+            DisableIdentityInsertAsync(tableName, conn, sqlTransaction).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static Task DisableIdentityInsertAsync(
+            string tableName,
+            SqlServerConnection conn,
+            SqlTransaction sqlTransaction,
+            CancellationToken cancellationToken = default)
+        {
+            return conn.DisableIdentityInsertAsync(tableName, sqlTransaction, cancellationToken);
         }
     }
 }

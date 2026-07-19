@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Tanneryd.BulkOperations.Common.Sql;
 using Tanneryd.BulkOperations.EFCore.Model;
 
@@ -135,6 +137,24 @@ namespace Tanneryd.BulkOperations.EFCore
             TableColumn[] extraColumnNames,
             IncludeRowNumber includeRowNumber = IncludeRowNumber.No)
         {
+            return CreateTempTableAsync(
+                connection,
+                transaction,
+                tableName,
+                columnNames,
+                extraColumnNames,
+                includeRowNumber).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task<string> CreateTempTableAsync(
+            SqlConnection connection,
+            SqlTransaction transaction,
+            TableName tableName,
+            string[] columnNames,
+            TableColumn[] extraColumnNames,
+            IncludeRowNumber includeRowNumber = IncludeRowNumber.No,
+            CancellationToken cancellationToken = default)
+        {
             var selectClause = string.Join(",", columnNames.Select(p => $"[{p}]"));
 
             if (includeRowNumber == IncludeRowNumber.Yes)
@@ -160,7 +180,7 @@ namespace Tanneryd.BulkOperations.EFCore
                         FROM {tableName.Fullname}
                         WHERE 1=0";
             var cmd = SqlCommandFactory.Create(query, connection, transaction, TimeSpan.FromSeconds(30));
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
             return tempTableName;
         }
@@ -176,7 +196,16 @@ namespace Tanneryd.BulkOperations.EFCore
             SqlTransaction transaction,
             string tempTableName)
         {
-            TempTableSqlHelper.Drop(connection, transaction, tempTableName);
+            DropTempTableAsync(connection, transaction, tempTableName).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static Task DropTempTableAsync(
+            SqlConnection connection,
+            SqlTransaction transaction,
+            string tempTableName,
+            CancellationToken cancellationToken = default)
+        {
+            return TempTableSqlHelper.DropAsync(connection, transaction, tempTableName, cancellationToken);
         }
 
         /// <summary>

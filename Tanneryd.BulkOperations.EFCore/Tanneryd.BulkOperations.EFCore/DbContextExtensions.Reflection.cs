@@ -12,6 +12,8 @@ using System.Data;
 using System.Dynamic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Tanneryd.BulkOperations.Common.Sql;
 using Tanneryd.BulkOperations.EFCore.Model;
 
@@ -77,9 +79,16 @@ namespace Tanneryd.BulkOperations.EFCore
 
         public static SqlConnection GetSqlConnection(this DbContext ctx)
         {
+            return GetSqlConnectionAsync(ctx).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static async Task<SqlConnection> GetSqlConnectionAsync(
+            this DbContext ctx,
+            CancellationToken cancellationToken = default)
+        {
             var conn = (SqlConnection)ctx.Database.GetDbConnection();
             if (conn.State == ConnectionState.Closed)
-                conn.Open();
+                await conn.OpenAsync(cancellationToken).ConfigureAwait(false);
 
             return conn;
         }

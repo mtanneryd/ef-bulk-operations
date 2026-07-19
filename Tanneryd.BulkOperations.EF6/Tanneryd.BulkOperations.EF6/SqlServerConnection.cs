@@ -8,6 +8,8 @@ using System;
 using System.Data;
 using System.Data.Common;
 using System.Data.Entity;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Tanneryd.BulkOperations.EF6
 {
@@ -33,12 +35,26 @@ namespace Tanneryd.BulkOperations.EF6
 
         public static SqlServerConnection Resolve(DbContext ctx)
         {
+            return ResolveAsync(ctx).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public static async Task<SqlServerConnection> ResolveAsync(
+            DbContext ctx,
+            CancellationToken cancellationToken = default)
+        {
             if (ctx == null)
                 throw new ArgumentNullException(nameof(ctx));
 
             var connection = ctx.Database.Connection;
             if (connection.State == ConnectionState.Closed)
-                connection.Open();
+            {
+                if (connection is SqlConnection modernToOpen)
+                    await modernToOpen.OpenAsync(cancellationToken).ConfigureAwait(false);
+                else if (connection is System.Data.SqlClient.SqlConnection legacyToOpen)
+                    await legacyToOpen.OpenAsync(cancellationToken).ConfigureAwait(false);
+                else
+                    connection.Open();
+            }
 
             if (connection is SqlConnection modernConnection)
                 return new SqlServerConnection(modernConnection);
@@ -50,7 +66,14 @@ namespace Tanneryd.BulkOperations.EF6
             {
                 var storeConnection = entityConnection.StoreConnection;
                 if (storeConnection.State == ConnectionState.Closed)
-                    storeConnection.Open();
+                {
+                    if (storeConnection is SqlConnection modernStoreToOpen)
+                        await modernStoreToOpen.OpenAsync(cancellationToken).ConfigureAwait(false);
+                    else if (storeConnection is System.Data.SqlClient.SqlConnection legacyStoreToOpen)
+                        await legacyStoreToOpen.OpenAsync(cancellationToken).ConfigureAwait(false);
+                    else
+                        storeConnection.Open();
+                }
 
                 if (storeConnection is SqlConnection modernStoreConnection)
                     return new SqlServerConnection(modernStoreConnection);
@@ -65,14 +88,19 @@ namespace Tanneryd.BulkOperations.EF6
 
         public void EnsureOpen()
         {
+            EnsureOpenAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public async Task EnsureOpenAsync(CancellationToken cancellationToken = default)
+        {
             if (IsLegacy)
             {
                 if (_legacyConnection.State == ConnectionState.Closed)
-                    _legacyConnection.Open();
+                    await _legacyConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
             }
             else if (_modernConnection.State == ConnectionState.Closed)
             {
-                _modernConnection.Open();
+                await _modernConnection.OpenAsync(cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -129,24 +157,65 @@ namespace Tanneryd.BulkOperations.EF6
 
         public void ExecuteNonQuery(string query, SqlTransaction transaction, TimeSpan timeout)
         {
+            ExecuteNonQueryAsync(query, transaction, timeout).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public async Task ExecuteNonQueryAsync(
+            string query,
+            SqlTransaction transaction,
+            TimeSpan timeout,
+            CancellationToken cancellationToken = default)
+        {
             using var cmd = CreateCommand(query, transaction, timeout);
-            cmd.ExecuteNonQuery();
+            await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
         public void DropTempTable(SqlTransaction transaction, string tempTableName)
         {
+            DropTempTableAsync(transaction, tempTableName).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public Task DropTempTableAsync(
+            SqlTransaction transaction,
+            string tempTableName,
+            CancellationToken cancellationToken = default)
+        {
             var query = $@"IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}";
-            ExecuteNonQuery(query, transaction, TimeSpan.FromSeconds(30));
+            return ExecuteNonQueryAsync(query, transaction, TimeSpan.FromSeconds(30), cancellationToken);
         }
 
         public void EnableIdentityInsert(string tableName, SqlTransaction transaction)
         {
-            ExecuteNonQuery($@"SET IDENTITY_INSERT {tableName} ON", transaction, TimeSpan.FromSeconds(30));
+            EnableIdentityInsertAsync(tableName, transaction).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public Task EnableIdentityInsertAsync(
+            string tableName,
+            SqlTransaction transaction,
+            CancellationToken cancellationToken = default)
+        {
+            return ExecuteNonQueryAsync(
+                $@"SET IDENTITY_INSERT {tableName} ON",
+                transaction,
+                TimeSpan.FromSeconds(30),
+                cancellationToken);
         }
 
         public void DisableIdentityInsert(string tableName, SqlTransaction transaction)
         {
-            ExecuteNonQuery($@"SET IDENTITY_INSERT {tableName} OFF", transaction, TimeSpan.FromSeconds(30));
+            DisableIdentityInsertAsync(tableName, transaction).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        public Task DisableIdentityInsertAsync(
+            string tableName,
+            SqlTransaction transaction,
+            CancellationToken cancellationToken = default)
+        {
+            return ExecuteNonQueryAsync(
+                $@"SET IDENTITY_INSERT {tableName} OFF",
+                transaction,
+                TimeSpan.FromSeconds(30),
+                cancellationToken);
         }
 
         private void ValidateTransaction(SqlTransaction transaction)
@@ -248,7 +317,12 @@ namespace Tanneryd.BulkOperations.EF6
         private bool IsLegacy => _legacyCommand != null;
 
         public int ExecuteNonQuery() =>
-            IsLegacy ? _legacyCommand.ExecuteNonQuery() : _modernCommand.ExecuteNonQuery();
+            ExecuteNonQueryAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+
+        public Task<int> ExecuteNonQueryAsync(CancellationToken cancellationToken = default) =>
+            IsLegacy
+                ? _legacyCommand.ExecuteNonQueryAsync(cancellationToken)
+                : _modernCommand.ExecuteNonQueryAsync(cancellationToken);
 
         public void AddParameter(SqlParameter parameter)
         {
@@ -274,10 +348,23 @@ namespace Tanneryd.BulkOperations.EF6
         }
 
         public object ExecuteScalar() =>
-            IsLegacy ? _legacyCommand.ExecuteScalar() : _modernCommand.ExecuteScalar();
+            ExecuteScalarAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+
+        public Task<object> ExecuteScalarAsync(CancellationToken cancellationToken = default) =>
+            IsLegacy
+                ? _legacyCommand.ExecuteScalarAsync(cancellationToken)
+                : _modernCommand.ExecuteScalarAsync(cancellationToken);
 
         public DbDataReader ExecuteReader() =>
-            IsLegacy ? _legacyCommand.ExecuteReader() : _modernCommand.ExecuteReader();
+            ExecuteReaderAsync().ConfigureAwait(false).GetAwaiter().GetResult();
+
+        public async Task<DbDataReader> ExecuteReaderAsync(CancellationToken cancellationToken = default)
+        {
+            if (IsLegacy)
+                return await _legacyCommand.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+
+            return await _modernCommand.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
+        }
 
         public void Dispose()
         {
@@ -378,19 +465,23 @@ namespace Tanneryd.BulkOperations.EF6
 
         public void WriteToServer(DataTable table)
         {
-            if (IsLegacy)
-                _legacyBulkCopy.WriteToServer(table);
-            else
-                _modernBulkCopy.WriteToServer(table);
+            WriteToServerAsync(table).ConfigureAwait(false).GetAwaiter().GetResult();
         }
+
+        public Task WriteToServerAsync(DataTable table, CancellationToken cancellationToken = default) =>
+            IsLegacy
+                ? _legacyBulkCopy.WriteToServerAsync(table, cancellationToken)
+                : _modernBulkCopy.WriteToServerAsync(table, cancellationToken);
 
         public void WriteToServer(DbDataReader reader)
         {
-            if (IsLegacy)
-                _legacyBulkCopy.WriteToServer(reader);
-            else
-                _modernBulkCopy.WriteToServer(reader);
+            WriteToServerAsync(reader).ConfigureAwait(false).GetAwaiter().GetResult();
         }
+
+        public Task WriteToServerAsync(DbDataReader reader, CancellationToken cancellationToken = default) =>
+            IsLegacy
+                ? _legacyBulkCopy.WriteToServerAsync(reader, cancellationToken)
+                : _modernBulkCopy.WriteToServerAsync(reader, cancellationToken);
 
         public void Dispose()
         {

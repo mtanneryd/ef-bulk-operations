@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Tanneryd.BulkOperations.EFCore.Model;
 
 namespace Tanneryd.BulkOperations.EFCore
@@ -18,6 +20,15 @@ namespace Tanneryd.BulkOperations.EFCore
             this DbContext ctx,
             BulkUpdateRequest request,
             BulkOperationResponse response)
+        {
+            DoBulkUpdateAllAsync(ctx, request, response).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task DoBulkUpdateAllAsync(
+            this DbContext ctx,
+            BulkUpdateRequest request,
+            BulkOperationResponse response,
+            CancellationToken cancellationToken = default)
         {
             var rowsAffected = 0;
 
@@ -71,9 +82,16 @@ namespace Tanneryd.BulkOperations.EFCore
                 //
                 // Create and populate a temp table to hold the updated values.
                 //
-                var conn = GetSqlConnection(ctx);
-                var tempTableName = FillTempTable(conn, entities, tableName, columnMappings, selectedKeyMappings,
-                    modifiedColumnMappings, transaction);
+                var conn = await GetSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
+                var tempTableName = await FillTempTableAsync(
+                    conn,
+                    entities,
+                    tableName,
+                    columnMappings,
+                    selectedKeyMappings,
+                    modifiedColumnMappings,
+                    transaction,
+                    cancellationToken).ConfigureAwait(false);
 
                 //
                 // Update the target table using the temp table we just created.
@@ -89,7 +107,7 @@ namespace Tanneryd.BulkOperations.EFCore
                                  INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
                                 ";
                 var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout);
-                rowsAffected += cmd.ExecuteNonQuery();
+                rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
                 if (request.InsertIfNew)
                 {
@@ -108,13 +126,13 @@ namespace Tanneryd.BulkOperations.EFCore
                              INNER JOIN {tableName.Fullname} AS t1 ON {conditionStatementsSql}            
                             ";
                     cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout);
-                    rowsAffected += cmd.ExecuteNonQuery();
+                    rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 }
 
                 //
                 // Clean up. Delete the temp table.
                 //
-                DropTempTable(conn, transaction, tempTableName);
+                await DropTempTableAsync(conn, transaction, tempTableName, cancellationToken).ConfigureAwait(false);
             }
 
             response.AffectedRows.Add(new Tuple<Type, long>(t, rowsAffected));

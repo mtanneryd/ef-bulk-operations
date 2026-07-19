@@ -150,7 +150,7 @@
             "type": "shell",
             "command": "vstest.console.exe",
             "args": [
-                "${workspaceFolder}/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET48.Tests/bin/Debug/Tanneryd.BulkOperations.EF6.NET48.Tests.dll",
+                "${workspaceFolder}/Tanneryd.BulkOperations.EF6/Tanneryd.BulkOperations.EF6.NET48.Tests/bin/Debug/net48/Tanneryd.BulkOperations.EF6.NET48.Tests.dll",
                 "/logger:console;verbosity=normal"
             ],
             "group": "test",

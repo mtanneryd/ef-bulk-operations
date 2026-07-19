@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Tanneryd.BulkOperations.EF6.Model;
 
 namespace Tanneryd.BulkOperations.EF6
@@ -18,6 +20,15 @@ namespace Tanneryd.BulkOperations.EF6
             this DbContext ctx,
             BulkUpdateRequest request,
             BulkOperationResponse response)
+        {
+            DoBulkUpdateAllAsync(ctx, request, response).ConfigureAwait(false).GetAwaiter().GetResult();
+        }
+
+        private static async Task DoBulkUpdateAllAsync(
+            this DbContext ctx,
+            BulkUpdateRequest request,
+            BulkOperationResponse response,
+            CancellationToken cancellationToken = default)
         {
             var rowsAffected = 0;
 
@@ -33,10 +44,6 @@ namespace Tanneryd.BulkOperations.EF6
             var keyColumnNames = keyPropertyNames.Select(n=>columnMappings[n].TableColumn.Name).ToArray();
             var updatedColumnNames = updatedPropertyNames.Select(n=>columnMappings[n].TableColumn.Name).ToArray();
 
-            //
-            // Check to see if the table has a primary key. If so,
-            // get a clr property name to table column name mapping.
-            //
             var primaryKeyMembers = GetPrimaryKeyMembers(columnMappings);
 
             var selectedKeyMembers = keyPropertyNames.Any() ? keyPropertyNames : primaryKeyMembers.ToArray();
@@ -50,12 +57,6 @@ namespace Tanneryd.BulkOperations.EF6
 
             if (selectedKeyMappings.Any())
             {
-                //
-                // Get a clr property name to table column name mapping
-                // for the columns we want to update. Exclude any primary
-                // key column as well as any column that we chose to use
-                // as a key column in this specific update operation.
-                //
                 var modifiedColumnMappingCandidates = columnMappings.Values
                     .Where(m => !allKeyMembers.Contains(m.TableColumn.Name))
                     .Select(m => m)
@@ -68,16 +69,17 @@ namespace Tanneryd.BulkOperations.EF6
 
                 var modifiedColumnMappings = modifiedColumnMappingCandidates.ToArray();
 
-                //
-                // Create and populate a temp table to hold the updated values.
-                //
-                var conn = ResolveSqlConnection(ctx);
-                var tempTableName = FillTempTable(conn, entities, tableName, columnMappings, selectedKeyMappings,
-                    modifiedColumnMappings, transaction);
+                var conn = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
+                var tempTableName = await FillTempTableAsync(
+                    conn,
+                    entities,
+                    tableName,
+                    columnMappings,
+                    selectedKeyMappings,
+                    modifiedColumnMappings,
+                    transaction,
+                    cancellationToken).ConfigureAwait(false);
 
-                //
-                // Update the target table using the temp table we just created.
-                //
                 var setStatements =
                     modifiedColumnMappings.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
                 var setStatementsSql = string.Join(" , ", setStatements);
@@ -89,7 +91,7 @@ namespace Tanneryd.BulkOperations.EF6
                                  INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
                                 ";
                 var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout);
-                rowsAffected += cmd.ExecuteNonQuery();
+                rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
                 if (request.InsertIfNew)
                 {
@@ -108,29 +110,13 @@ namespace Tanneryd.BulkOperations.EF6
                              INNER JOIN {tableName.Fullname} AS t1 ON {conditionStatementsSql}            
                             ";
                     cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout);
-                    rowsAffected += cmd.ExecuteNonQuery();
+                    rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 }
 
-                //
-                // Clean up. Delete the temp table.
-                //
-                DropTempTable(conn, transaction, tempTableName);
+                await DropTempTableAsync(conn, transaction, tempTableName, cancellationToken).ConfigureAwait(false);
             }
 
             response.AffectedRows.Add(new Tuple<Type, long>(t, rowsAffected));
         }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="entities"></param>
-        /// <param name="sqlTransaction"></param>
-        /// <param name="recursive"></param>
-        /// <param name="allowNotNullSelfReferences"></param>
-        /// <param name="commandTimeout"></param>
-        /// <param name="savedEntities"></param>
-        /// <param name="mappingsByType"></param>
     }
 }
