@@ -102,15 +102,10 @@ namespace Tanneryd.BulkOperations.EF6
         }
 
         /// <summary>
-        /// 
+        /// Creates a session-scoped temp table with the same column types as the
+        /// target (including identity/discriminator metadata) by selecting zero
+        /// rows via SELECT … INTO … WHERE 1=0. The name is a GUID to avoid collisions.
         /// </summary>
-        /// <param name="connection"></param>
-        /// <param name="transaction"></param>
-        /// <param name="tableName"></param>
-        /// <param name="discriminator"></param>
-        /// <param name="columnNames"></param>
-        /// <param name="includeRowNumber"></param>
-        /// <returns></returns>
         private static string CreateTempTable(
             SqlServerConnection connection,
             SqlTransaction transaction,
@@ -164,12 +159,6 @@ namespace Tanneryd.BulkOperations.EF6
             return tempTableName;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="connection"></param>
-        /// <param name="transaction"></param>
-        /// <param name="tempTableName"></param>
         private static void DropTempTable(
             SqlServerConnection connection,
             SqlTransaction transaction,
@@ -188,18 +177,10 @@ namespace Tanneryd.BulkOperations.EF6
         }
 
         /// <summary>
-        /// 
+        /// Builds a SqlBulkCopy session and DataTable columns for the mapped properties.
+        /// Always ORs in TableLock (TABLOCK) for throughput; expect reduced concurrency
+        /// on the destination during the copy. Unmapped CLR properties are skipped.
         /// </summary>
-        /// <param name="table"></param>
-        /// <param name="properties"></param>
-        /// <param name="columnMappings"></param>
-        /// <param name="connection"></param>
-        /// <param name="transaction"></param>
-        /// <param name="tableName"></param>
-        /// <param name="discriminator"></param>
-        /// <param name="options"></param>
-        /// <param name="includeRowNumber"></param>
-        /// <returns></returns>
         private static SqlBulkCopySession CreateBulkCopy(
             DataTable table,
             BulkPropertyInfo[] properties,
@@ -228,12 +209,10 @@ namespace Tanneryd.BulkOperations.EF6
                     propertyType = Nullable.GetUnderlyingType(propertyType);
                 }
 
-                // Ignore all properties that we have no mappings for. We might have done so
-                // already but just to be really really sure.
+                // Skip unmapped CLR properties.
                 if (columnMappings.ContainsKey(property.Name))
                 {
-                    // Since we cannot trust the CLR type properties to be in the same order as
-                    // the table columns we use the SqlBulkCopy column mappings.
+                    // Column order may differ from CLR property order; map by name.
                     table.Columns.Add(new DataColumn(property.Name, propertyType));
                     var clrPropertyName = property.Name;
                     var tableColumnName = columnMappings[property.Name].TableColumn.Name;
@@ -256,15 +235,5 @@ namespace Tanneryd.BulkOperations.EF6
 
             return bulkCopy;
         }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="T1"></typeparam>
-        /// <typeparam name="T2"></typeparam>
-        /// <param name="ctx"></param>
-        /// <param name="request"></param>
-        /// <returns></returns>
     }
 }

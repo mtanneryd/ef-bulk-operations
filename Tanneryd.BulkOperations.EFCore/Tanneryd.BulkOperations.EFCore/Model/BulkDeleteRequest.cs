@@ -4,6 +4,11 @@ using Microsoft.Data.SqlClient;
 
 namespace Tanneryd.BulkOperations.EFCore.Model
 {
+    /// <summary>
+    /// Parameters for BulkDeleteNotExisting. Deletes rows matching SqlConditions
+    /// that do not appear in Items according to KeyPropertyMappings. An empty
+    /// Items list therefore deletes the entire condition window.
+    /// </summary>
     public class BulkDeleteRequest<T>
     {
         public SqlCondition[] SqlConditions { get; set; }

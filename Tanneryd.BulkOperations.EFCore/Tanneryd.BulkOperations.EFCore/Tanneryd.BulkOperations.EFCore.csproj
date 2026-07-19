@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net10.0</TargetFramework>
-		<Version>3.0.1</Version>
+		<Version>4.0.0</Version>
 		<Authors>Måns Tånneryd</Authors>
 		<Company>Tånneryd IT</Company>
 		<Description>Provides bulk operations for EF Core</Description>
@@ -13,7 +13,7 @@
 		<PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
 		<PackageId>Tanneryd.BulkOperations.EFCore</PackageId>
 		<PackageProjectUrl>https://www.nuget.org/packages/Tanneryd.BulkOperations.EFCore</PackageProjectUrl>
-		<PackageReleaseNotes>Updated NuGet package dependencies. Added VS Code build and test tasks. Minor code cleanup.</PackageReleaseNotes>
+		<PackageReleaseNotes>Added async bulk operation APIs with CancellationToken support. Synchronous methods remain and delegate to the async implementations. Updated NuGet package dependencies. Added VS Code build and test tasks. Minor code cleanup.</PackageReleaseNotes>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedAllSources>True</EmbedAllSources>

@@ -4,6 +4,11 @@ using System.Collections.Generic;
 
 namespace Tanneryd.BulkOperations.Common.Sql
 {
+    /// <summary>
+    /// Builds AND predicates with SqlParameters for non-null values.
+    /// Null/DBNull becomes IS NULL. Column names come from the resolve
+    /// callback (mapped identifiers), never from raw caller SQL fragments.
+    /// </summary>
     internal static class SqlConditionBuilder
     {
         public static string Build(

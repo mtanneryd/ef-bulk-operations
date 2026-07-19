@@ -492,10 +492,8 @@ namespace Tanneryd.BulkOperations.EF6
 
             var conn = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
 
-            // If we are dealing with entities with properties configured 
-            // as complex types we need to flatten all entities. We use 
-            // ExpandoObject for this since we are already compatible with
-            // those little critters.
+            // Complex types are flattened into ExpandoObject so the same
+            // bulk-copy path can be reused for nested CLR shapes.
             if (hasComplexProperties)
             {
                 IList flattenedEntities = new List<object>();
@@ -520,37 +518,21 @@ namespace Tanneryd.BulkOperations.EF6
             var primaryKeyMembers = GetPrimaryKeyMembers(columnMappings);
             var pkColumnMappings = GetPrimaryKeyColumnMappings(columnMappings, primaryKeyMembers);
 
-            // There are four different scenarios here:
+            // Insert path selection:
             //
-            // (1) There are no primary keys and since EF6 does not
-            //     support this neither do we so we just throw an 
-            //     exception.
+            // (1) No primary key — unsupported (EF6 requires one); throw.
             //
-            // (2) Join tables are treated as a special case and we
-            //     identify them by looking at the entity type which 
-            //     for these tables always is ExpandoObject.
+            // (2) Join tables — entity type is ExpandoObject; stage via temp
+            //     table then INSERT the missing rows.
             //
-            // (3a) The table has a single column primary key that is
-            //     generated or computed by the database. In these
-            //     cases we need to perform some black magic in order
-            //     to reliably retrieve these primary key values and
-            //     update the corresponding entity objects. Separating
-            //     new entities from previously existing entities is
-            //     easy. We simply look at the primary key property
-            //     and if it has no value the entity is a new one and
-            //     it should be written to the database table.
-            // (3b) The table has a single column primary key that is
-            //     generated or computed by the database but we are not
-            //     interested in recursively inserting entities and we
-            //     do not care about retrieving generated primary key
-            //     values. So, we can save some time by simply doing
-            //     a direct bulk copy without the previously mentioned
-            //     black magic.
+            // (3a) Single store-generated PK and we need those values back —
+            //     bulk-copy into a temp table, then MERGE … OUTPUT to insert
+            //     and map generated keys back via temp rowno.
+            // (3b) Same PK shape but EnableRecursiveInsert.NoAndIgnoreGeneratedPrimaryKeys —
+            //     direct SqlBulkCopy into the target table (no key retrieval).
             //
-            // (4) In all other cases we use bulk copy directly to the
-            //     target table (so no black magic required) but
-            //     selecting the new entities requires an actual lookup
-            //     in the database.
+            // (4) All other key shapes — direct SqlBulkCopy; "new vs existing"
+            //     is determined by a database lookup when needed.
 
             if (pkColumnMappings.Length == 0)
             {
@@ -558,10 +540,7 @@ namespace Tanneryd.BulkOperations.EF6
                     "No primary key found. This should not be possible since EF6 has no support for tables without a primary key.");
             }
 
-            // Join tables are treated as a special case. However,
-            // we should be able to do this with a direct bulk copy
-            // if we select the new entities first instead of
-            // excluding them in hte insert into statement.
+            // Join tables: stage keys in a temp table and insert only missing rows.
             if (t == typeof(ExpandoObject))
             {
                 var nonPrimaryKeyColumnMappings = columnMappings
@@ -791,6 +770,9 @@ namespace Tanneryd.BulkOperations.EF6
                 t).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        // Legacy identity-range approach (IDENT_CURRENT ± count). Unsafe under
+        // concurrent inserts; superseded by SelectIntoUsingOutputClauseAsync.
+        // Kept for reference; no current call sites.
         private static async Task<int> SelectIntoForIntegerTypePrimaryKeyAsync(
             SqlServerConnection conn,
             SqlTransaction transaction,
@@ -928,6 +910,13 @@ namespace Tanneryd.BulkOperations.EF6
                 t).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <summary>
+        /// Inserts from the temp table using MERGE ON 1=0 … OUTPUT so SQL Server
+        /// returns inserted identity values ordered by our temp-table rowno.
+        /// Required because SqlBulkCopy into a real table cannot reliably return
+        /// per-row identities. When AllowNotNullSelfReferences is Yes, CHECK/FK
+        /// constraints are temporarily disabled (re-enabled by the outer finally).
+        /// </summary>
         private static async Task<int> SelectIntoUsingOutputClauseAsync(
             SqlServerConnection conn,
             SqlTransaction transaction,
@@ -954,6 +943,7 @@ namespace Tanneryd.BulkOperations.EF6
             string query;
             if (allowNotNullSelfReferences == AllowNotNullSelfReferences.Yes)
             {
+                // Allows inserting not-null self-FK graphs; re-enabled in BulkInsertAllAsync finally.
                 query = $"ALTER TABLE {tableName.Fullname} NOCHECK CONSTRAINT ALL";
                 cmd.CommandText = query;
                 await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -1186,6 +1176,10 @@ namespace Tanneryd.BulkOperations.EF6
                 .ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <summary>
+        /// Reads clustered-index column order so rows can be sorted before bulk
+        /// load to reduce page splits. Schema/table identifiers come from EF mappings.
+        /// </summary>
         private static async Task<string[]> GetClusteredIndexColumnsAsync(
             DbContext ctx,
             string schema,
@@ -1296,6 +1290,8 @@ namespace Tanneryd.BulkOperations.EF6
                 IncludeRowNumber.Yes,
                 cancellationToken).ConfigureAwait(false);
 
+            // Temp table inherits identity metadata from the source; KeepIdentity
+            // bulk-copy of explicit key values requires IDENTITY_INSERT ON.
             if (keyColumnMappings.Length == 1 &&
                 ((keyColumnMappings[0].TableColumn.IsStoreGeneratedIdentity &&
                   keyColumnMappings[0].TableColumn.TypeName != "uniqueidentifier") ||

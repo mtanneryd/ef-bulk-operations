@@ -1,5 +1,5 @@
 ﻿/*
- * Copyright ©  2017-2020 Tånneryd IT AB
+ * Copyright ©  2017-2026 Tånneryd IT AB
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,10 @@ using Microsoft.Data.SqlClient;
 
 namespace Tanneryd.BulkOperations.EFCore.Model
 {
+    /// <summary>
+    /// Parameters for BulkUpdateAll. Stages rows in a temp table, UPDATEs the target
+    /// on key match, and optionally INSERTs unmatched rows when InsertIfNew is set.
+    /// </summary>
     public class BulkUpdateRequest
     {
         public BulkUpdateRequest()
@@ -30,10 +34,24 @@ namespace Tanneryd.BulkOperations.EFCore.Model
         }
 
         public IList Entities { get; set; }
+
+        /// <summary>
+        /// CLR property names to update. Empty means all mapped non-key columns.
+        /// </summary>
         public string[] UpdatedPropertyNames { get; set; }
+
+        /// <summary>
+        /// CLR property names used as the join/match key. Empty means the table primary key.
+        /// </summary>
         public string[] KeyPropertyNames { get; set; }
+
         public SqlTransaction Transaction { get; set; }
+
+        /// <summary>
+        /// When true, entities that do not match existing rows are inserted.
+        /// </summary>
         public bool InsertIfNew { get; set; }
+
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(30);
     }
 }

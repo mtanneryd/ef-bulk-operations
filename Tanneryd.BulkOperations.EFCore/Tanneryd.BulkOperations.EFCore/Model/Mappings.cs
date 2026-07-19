@@ -16,10 +16,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Tanneryd.BulkOperations.EFCore.Model
 {
+    /// <summary>
+    /// EF model mappings for a CLR entity type: table name, columns, and FK relations.
+    /// </summary>
     public class Mappings
     {
         public Mappings()
@@ -36,36 +38,5 @@ namespace Tanneryd.BulkOperations.EFCore.Model
         public Dictionary<string, TableColumnMapping> ColumnMappingByColumnName { get; set; }
         public ForeignKeyMapping[] ToForeignKeyMappings { get; set; }
         public ForeignKeyMapping[] FromForeignKeyMappings { get; set; }
-
-        //public string[] GetPrimaryKeyMembers()
-        //{
-        //    dynamic declaringType = ColumnMappingByPropertyName
-        //        .Values
-        //        .First()
-        //        .TableColumn
-        //        .DeclaringType;
-
-        //    var primaryKeyMembers = new List<string>();
-        //    foreach (var keyMember in declaringType.KeyMembers)
-        //        primaryKeyMembers.Add(keyMember.ToString());
-
-        //    return primaryKeyMembers.ToArray();
-        //}
-
-        //public TableColumnMapping[] GetPrimaryKeyColumnMappings()
-        //{
-        //    var keyMembers = GetPrimaryKeyMembers();
-        //    var pkColumnMappings = ColumnMappingByPropertyName.Values
-        //        .Where(m => keyMembers.Contains(m.TableColumn.Name))
-        //        .ToArray();
-        //    return pkColumnMappings;
-        //}
-
-        //public bool IsPrimaryKeyStoreGenerated(TableColumnMapping[] pkColumnMappings)
-        //{
-        //    return pkColumnMappings.Length == 1 &&
-        //           (pkColumnMappings[0].TableColumn.IsStoreGeneratedIdentity ||
-        //            pkColumnMappings[0].TableColumn.IsStoreGeneratedComputed);
-        //}
     }
 }

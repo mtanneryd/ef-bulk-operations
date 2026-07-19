@@ -37,11 +37,17 @@ namespace Tanneryd.BulkOperations.EF6
 
         #region Public API
 
+        /// <summary>
+        /// Clears the SQL Server plan cache via DBCC FREEPROCCACHE.
+        /// Expensive and instance-wide for the connection context—use only for
+        /// plan-cache troubleshooting, not routine operations.
+        /// </summary>
         public static void DeleteAllExecutionPlansFromCache(this DbContext ctx, SqlTransaction sqlTransaction)
         {
             DeleteAllExecutionPlansFromCacheAsync(ctx, sqlTransaction).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <inheritdoc cref="DeleteAllExecutionPlansFromCache"/>
         public static Task DeleteAllExecutionPlansFromCacheAsync(
             this DbContext ctx,
             SqlTransaction sqlTransaction,
@@ -88,6 +94,7 @@ namespace Tanneryd.BulkOperations.EF6
             BulkDeleteNotExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <inheritdoc cref="BulkDeleteNotExisting{T1,T2}"/>
         public static Task BulkDeleteNotExistingAsync<T1, T2>(
             this DbContext ctx,
             BulkDeleteRequest<T1> request,
@@ -121,6 +128,7 @@ namespace Tanneryd.BulkOperations.EF6
             return BulkSelectAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <inheritdoc cref="BulkSelect{T1,T2}"/>
         public static Task<IList<T2>> BulkSelectAsync<T1, T2>(
             this DbContext ctx,
             BulkSelectRequest<T1> request,
@@ -147,6 +155,7 @@ namespace Tanneryd.BulkOperations.EF6
             return BulkSelectExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <inheritdoc cref="BulkSelectExisting{T1,T2}"/>
         public static Task<IList<T1>> BulkSelectExistingAsync<T1, T2>(
             this DbContext ctx,
             BulkSelectRequest<T1> request,
@@ -172,6 +181,7 @@ namespace Tanneryd.BulkOperations.EF6
             return BulkSelectNotExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <inheritdoc cref="BulkSelectNotExisting{T1,T2}"/>
         public static Task<IList<T1>> BulkSelectNotExistingAsync<T1, T2>(
             this DbContext ctx,
             BulkSelectRequest<T1> request,
@@ -215,6 +225,7 @@ namespace Tanneryd.BulkOperations.EF6
             return BulkUpdateAllAsync(ctx, entities, transaction).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <inheritdoc cref="BulkUpdateAll(DbContext, IList, SqlTransaction)"/>
         public static Task<BulkOperationResponse> BulkUpdateAllAsync(
             this DbContext ctx,
             IList entities,
@@ -234,20 +245,13 @@ namespace Tanneryd.BulkOperations.EF6
         }
 
         /// <summary>
-        /// 
-        /// The request object properties have the following function:
-        /// 
-        /// Entities - The entities are mapped to rows in a table and these table rows will be updated.
-        /// UpdatedColumnNames - Specifies which columns to update. An empty list will update ALL columns.
-        /// KeyMemberNames - Specifies which columns to use as row selectors. An empty list will result
-        ///                  in the primary key columns to be used.
-        /// Transaction - If a transaction object is provided the update will be made within that transaction.
-        /// InsertIfNew - When set to true, any entities new to the table will be inserted. Otherwise, they 
-        ///               will be ignored.
-        /// 
+        /// Updates table rows from the request entities.
+        /// Entities — rows to update.
+        /// UpdatedPropertyNames — CLR properties to update (empty = all non-key columns).
+        /// KeyPropertyNames — CLR properties used as the match key (empty = primary key).
+        /// Transaction — optional ambient transaction.
+        /// InsertIfNew — when true, unmatched entities are inserted.
         /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="request"></param>
         public static BulkOperationResponse BulkUpdateAll(
             this DbContext ctx,
             BulkUpdateRequest request)
@@ -255,6 +259,7 @@ namespace Tanneryd.BulkOperations.EF6
             return BulkUpdateAllAsync(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <inheritdoc cref="BulkUpdateAll(DbContext, BulkUpdateRequest)"/>
         public static async Task<BulkOperationResponse> BulkUpdateAllAsync(
             this DbContext ctx,
             BulkUpdateRequest request,
@@ -272,12 +277,9 @@ namespace Tanneryd.BulkOperations.EF6
 
 
         /// <summary>
-        /// Insert all entities using Microsoft.Data.SqlClient.SqlBulkCopy. 
+        /// Inserts all entities using SqlBulkCopy.
         /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="entities"></param>
-        /// <param name="transaction"></param>
-        /// <param name="recursive">True if the entire entity graph should be inserted, false otherwise.</param>
+        /// <param name="recursive">When true, inserts the full entity graph (EnableRecursiveInsert.Yes).</param>
         public static BulkInsertResponse BulkInsertAll<T>(
             this DbContext ctx,
             IList<T> entities,
@@ -287,6 +289,7 @@ namespace Tanneryd.BulkOperations.EF6
             return BulkInsertAllAsync(ctx, entities, transaction, recursive).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <inheritdoc cref="BulkInsertAll{T}(DbContext, IList{T}, SqlTransaction, bool)"/>
         public static Task<BulkInsertResponse> BulkInsertAllAsync<T>(
             this DbContext ctx,
             IList<T> entities,
@@ -308,20 +311,13 @@ namespace Tanneryd.BulkOperations.EF6
         }
 
         /// <summary>
-        /// 
-        /// The request object properties have the following function:
-        /// 
-        ///  Entities - The entities are mapped to rows in a table and these table rows will 
-        ///             be updated.
-        ///  Transaction - If a transaction object is provided the update will be made within that transaction.
-        ///  Recursive - If true any new entities added to navigation properties will also be inserted. Foreign 
-        ///              key relationships will be honored for both new and existing entities in the entire 
-        ///              entity graph.
-        /// 
+        /// Inserts entities via SqlBulkCopy.
+        /// Entities — rows to insert.
+        /// Transaction — optional ambient transaction.
+        /// EnableRecursiveInsert — whether to walk navigations and/or retrieve generated PKs.
+        /// AllowNotNullSelfReferences — temporarily disable CHECK/FK constraints when needed.
+        /// UpdateStatistics / SortUsingClusteredIndex — post-insert stats and pre-copy sort.
         /// </summary>
-        /// <param name="ctx"></param>
-        /// <param name="request"></param>
-        /// <returns></returns>
         public static BulkInsertResponse BulkInsertAll<T>(
             this DbContext ctx,
             BulkInsertRequest<T> request)
@@ -329,6 +325,7 @@ namespace Tanneryd.BulkOperations.EF6
             return BulkInsertAllAsync(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <inheritdoc cref="BulkInsertAll{T}(DbContext, BulkInsertRequest{T})"/>
         public static async Task<BulkInsertResponse> BulkInsertAllAsync<T>(
             this DbContext ctx,
             BulkInsertRequest<T> request,
@@ -412,11 +409,15 @@ namespace Tanneryd.BulkOperations.EF6
             return response;
         }
 
+        /// <summary>
+        /// Runs UPDATE STATISTICS … WITH ALL on the entity's mapped table.
+        /// </summary>
         public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx)
         {
             return UpdateStatisticsAsync<T>(ctx).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <inheritdoc cref="UpdateStatistics{T}(DbContext)"/>
         public static Task<BulkInsertResponse> UpdateStatisticsAsync<T>(
             this DbContext ctx,
             CancellationToken cancellationToken = default)
@@ -424,11 +425,13 @@ namespace Tanneryd.BulkOperations.EF6
             return UpdateStatisticsAsync<T>(ctx, TimeSpan.FromMinutes(15), cancellationToken);
         }
 
+        /// <inheritdoc cref="UpdateStatistics{T}(DbContext)"/>
         public static BulkInsertResponse UpdateStatistics<T>(this DbContext ctx, TimeSpan timeout)
         {
             return UpdateStatisticsAsync<T>(ctx, timeout).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <inheritdoc cref="UpdateStatistics{T}(DbContext)"/>
         public static async Task<BulkInsertResponse> UpdateStatisticsAsync<T>(
             this DbContext ctx,
             TimeSpan timeout,

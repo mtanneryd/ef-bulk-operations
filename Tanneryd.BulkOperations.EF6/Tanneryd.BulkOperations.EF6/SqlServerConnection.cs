@@ -13,6 +13,12 @@ using System.Threading.Tasks;
 
 namespace Tanneryd.BulkOperations.EF6
 {
+    /// <summary>
+    /// Facade over Microsoft.Data.SqlClient and System.Data.SqlClient connections
+    /// (including EntityConnection store connections). Sync wrappers use
+    /// ConfigureAwait(false).GetAwaiter().GetResult(). Microsoft.Data.SqlClient
+    /// transactions cannot be used against a legacy System.Data.SqlClient connection.
+    /// </summary>
     internal sealed class SqlServerConnection
     {
         private readonly SqlConnection _modernConnection;

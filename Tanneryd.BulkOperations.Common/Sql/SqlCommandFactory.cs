@@ -3,6 +3,9 @@ using System;
 
 namespace Tanneryd.BulkOperations.Common.Sql
 {
+    /// <summary>
+    /// Creates SqlCommand instances with a consistent timeout conversion.
+    /// </summary>
     internal static class SqlCommandFactory
     {
         public static SqlCommand Create(

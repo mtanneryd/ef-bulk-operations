@@ -55,6 +55,8 @@ namespace Tanneryd.BulkOperations.EF6
                      m.Value.TableColumn.TypeName != "uniqueidentifier") ||
                     m.Value.TableColumn.IsStoreGeneratedComputed);
 
+                // Include rowno even when unused: on some hosts WriteToServer
+                // does nothing if the temp table has no rowno column.
                 var tempTableName = await CreateTempTableAsync(
                     conn,
                     request.Transaction,
@@ -165,6 +167,8 @@ namespace Tanneryd.BulkOperations.EF6
                     m.Value.TableColumn.IsStoreGeneratedIdentity &&
                     m.Value.TableColumn.TypeName != "uniqueidentifier");
 
+                // Include rowno even when unused: on some hosts WriteToServer
+                // does nothing if the temp table has no rowno column.
                 var tempTableName = await CreateTempTableAsync(
                     conn,
                     request.Transaction,
@@ -276,6 +280,8 @@ namespace Tanneryd.BulkOperations.EF6
                      m.Value.TableColumn.TypeName != "uniqueidentifier") ||
                     m.Value.TableColumn.IsStoreGeneratedComputed);
 
+                // Include rowno even when unused: on some hosts WriteToServer
+                // does nothing if the temp table has no rowno column.
                 var tempTableName = await CreateTempTableAsync(
                     conn,
                     request.Transaction,
@@ -389,6 +395,8 @@ namespace Tanneryd.BulkOperations.EF6
                     m.Value.TableColumn.IsStoreGeneratedIdentity &&
                     m.Value.TableColumn.TypeName != "uniqueidentifier");
 
+                // Include rowno even when unused: on some hosts WriteToServer
+                // does nothing if the temp table has no rowno column.
                 var tempTableName = await CreateTempTableAsync(
                     conn,
                     request.Transaction,

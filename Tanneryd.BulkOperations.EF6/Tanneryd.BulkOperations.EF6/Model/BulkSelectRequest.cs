@@ -20,6 +20,9 @@ using Microsoft.Data.SqlClient;
 
 namespace Tanneryd.BulkOperations.EF6.Model
 {
+    /// <summary>
+    /// Parameters for bulk select / select-existing / select-not-existing operations.
+    /// </summary>
     public class BulkSelectRequest<T>
     {
         public BulkSelectRequest(string[] keyPropertyNames, IList<T> items = null, SqlTransaction transaction = null)
@@ -31,12 +34,18 @@ namespace Tanneryd.BulkOperations.EF6.Model
         }
 
         public IList<T> Items { get; set; }
-        public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
+
         /// <summary>
-        /// Mappings for the columns we would like to update on our
-        /// local entities if they match existing entities in the database.
+        /// Mappings used to match local items to database rows.
+        /// </summary>
+        public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
+
+        /// <summary>
+        /// Optional mappings used by BulkSelectExisting to copy matched database
+        /// column values onto the local items (not used for BulkUpdate).
         /// </summary>
         public KeyPropertyMapping[] ColumnPropertyMappings { get; set; }
+
         public SqlTransaction Transaction { get; set; }
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(1);
 

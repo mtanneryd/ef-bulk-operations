@@ -18,6 +18,10 @@ namespace Tanneryd.BulkOperations.EFCore
 {
     public static partial class DbContextExtensions
     {
+        /// <summary>
+        /// Returns a MappingsExtractor for the DbContext CLR type. Extractors are
+        /// cached statically; the lock guards concurrent first-use initialization.
+        /// </summary>
         private static MappingsExtractor GetMappingExtractor(DbContext ctx)
         {
             var contextType = ctx.GetType();
@@ -120,15 +124,10 @@ namespace Tanneryd.BulkOperations.EFCore
         }
 
         /// <summary>
-        /// 
+        /// Creates a session-scoped temp table with the same column types as the
+        /// target by selecting zero rows via SELECT … INTO … WHERE 1=0.
+        /// The name is a GUID to avoid collisions.
         /// </summary>
-        /// <param name="connection"></param>
-        /// <param name="transaction"></param>
-        /// <param name="tableName"></param>
-        /// <param name="columnNames"></param>
-        /// <param name="extraColumnNames"></param>
-        /// <param name="includeRowNumber"></param>
-        /// <returns></returns>
         private static string CreateTempTable(
             SqlConnection connection,
             SqlTransaction transaction,
@@ -185,12 +184,6 @@ namespace Tanneryd.BulkOperations.EFCore
             return tempTableName;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="connection"></param>
-        /// <param name="transaction"></param>
-        /// <param name="tempTableName"></param>
         private static void DropTempTable(
             SqlConnection connection,
             SqlTransaction transaction,
@@ -208,19 +201,6 @@ namespace Tanneryd.BulkOperations.EFCore
             return TempTableSqlHelper.DropAsync(connection, transaction, tempTableName, cancellationToken);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="table"></param>
-        /// <param name="properties"></param>
-        /// <param name="columnMappings"></param>
-        /// <param name="connection"></param>
-        /// <param name="transaction"></param>
-        /// <param name="tableName"></param>
-        /// <param name="extraColumnNames"></param>
-        /// <param name="options"></param>
-        /// <param name="includeRowNumber"></param>
-        /// <returns></returns>
         private static TableColumn[] GetDiscriminatorExtraColumns(Discriminator discriminator)
         {
             if (discriminator == null)
@@ -244,6 +224,11 @@ namespace Tanneryd.BulkOperations.EFCore
             ];
         }
 
+        /// <summary>
+        /// Builds a SqlBulkCopy instance and DataTable columns for the mapped properties.
+        /// Always ORs in TableLock (TABLOCK) for throughput; expect reduced concurrency
+        /// on the destination during the copy. Unmapped CLR properties are skipped.
+        /// </summary>
         private static SqlBulkCopy CreateBulkCopy(
             DataTable table,
             BulkPropertyInfo[] properties,
@@ -275,8 +260,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     propertyType = Nullable.GetUnderlyingType(propertyType);
                 }
 
-                // Ignore all properties that we have no mappings for. We might have done so
-                // already but just to be really really sure.
+                // Skip unmapped CLR properties.
                 if (columnMappings.ContainsKey(property.Name))
                 {
                     // Since we cannot trust the CLR type properties to be in the same order as

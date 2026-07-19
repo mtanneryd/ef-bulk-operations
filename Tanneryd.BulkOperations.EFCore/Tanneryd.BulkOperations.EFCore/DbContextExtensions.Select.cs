@@ -165,12 +165,8 @@ namespace Tanneryd.BulkOperations.EFCore
             {
                 var containsIdentityKey = keyMappings.Any(m => m.Value.IsIdentity);
 
-                // Create a temporary table with the supplied keys 
-                // as columns. We include the rowno column as well
-                // even though we do not need it. But, for some
-                // ungodly reason WriteToServer does nothing, on
-                // some platforms, if we omit it. Need to figure
-                // that out at some point.
+                // Include rowno even when unused: on some hosts WriteToServer
+                // does nothing if the temp table has no rowno column.
                 var tempTableName = await CreateTempTableAsync(
                     conn,
                     request.Transaction,
@@ -287,12 +283,8 @@ namespace Tanneryd.BulkOperations.EFCore
             {
                 var containsIdentityKey = keyMappings.Any(m => m.Value.IsIdentity);
 
-                // Create a temporary table with the supplied keys 
-                // as columns. We include the rowno column as well
-                // even though we do not need it. But, for some
-                // ungodly reason WriteToServer does nothing, on
-                // some platforms, if we omit it. Need to figure
-                // that out at some point.
+                // Include rowno even when unused: on some hosts WriteToServer
+                // does nothing if the temp table has no rowno column.
                 var tempTableName = await CreateTempTableAsync(
                     conn,
                     request.Transaction,

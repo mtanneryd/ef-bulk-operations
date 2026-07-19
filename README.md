@@ -230,11 +230,13 @@ await ctx.UpdateStatisticsAsync<T>(cancellationToken);
 The existing synchronous methods remain unchanged and delegate to the async implementations.
 
 ## Release history
-##### 3.0.1 (2026-05-26)
+##### 4.0.0 (2026-07-20)
+ * Added async bulk operation APIs for EF6 and EF Core (`BulkInsertAllAsync`, `BulkUpdateAllAsync`, `BulkSelectAsync`, `BulkSelectExistingAsync`, `BulkSelectNotExistingAsync`, `BulkDeleteNotExistingAsync`, `UpdateStatisticsAsync`, and related helpers).
+ * Async APIs await SQL Server I/O and accept an optional `CancellationToken`.
+ * Existing synchronous methods remain unchanged and delegate to the async implementations.
  * Updated NuGet package dependencies.
  * Added VS Code build and test tasks.
  * Minor code cleanup.
- * Added async bulk operation APIs for EF6 and EF Core.
 
 ##### 3.0.0 (2025-04-30)
  * Using Microsoft.Data.SqlClient instead of System.Data.SqlClient for EF6.

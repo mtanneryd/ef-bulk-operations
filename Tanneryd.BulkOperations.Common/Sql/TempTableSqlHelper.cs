@@ -5,6 +5,11 @@ using System.Threading.Tasks;
 
 namespace Tanneryd.BulkOperations.Common.Sql
 {
+    /// <summary>
+    /// Shared SQL helpers for session-scoped temp tables and IDENTITY_INSERT.
+    /// Sync methods block with GetAwaiter().GetResult() for the legacy sync
+    /// surface; prefer the Async variants from async call paths.
+    /// </summary>
     internal static class TempTableSqlHelper
     {
         public static void Drop(SqlConnection connection, SqlTransaction transaction, string tempTableName)
@@ -22,6 +27,10 @@ namespace Tanneryd.BulkOperations.Common.Sql
             return ExecuteNonQueryAsync(query, connection, transaction, cancellationToken);
         }
 
+        /// <summary>
+        /// Required when bulk-copying explicit identity values into a table
+        /// (or temp table) that inherits identity metadata from the source.
+        /// </summary>
         public static void EnableIdentityInsert(string tableName, SqlConnection connection, SqlTransaction transaction)
         {
             EnableIdentityInsertAsync(tableName, connection, transaction).GetAwaiter().GetResult();

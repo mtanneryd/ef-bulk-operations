@@ -24,6 +24,11 @@ namespace Tanneryd.BulkOperations.EF6
             DoBulkUpdateAllAsync(ctx, request, response).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <summary>
+        /// Stages entities in a temp table, UPDATEs the target on key match, and
+        /// when InsertIfNew is set INSERTs rows present in temp but not the target
+        /// (EXCEPT anti-join).
+        /// </summary>
         private static async Task DoBulkUpdateAllAsync(
             this DbContext ctx,
             BulkUpdateRequest request,
