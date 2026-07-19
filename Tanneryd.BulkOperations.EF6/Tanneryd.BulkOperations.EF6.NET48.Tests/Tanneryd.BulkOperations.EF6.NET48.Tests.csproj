@@ -361,6 +361,7 @@
     <Compile Include="Tests\Insert\BulkInsertTeamTests.cs" />
     <Compile Include="Tests\Select\BulkSelectExistingTests.cs" />
     <Compile Include="Tests\Select\BulkSelectTests.cs" />
+    <Compile Include="Tests\ThreadSafety\BulkOperationThreadSafetyTests.cs" />
     <Compile Include="Tests\Update\BulkUpdateTests.cs" />
   </ItemGroup>
   <ItemGroup>

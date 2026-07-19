@@ -117,6 +117,8 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
 
             db.LogItems.RemoveRange(db.LogItems.ToArray());
             db.SaveChanges();
+
+            db.Database.ExecuteSqlCommand(@"DELETE FROM [dbo].[EmptyTable]");
         }
 
         //#region Invoice

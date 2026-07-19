@@ -115,6 +115,8 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
             db.LogItems.RemoveRange(db.LogItems.ToArray());
             db.Levels.RemoveRange(db.Levels.ToArray());
             db.SaveChanges();
+
+            db.Database.ExecuteSqlRaw(@"DELETE FROM [dbo].[EmptyTable]");
         }
 
 
