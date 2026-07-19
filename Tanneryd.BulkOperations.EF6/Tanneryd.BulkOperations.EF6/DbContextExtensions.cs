@@ -382,14 +382,12 @@ namespace Tanneryd.BulkOperations.EF6
 
                 if (request.UpdateStatistics)
                 {
-                    var s0 = new Stopwatch();
-                    s0.Start();
-                    var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
-                    var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
-                    var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
-                    await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-                    s0.Stop();
-                    response.TimeElapsedDuringUpdateStatistics = s0.Elapsed;
+                    response.TimeElapsedDuringUpdateStatistics = await UpdateStatisticsCoreAsync(
+                        ctx,
+                        tableName,
+                        request.Transaction,
+                        request.CommandTimeout,
+                        cancellationToken).ConfigureAwait(false);
                 }
             }
             finally
@@ -440,16 +438,12 @@ namespace Tanneryd.BulkOperations.EF6
             ValidateDbContext(ctx);
             var response = new BulkInsertResponse();
             var tableName = MappingExtractor.GetTableName(ctx, typeof(T));
-
-            var s0 = new Stopwatch();
-            s0.Start();
-            var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
-            var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
-            var cmd = CreateSqlCommand(query, connection, null, timeout);
-            await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-            s0.Stop();
-            response.TimeElapsedDuringUpdateStatistics = s0.Elapsed;
-
+            response.TimeElapsedDuringUpdateStatistics = await UpdateStatisticsCoreAsync(
+                ctx,
+                tableName,
+                transaction: null,
+                timeout,
+                cancellationToken).ConfigureAwait(false);
             return response;
         }
 

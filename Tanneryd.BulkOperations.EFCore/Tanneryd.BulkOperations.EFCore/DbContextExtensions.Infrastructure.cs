@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -285,6 +286,26 @@ namespace Tanneryd.BulkOperations.EFCore
             }
 
             return bulkCopy;
+        }
+
+        /// <summary>
+        /// Runs UPDATE STATISTICS … WITH ALL for the given table. Shared by the
+        /// public UpdateStatistics APIs and BulkInsertAll when UpdateStatistics is set.
+        /// </summary>
+        private static async Task<TimeSpan> UpdateStatisticsCoreAsync(
+            DbContext ctx,
+            TableName tableName,
+            SqlTransaction transaction,
+            TimeSpan timeout,
+            CancellationToken cancellationToken = default)
+        {
+            var s0 = Stopwatch.StartNew();
+            var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
+            var connection = await GetSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
+            var cmd = CreateSqlCommand(query, connection, transaction, timeout);
+            await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            s0.Stop();
+            return s0.Elapsed;
         }
     }
 }
