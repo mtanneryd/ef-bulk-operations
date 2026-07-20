@@ -24,9 +24,9 @@ using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF;
 namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
 {
     /// <summary>
-    /// Regression for review finding H4: SqlCommand / SqlBulkCopy wrappers created
-    /// during bulk ops must be disposed. Uses <see cref="SqlResourceTracker"/> so
-    /// the assertion is deterministic (LocalDB alone cannot catch this).
+    /// Regression: SqlCommand / SqlBulkCopy wrappers created during bulk ops must
+    /// be disposed. Uses <see cref="SqlResourceTracker"/> so the assertion is
+    /// deterministic (LocalDB alone cannot catch this).
     /// </summary>
     [TestClass]
     public class SqlResourceDisposeTests : BulkOperationTestBase
@@ -54,7 +54,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
                 {
                     Entities = new[]
                     {
-                        new Price { Date = new DateTime(2019, 1, 1), Name = "H4", Value = 1 },
+                        new Price { Date = new DateTime(2019, 1, 1), Name = "DisposeCheck", Value = 1 },
                     },
                     EnableRecursiveInsert = EnableRecursiveInsert.NoButRetrieveGeneratedPrimaryKeys,
                 });

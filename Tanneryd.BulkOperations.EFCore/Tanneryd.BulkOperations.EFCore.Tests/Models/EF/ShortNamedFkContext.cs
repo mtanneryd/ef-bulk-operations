@@ -23,7 +23,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Models.EF.ShortNamedFk
     /// <summary>
     /// Minimal one-to-many model registered as shared-type entity types with short names
     /// (e.g. "Author") while ClrType.ToString() remains namespace-qualified.
-    /// That mismatch is what MappingsExtractor H1 compares inconsistently.
+    /// That mismatch is what MappingsExtractor previously compared inconsistently.
     /// </summary>
     public class Author
     {
@@ -59,7 +59,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Models.EF.ShortNamedFk
             // types first, then wire the relationship by entity-type name.
             modelBuilder.SharedTypeEntity<Book>(BookEntityName, e =>
             {
-                e.ToTable("H1Book");
+                e.ToTable("ShortNamedBook");
                 e.HasKey(x => x.Id);
                 e.Property(x => x.Title).IsRequired().HasMaxLength(200);
                 e.Property(x => x.AuthorId);
@@ -67,7 +67,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Models.EF.ShortNamedFk
 
             modelBuilder.SharedTypeEntity<Author>(AuthorEntityName, e =>
             {
-                e.ToTable("H1Author");
+                e.ToTable("ShortNamedAuthor");
                 e.HasKey(x => x.Id);
                 e.Property(x => x.Name).IsRequired().HasMaxLength(200);
             });

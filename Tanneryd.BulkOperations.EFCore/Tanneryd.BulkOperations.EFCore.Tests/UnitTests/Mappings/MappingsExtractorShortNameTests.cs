@@ -23,8 +23,8 @@ using Tanneryd.BulkOperations.EFCore.Tests.Models.EF.ShortNamedFk;
 namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Mappings
 {
     /// <summary>
-    /// Regression for review finding H1: MappingsExtractor must store
-    /// FromType/ToType as entity type Name (same as the filter), not ClrType.ToString().
+    /// Regression: MappingsExtractor must store FromType/ToType as entity type Name
+    /// (same as the filter), not ClrType.ToString().
     /// </summary>
     [TestClass]
     public class MappingsExtractorShortNameTests
@@ -65,11 +65,12 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Mappings
             Assert.AreEqual(typeof(Author), authorEntityType.ClrType);
 
             // Precondition: shared-type short Name vs namespace-qualified ClrType.ToString().
-            // (EF Core 10 normal entity types use FullName for both, so UnitTestContext hides H1.)
+            // (EF Core 10 normal entity types use FullName for both, so UnitTestContext
+            // would not exercise the Name vs ClrType.ToString() mismatch.)
             Assert.AreNotEqual(
                 authorEntityType.ClrType.ToString(),
                 authorEntityType.Name,
-                "Precondition failed: entity type Name must differ from ClrType.ToString() to exercise H1.");
+                "Precondition failed: entity type Name must differ from ClrType.ToString() to exercise the FK filter bug.");
             Assert.AreEqual(ShortNamedFkContext.AuthorEntityName, authorEntityType.Name);
 
             var extractor = new MappingsExtractor(ctx);

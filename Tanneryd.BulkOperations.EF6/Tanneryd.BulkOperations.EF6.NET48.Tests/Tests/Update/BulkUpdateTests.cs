@@ -112,9 +112,9 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Update
         }
 
         /// <summary>
-        /// Regression for review finding H2: BulkUpdateAll must resolve KeyPropertyNames
-        /// to column names before matching TableColumn.Name. Invoice.Id maps to column
-        /// PrimaryKey, so using the CLR property name as the key must still update.
+        /// Regression: BulkUpdateAll must resolve KeyPropertyNames to column names before
+        /// matching TableColumn.Name. Invoice.Id maps to column PrimaryKey, so using the
+        /// CLR property name as the key must still update.
         /// </summary>
         [TestMethod]
         public void BulkUpdate_ShouldMatchWhenKeyPropertyNameDiffersFromColumnName()

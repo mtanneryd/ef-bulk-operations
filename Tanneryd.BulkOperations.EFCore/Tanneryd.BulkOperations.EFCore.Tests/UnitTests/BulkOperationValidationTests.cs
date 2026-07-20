@@ -38,8 +38,8 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
         }
 
         /// <summary>
-        /// Regression for review finding H5: empty Items currently deletes the
-        /// entire SqlConditions window. Safe default must reject empty Items.
+        /// Regression: empty Items previously deleted the entire SqlConditions
+        /// window. Safe default must reject empty Items.
         /// </summary>
         [TestMethod]
         public void BulkDeleteNotExistingShouldRejectEmptyItems()

@@ -117,8 +117,8 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Delete
         }
 
         /// <summary>
-        /// Regression for review finding H5: empty Items must not wipe the
-        /// condition window unless an explicit opt-in is provided.
+        /// Regression: empty Items must not wipe the condition window unless an
+        /// explicit opt-in is provided.
         /// </summary>
         [TestMethod]
         public void BulkDeleteNotExisting_WithEmptyItems_ShouldNotDeleteMatchingRows()

@@ -23,7 +23,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.DiscriminatorOnly
     /// <summary>
     /// TPH hierarchy with only an identity PK plus discriminator column.
     /// Used to hit the MERGE branch that selects discriminator+rowno but
-    /// aliases only rowno (review finding H3).
+    /// previously aliased only rowno.
     /// </summary>
     public abstract class TagBase
     {
@@ -63,7 +63,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.DiscriminatorOnly
     {
         public TagBaseConfiguration()
         {
-            ToTable("H3Tag");
+            ToTable("DiscriminatorOnlyTag");
             HasKey(t => t.Id);
             Property(t => t.Id)
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);

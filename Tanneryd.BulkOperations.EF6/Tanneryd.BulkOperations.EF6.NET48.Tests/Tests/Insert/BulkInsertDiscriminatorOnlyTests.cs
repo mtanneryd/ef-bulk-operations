@@ -22,9 +22,9 @@ using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.DiscriminatorOnly;
 namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
 {
     /// <summary>
-    /// Regression for review finding H3: when retrieving identity keys for a
-    /// TPH type with no non-key columns, MERGE SELECT lists discriminator+rowno
-    /// but the USING alias only declares rowno.
+    /// Regression: when retrieving identity keys for a TPH type with no non-key
+    /// columns, MERGE SELECT lists discriminator+rowno but the USING alias must
+    /// declare the same columns (not only rowno).
     /// </summary>
     [TestClass]
     public class BulkInsertDiscriminatorOnlyTests

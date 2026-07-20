@@ -22,9 +22,9 @@ using Tanneryd.BulkOperations.EFCore.Model;
 namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
 {
     /// <summary>
-    /// Regression for review finding H4: SqlCommand / SqlBulkCopy instances created
-    /// during bulk ops must be disposed. Uses <see cref="SqlResourceTracker"/> so
-    /// the assertion is deterministic (LocalDB alone cannot catch this).
+    /// Regression: SqlCommand / SqlBulkCopy instances created during bulk ops must
+    /// be disposed. Uses <see cref="SqlResourceTracker"/> so the assertion is
+    /// deterministic (LocalDB alone cannot catch this).
     /// </summary>
     [TestClass]
     public class SqlResourceDisposeTests : BulkOperationTestBase
@@ -52,7 +52,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
             {
                 Entities =
                 [
-                    new Price { Date = new DateTime(2019, 1, 1), Name = "H4", Value = 1 },
+                    new Price { Date = new DateTime(2019, 1, 1), Name = "DisposeCheck", Value = 1 },
                 ],
                 EnableRecursiveInsert = EnableRecursiveInsert.NoButRetrieveGeneratedPrimaryKeys,
             });

@@ -5,7 +5,7 @@ namespace Tanneryd.BulkOperations.Common.Sql
 {
     /// <summary>
     /// Optional create/dispose counters for SQL client resources. Used by tests to
-    /// verify commands and bulk-copy sessions are disposed (review finding H4).
+    /// verify commands and bulk-copy sessions are disposed.
     /// No-op when no scope is active.
     /// </summary>
     internal static class SqlResourceTracker

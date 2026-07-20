@@ -390,12 +390,14 @@ namespace Tanneryd.BulkOperations.EF6
             }
             finally
             {
+                // Re-enable with CancellationToken.None so a cancelled caller cannot
+                // leave NOCHECK constraints in place after AllowNotNullSelfReferences.
                 foreach (var tableName in response.TablesWithNoCheckConstraints)
                 {
                     var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
-                    var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
-                    using var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
-                    await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                    var connection = await ResolveSqlConnectionAsync(ctx, CancellationToken.None).ConfigureAwait(false);
+                    using var cmd = CreateSqlCommand(query, connection, request.Transaction, TimeSpan.FromSeconds(30));
+                    await cmd.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
                 }
             }
 
