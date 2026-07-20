@@ -26,6 +26,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<InternalsVisibleTo Include="Tanneryd.BulkOperations.EF6.NET48.Tests" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<None Include="LICENSE-2.0.txt">
 			<Pack>True</Pack>
 			<PackagePath></PackagePath>

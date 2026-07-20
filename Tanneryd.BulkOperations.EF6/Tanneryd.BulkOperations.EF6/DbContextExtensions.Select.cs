@@ -70,7 +70,7 @@ namespace Tanneryd.BulkOperations.EF6
                     .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
                 var table = new DataTable();
-                var bulkCopy = CreateBulkCopy(
+                using var bulkCopy = CreateBulkCopy(
                     table,
                     keyProperties,
                     keyMappings,
@@ -112,7 +112,7 @@ namespace Tanneryd.BulkOperations.EF6
                                FROM {tempTableName} AS [t1]
                                INNER JOIN {tableName.Fullname} AS [t2] ON {conditionStatementsSql}";
 
-                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
+                using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                 var existingEntities = new List<T1>();
                 using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
@@ -183,7 +183,7 @@ namespace Tanneryd.BulkOperations.EF6
                     .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
                 var table = new DataTable();
-                var bulkCopy = CreateBulkCopy(
+                using var bulkCopy = CreateBulkCopy(
                     table,
                     keyProperties,
                     keyMappings,
@@ -233,7 +233,7 @@ namespace Tanneryd.BulkOperations.EF6
                                 WHERE {conditionStatementsSql}
                                )";
 
-                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
+                using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
                 foreach (var parameter in parameters)
                     cmd.AddParameter(parameter);
                 await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
@@ -296,7 +296,7 @@ namespace Tanneryd.BulkOperations.EF6
                     .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
                 var table = new DataTable();
-                var bulkCopy = CreateBulkCopy(
+                using var bulkCopy = CreateBulkCopy(
                     table,
                     keyProperties,
                     keyMappings,
@@ -331,7 +331,7 @@ namespace Tanneryd.BulkOperations.EF6
                                INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}
                                ORDER BY [t1].rowno ASC";
 
-                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
+                using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                 var selectedEntities = new List<T2>();
                 using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
@@ -410,7 +410,7 @@ namespace Tanneryd.BulkOperations.EF6
                     .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
                 var table = new DataTable();
-                var bulkCopy = CreateBulkCopy(
+                using var bulkCopy = CreateBulkCopy(
                     table,
                     keyProperties,
                     keyMappings,
@@ -449,7 +449,7 @@ namespace Tanneryd.BulkOperations.EF6
                                FROM {tempTableName} AS [t0]
                                INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
 
-                var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
+                using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                 var existingEntities = new List<T1>();
 

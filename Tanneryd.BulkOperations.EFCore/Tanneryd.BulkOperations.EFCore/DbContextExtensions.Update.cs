@@ -111,8 +111,10 @@ namespace Tanneryd.BulkOperations.EFCore
                                  FROM {tableName.Fullname} AS t0
                                  INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
                                 ";
-                var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout);
-                rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                using (var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout))
+                {
+                    rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                }
 
                 if (request.InsertIfNew)
                 {
@@ -130,8 +132,10 @@ namespace Tanneryd.BulkOperations.EFCore
                              FROM {tempTableName} AS t0
                              INNER JOIN {tableName.Fullname} AS t1 ON {conditionStatementsSql}            
                             ";
-                    cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout);
-                    rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                    using (var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout))
+                    {
+                        rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                    }
                 }
 
                 //

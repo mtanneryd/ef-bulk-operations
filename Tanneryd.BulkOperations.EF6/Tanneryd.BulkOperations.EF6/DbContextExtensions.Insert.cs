@@ -575,7 +575,7 @@ namespace Tanneryd.BulkOperations.EF6
                                     WHERE {conditionStatementsSql}
                                  )
                                     ";
-                var cmd = CreateSqlCommand(cmdBody, conn, transaction, commandTimeout);
+                using var cmd = CreateSqlCommand(cmdBody, conn, transaction, commandTimeout);
                 rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
                 //
@@ -594,7 +594,7 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     if (newEntities.Count > 0)
                     {
-                        var bulkCopy = CreateBulkCopy(
+                        using var bulkCopy = CreateBulkCopy(
                             table,
                             properties,
                             columnMappings,
@@ -638,7 +638,7 @@ namespace Tanneryd.BulkOperations.EF6
                                 IncludeRowNumber.Yes,
                                 cancellationToken).ConfigureAwait(false);
 
-                        var bulkCopy = CreateBulkCopy(
+                        using var bulkCopy = CreateBulkCopy(
                             table,
                             properties,
                             columnMappings,
@@ -691,7 +691,7 @@ namespace Tanneryd.BulkOperations.EF6
             }
             else
             {
-                var bulkCopy = CreateBulkCopy(
+                using var bulkCopy = CreateBulkCopy(
                     table,
                     properties,
                     columnMappings,
@@ -791,7 +791,7 @@ namespace Tanneryd.BulkOperations.EF6
             Type t,
             CancellationToken cancellationToken = default)
         {
-            var cmd = conn.CreateCommand();
+            using var cmd = conn.CreateCommand();
             cmd.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
             cmd.Transaction = transaction;
 
@@ -936,7 +936,7 @@ namespace Tanneryd.BulkOperations.EF6
             Type t,
             CancellationToken cancellationToken = default)
         {
-            var cmd = conn.CreateCommand();
+            using var cmd = conn.CreateCommand();
             cmd.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
             cmd.Transaction = transaction;
 
@@ -1217,7 +1217,7 @@ namespace Tanneryd.BulkOperations.EF6
 
             query += " ORDER BY ic.index_column_id;";
 
-            var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
+            using var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
 
             string[] clusteredColumns = null;
             using (var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
@@ -1328,7 +1328,7 @@ namespace Tanneryd.BulkOperations.EF6
             var properties = pkColumnProperties.Concat(selectedColumnProperties).ToArray();
 
             var table = new DataTable();
-            var bulkCopy = CreateBulkCopy(
+            using var bulkCopy = CreateBulkCopy(
                 table,
                 properties,
                 columnMappings,

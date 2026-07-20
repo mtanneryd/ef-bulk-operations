@@ -78,7 +78,7 @@ namespace Tanneryd.BulkOperations.EFCore
             CancellationToken cancellationToken)
         {
             var connection = await GetSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
-            var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
+            using var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
             await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -409,7 +409,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 {
                     var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
                     var connection = await GetSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
-                    var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
+                    using var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
                     await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 }
             }

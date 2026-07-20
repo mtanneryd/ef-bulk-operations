@@ -10,6 +10,7 @@ using System.Data.Common;
 using System.Data.Entity;
 using System.Threading;
 using System.Threading.Tasks;
+using Tanneryd.BulkOperations.Common.Sql;
 
 namespace Tanneryd.BulkOperations.EF6
 {
@@ -239,15 +240,18 @@ namespace Tanneryd.BulkOperations.EF6
     {
         private readonly SqlCommand _modernCommand;
         private readonly System.Data.SqlClient.SqlCommand _legacyCommand;
+        private bool _disposed;
 
         private SqlServerCommand(SqlCommand modernCommand)
         {
             _modernCommand = modernCommand;
+            SqlResourceTracker.NotifyCreated();
         }
 
         private SqlServerCommand(System.Data.SqlClient.SqlCommand legacyCommand)
         {
             _legacyCommand = legacyCommand;
+            SqlResourceTracker.NotifyCreated();
         }
 
         public static SqlServerCommand FromModern(
@@ -374,10 +378,17 @@ namespace Tanneryd.BulkOperations.EF6
 
         public void Dispose()
         {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+
             if (IsLegacy)
                 _legacyCommand.Dispose();
             else
                 _modernCommand.Dispose();
+
+            SqlResourceTracker.NotifyDisposed();
         }
     }
 
@@ -385,15 +396,18 @@ namespace Tanneryd.BulkOperations.EF6
     {
         private readonly SqlBulkCopy _modernBulkCopy;
         private readonly System.Data.SqlClient.SqlBulkCopy _legacyBulkCopy;
+        private bool _disposed;
 
         private SqlBulkCopySession(SqlBulkCopy modernBulkCopy)
         {
             _modernBulkCopy = modernBulkCopy;
+            SqlResourceTracker.NotifyCreated();
         }
 
         private SqlBulkCopySession(System.Data.SqlClient.SqlBulkCopy legacyBulkCopy)
         {
             _legacyBulkCopy = legacyBulkCopy;
+            SqlResourceTracker.NotifyCreated();
         }
 
         public static SqlBulkCopySession FromModern(
@@ -491,10 +505,17 @@ namespace Tanneryd.BulkOperations.EF6
 
         public void Dispose()
         {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+
             if (IsLegacy)
                 _legacyBulkCopy.Close();
             else
                 _modernBulkCopy.Close();
+
+            SqlResourceTracker.NotifyDisposed();
         }
     }
 }

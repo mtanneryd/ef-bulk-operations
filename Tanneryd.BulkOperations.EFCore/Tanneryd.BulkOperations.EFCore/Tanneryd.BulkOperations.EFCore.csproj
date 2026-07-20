@@ -25,6 +25,10 @@
 		<Compile Include="..\..\Tanneryd.BulkOperations.Common\Sql\*.cs" Link="Common\Sql\%(Filename)%(Extension)" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<InternalsVisibleTo Include="Tanneryd.BulkOperations.EFCore.Tests" />
+	</ItemGroup>
+
 	<ItemGroup> 
 		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.10" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.10" />

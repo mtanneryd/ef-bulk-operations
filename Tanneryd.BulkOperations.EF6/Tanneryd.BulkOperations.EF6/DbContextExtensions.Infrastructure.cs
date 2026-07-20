@@ -251,7 +251,7 @@ namespace Tanneryd.BulkOperations.EF6
             var s0 = Stopwatch.StartNew();
             var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
             var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
-            var cmd = CreateSqlCommand(query, connection, transaction, timeout);
+            using var cmd = CreateSqlCommand(query, connection, transaction, timeout);
             await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             s0.Stop();
             return s0.Elapsed;

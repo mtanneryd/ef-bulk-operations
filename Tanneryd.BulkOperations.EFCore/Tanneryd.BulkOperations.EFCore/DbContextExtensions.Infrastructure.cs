@@ -179,7 +179,7 @@ namespace Tanneryd.BulkOperations.EFCore
                         INTO {tempTableName}
                         FROM {tableName.Fullname}
                         WHERE 1=0";
-            var cmd = SqlCommandFactory.Create(query, connection, transaction, TimeSpan.FromSeconds(30));
+            using var cmd = SqlCommandFactory.Create(query, connection, transaction, TimeSpan.FromSeconds(30));
             await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
 
             return tempTableName;
@@ -226,11 +226,12 @@ namespace Tanneryd.BulkOperations.EFCore
         }
 
         /// <summary>
-        /// Builds a SqlBulkCopy instance and DataTable columns for the mapped properties.
+        /// Builds a tracked SqlBulkCopy session and DataTable columns for the mapped properties.
         /// Always ORs in TableLock (TABLOCK) for throughput; expect reduced concurrency
         /// on the destination during the copy. Unmapped CLR properties are skipped.
+        /// Callers must Dispose the returned session.
         /// </summary>
-        private static SqlBulkCopy CreateBulkCopy(
+        private static TrackedSqlBulkCopy CreateBulkCopy(
             DataTable table,
             BulkPropertyInfo[] properties,
             Dictionary<string, TableColumnMapping> columnMappings,
@@ -285,7 +286,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping("rowno", "rowno"));
             }
 
-            return bulkCopy;
+            return new TrackedSqlBulkCopy(bulkCopy);
         }
 
         /// <summary>
@@ -302,7 +303,7 @@ namespace Tanneryd.BulkOperations.EFCore
             var s0 = Stopwatch.StartNew();
             var query = $"UPDATE STATISTICS {tableName.Fullname} WITH ALL";
             var connection = await GetSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
-            var cmd = CreateSqlCommand(query, connection, transaction, timeout);
+            using var cmd = CreateSqlCommand(query, connection, transaction, timeout);
             await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             s0.Stop();
             return s0.Elapsed;

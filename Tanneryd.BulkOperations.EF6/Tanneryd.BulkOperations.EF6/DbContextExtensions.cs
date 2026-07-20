@@ -65,7 +65,7 @@ namespace Tanneryd.BulkOperations.EF6
             CancellationToken cancellationToken)
         {
             var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
-            var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
+            using var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
             await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
         }
 
@@ -396,7 +396,7 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
                     var connection = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
-                    var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
+                    using var cmd = CreateSqlCommand(query, connection, request.Transaction, request.CommandTimeout);
                     await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
