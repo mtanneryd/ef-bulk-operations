@@ -15,11 +15,35 @@ See the CodeProject article [Bulk operations using Entity Framework](https://www
 | EF6 (.NET Framework 4.8) | [Tanneryd.BulkOperations.EF6](https://www.nuget.org/packages/Tanneryd.BulkOperations.EF6) |
 | EF Core | [Tanneryd.BulkOperations.EFCore](https://www.nuget.org/packages/Tanneryd.BulkOperations.EFCore) |
 
-Both packages require **SQL Server** and **Microsoft.Data.SqlClient**.
+Both packages target **SQL Server**. EF Core uses **Microsoft.Data.SqlClient**. EF6 accepts either Microsoft.Data.SqlClient or the legacy System.Data.SqlClient connection that classic EF6 apps usually get.
 
-#### EF6 provider setup
+#### EF6 SqlClient support
 
-EF6 must use the Microsoft.Data.SqlClient provider. Add the following to your config, set `providerName="Microsoft.Data.SqlClient"` on the connection string, and reference:
+EF6 resolves `ctx.Database.Connection` (or an `EntityConnection` store connection) and runs bulk work against whichever concrete type is present:
+
+| Connection type | Supported | Notes |
+|-----------------|-----------|-------|
+| `Microsoft.Data.SqlClient.SqlConnection` | Yes (recommended) | Preferred going forward; required if you pass a `Microsoft.Data.SqlClient.SqlTransaction` on the request. |
+| `System.Data.SqlClient.SqlConnection` | Yes | Works for default EF6 + `EntityFramework.SqlServer` setups without migrating the provider. |
+
+You do **not** need to migrate off System.Data.SqlClient for bulk operations to work. The library keeps a dual facade for commands and `SqlBulkCopy`.
+
+**Caveat:** request `Transaction` is typed as `Microsoft.Data.SqlClient.SqlTransaction`. That value cannot be used when the context still owns a legacy System.Data.SqlClient connection — pass `null` (library opens/uses its own work) or migrate the context to Microsoft.Data.SqlClient first.
+
+##### Optional: switch EF6 to Microsoft.Data.SqlClient
+
+To make EF6 create a real `Microsoft.Data.SqlClient.SqlConnection`, register `MicrosoftSqlDbConfiguration`, set `providerName="Microsoft.Data.SqlClient"` on the connection string, and reference:
+
+```csharp
+using System.Data.Entity;
+using System.Data.Entity.SqlServer;
+
+[DbConfigurationType(typeof(MicrosoftSqlDbConfiguration))]
+public class MyContext : DbContext
+{
+    // ...
+}
+```
 
 ```xml
 <PackageReference Include="EntityFramework" Version="6.5.2" />
@@ -44,6 +68,8 @@ EF6 must use the Microsoft.Data.SqlClient provider. Add the following to your co
   </DbProviderFactories>
 </system.data>
 ```
+
+Config entries alone are not enough: without `MicrosoftSqlDbConfiguration` (or equivalent `codeConfigurationType`), EF6 often still creates a System.Data.SqlClient connection even when Microsoft.Data.SqlClient is listed. That is fine for this library — the legacy path handles it.
 
 ## API overview
 
@@ -270,7 +296,7 @@ await ctx.UpdateStatisticsAsync<Number>(TimeSpan.FromMinutes(5), cancellationTok
 
 ### Transactions
 
-Pass a `Microsoft.Data.SqlClient.SqlTransaction` on the request when you need the bulk work to participate in an ambient transaction you opened on the same connection.
+Pass a `Microsoft.Data.SqlClient.SqlTransaction` on the request when you need the bulk work to participate in an ambient transaction you opened on the same connection. For EF6 this requires the context connection to already be a `Microsoft.Data.SqlClient.SqlConnection` (see [EF6 SqlClient support](#ef6-sqlclient-support)).
 
 ```csharp
 using var connection = (SqlConnection)ctx.Database.Connection;
@@ -295,6 +321,7 @@ catch
 ```
 
 For EF Core, use `(SqlConnection)ctx.Database.GetDbConnection()` the same way.
+
 
 ## Release history
 
