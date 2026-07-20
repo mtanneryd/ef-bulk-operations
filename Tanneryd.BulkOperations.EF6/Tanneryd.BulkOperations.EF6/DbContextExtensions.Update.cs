@@ -51,10 +51,10 @@ namespace Tanneryd.BulkOperations.EF6
 
             var primaryKeyMembers = GetPrimaryKeyMembers(columnMappings);
 
-            var selectedKeyMembers = keyPropertyNames.Any() ? keyPropertyNames : primaryKeyMembers.ToArray();
+            var selectedKeyMembers = keyColumnNames.Any() ? keyColumnNames : primaryKeyMembers.ToArray();
             var allKeyMembers = new List<string>();
             allKeyMembers.AddRange(primaryKeyMembers);
-            allKeyMembers.AddRange(keyPropertyNames);
+            allKeyMembers.AddRange(keyColumnNames);
 
             var selectedKeyMappings = columnMappings.Values
                 .Where(m => selectedKeyMembers.Contains(m.TableColumn.Name))

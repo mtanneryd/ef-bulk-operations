@@ -20,6 +20,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Blog;
+using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Invoice;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Prices;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF;
 
@@ -108,6 +109,40 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Update
             Assert.AreEqual("C", prices[2].Name);
             Assert.AreEqual(new DateTime(2023, 5, 29), prices[2].Date);
             Assert.AreEqual(2.0m, prices[2].Value);
+        }
+
+        /// <summary>
+        /// Regression for review finding H2: BulkUpdateAll must resolve KeyPropertyNames
+        /// to column names before matching TableColumn.Name. Invoice.Id maps to column
+        /// PrimaryKey, so using the CLR property name as the key must still update.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_ShouldMatchWhenKeyPropertyNameDiffersFromColumnName()
+        {
+            using var db = new UnitTestContext();
+            var invoice = new Invoice
+            {
+                Id = Guid.NewGuid(),
+                Net = 100m,
+                Gross = 125m,
+            };
+            db.Invoices.Add(invoice);
+            db.SaveChanges();
+
+            invoice.Net = 200m;
+            invoice.Gross = 250m;
+
+            db.BulkUpdateAll(new BulkUpdateRequest
+            {
+                Entities = new[] { invoice },
+                KeyPropertyNames = new[] { nameof(Invoice.Id) },
+                UpdatedPropertyNames = new[] { nameof(Invoice.Net), nameof(Invoice.Gross) },
+            });
+
+            using var verify = new UnitTestContext();
+            var updated = verify.Invoices.Single(i => i.Id == invoice.Id);
+            Assert.AreEqual(200m, updated.Net);
+            Assert.AreEqual(250m, updated.Gross);
         }
 
         [TestMethod]
