@@ -105,8 +105,10 @@ namespace Tanneryd.BulkOperations.EFCore
                     {
                         NavigationPropertyName = navigation.Name,
                         IsCollection = navigation.IsCollection,
-                        FromType = navigation.ForeignKey.DeclaringEntityType.ClrType.ToString(),
-                        ToType = navigation.ForeignKey.PrincipalEntityType.ClrType.ToString(),
+                        // Use entity type Name (not ClrType.ToString()) so filters below
+                        // stay consistent for shared-type / short-named entity types.
+                        FromType = navigation.ForeignKey.DeclaringEntityType.Name,
+                        ToType = navigation.ForeignKey.PrincipalEntityType.Name,
                     };
                     foreignKeyMappings.Add(fkMapping);
 
