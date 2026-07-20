@@ -1,5 +1,5 @@
 /*
- * Copyright ©  2017-2020 Tånneryd IT AB
+ * Copyright ©  2017-2026 Tånneryd IT AB
  * Licensed under the Apache License, Version 2.0.
  */
 
