@@ -94,6 +94,22 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ConcurrencyItem",
+                schema: "dbo",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ConcurrencyItem", x => x.Id)
+                        .Annotation("SqlServer:Clustered", true);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Coordinate",
                 schema: "dbo",
                 columns: table => new
@@ -1018,11 +1034,39 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 schema: "dbo",
                 table: "VisitorPosts",
                 column: "VisitorId");
+
+            // Computed columns and Contact view (SQL Server-specific).
+            migrationBuilder.Sql("ALTER TABLE dbo.Invoice DROP COLUMN Tax");
+            migrationBuilder.Sql("ALTER TABLE dbo.Invoice ADD Tax AS (Gross - Net) PERSISTED");
+            migrationBuilder.Sql("ALTER TABLE dbo.Instructor DROP COLUMN FullName");
+            migrationBuilder.Sql("ALTER TABLE dbo.Instructor ADD FullName AS (FirstName + ' ' + LastName) PERSISTED");
+            migrationBuilder.Sql(@"
+IF OBJECT_ID(N'dbo.Contact', N'U') IS NOT NULL DROP TABLE dbo.Contact;
+IF OBJECT_ID(N'dbo.Contact', N'V') IS NULL
+EXEC(N'CREATE VIEW dbo.Contact AS SELECT FirstName, LastName FROM dbo.Person')");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.Sql("IF OBJECT_ID(N'dbo.Contact', N'V') IS NOT NULL DROP VIEW dbo.Contact");
+            migrationBuilder.Sql("ALTER TABLE dbo.Invoice DROP COLUMN Tax");
+            migrationBuilder.AddColumn<decimal>(
+                name: "Tax",
+                schema: "dbo",
+                table: "Invoice",
+                type: "decimal(18,2)",
+                nullable: false,
+                defaultValue: 0m);
+            migrationBuilder.Sql("ALTER TABLE dbo.Instructor DROP COLUMN FullName");
+            migrationBuilder.AddColumn<string>(
+                name: "FullName",
+                schema: "dbo",
+                table: "Instructor",
+                type: "nvarchar(max)",
+                nullable: false,
+                defaultValue: "");
+
             migrationBuilder.DropTable(
                 name: "BatchInvoiceItem",
                 schema: "dbo");
@@ -1129,6 +1173,10 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
 
             migrationBuilder.DropTable(
                 name: "Course",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
+                name: "ConcurrencyItem",
                 schema: "dbo");
 
             migrationBuilder.DropTable(

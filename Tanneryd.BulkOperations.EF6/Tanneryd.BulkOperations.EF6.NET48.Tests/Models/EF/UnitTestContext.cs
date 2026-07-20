@@ -11,6 +11,7 @@ using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.People;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Prices;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Report;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.School;
+using Tanneryd.BulkOperations.TestModels;
 
 namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
 {
@@ -75,6 +76,12 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
         #region Price
 
         public DbSet<Price> Prices { get; set; }
+
+        #endregion
+
+        #region Concurrency
+
+        public DbSet<ConcurrencyItem> ConcurrencyItems { get; set; }
 
         #endregion
 
@@ -468,6 +475,26 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
             modelBuilder.Entity<Price>()
                 .Property(u => u.Value)
                 .IsOptional();
+
+            #endregion
+
+            #region Concurrency
+
+            modelBuilder.Entity<ConcurrencyItem>()
+                .ToTable("ConcurrencyItem")
+                .HasKey(u => u.Id);
+            modelBuilder.Entity<ConcurrencyItem>()
+                .Property(u => u.Id)
+                .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            modelBuilder.Entity<ConcurrencyItem>()
+                .Property(u => u.Name)
+                .IsRequired()
+                .HasMaxLength(100);
+            modelBuilder.Entity<ConcurrencyItem>()
+                .Property(u => u.RowVersion)
+                .IsConcurrencyToken()
+                .IsRequired()
+                .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Computed);
 
             #endregion
 

@@ -29,8 +29,9 @@ using Tanneryd.BulkOperations.EFCore.Model;
 namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
 {
     /// <summary>
-    /// Regression: BulkInsertAllAsync finally re-enables CHECK constraints with the
-    /// caller's CancellationToken, so a cancel after NOCHECK can leave FKs disabled.
+    /// Regression: after AllowNotNullSelfReferences NOCHECK, a cancelled insert can
+    /// leave rows that fail WITH CHECK validation. Finally must still re-enable
+    /// constraints (WITH NOCHECK fallback) so FKs are not left disabled.
     /// </summary>
     [TestClass]
     public class BulkInsertConstraintFinallyTests : BulkOperationTestBase

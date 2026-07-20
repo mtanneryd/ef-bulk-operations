@@ -7,6 +7,13 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
     [TestClass]
     public class BulkOperationValidationTests : BulkOperationTestBase
     {
+        [TestInitialize]
+        public void Initialize()
+        {
+            // Ensure LocalDB catalog exists after a drop (same as other fixtures).
+            InitializeUnitTestContext();
+        }
+
         [TestMethod]
         public void BulkInsertAllShouldRejectNullRequest()
         {

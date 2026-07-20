@@ -226,6 +226,35 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.ToTable("Company", "dbo");
                 });
 
+            modelBuilder.Entity("Tanneryd.BulkOperations.TestModels.ConcurrencyItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("Name");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("RowVersion");
+
+                    b.HasKey("Id");
+
+                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
+
+                    b.ToTable("ConcurrencyItem", "dbo");
+                });
+
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Composite", b =>
                 {
                     b.Property<long>("NumberId")

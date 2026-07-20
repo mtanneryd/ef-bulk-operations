@@ -36,6 +36,11 @@ namespace Tanneryd.BulkOperations.EFCore.Model
         public string[] ComplexPropertyNames { get; set; }
         public Dictionary<string, TableColumnMapping> ColumnMappingByPropertyName { get; set; }
         public Dictionary<string, TableColumnMapping> ColumnMappingByColumnName { get; set; }
+        /// <summary>
+        /// Optimistic concurrency tokens (e.g. rowversion). Not included in
+        /// <see cref="ColumnMappingByPropertyName"/> so inserts never write them.
+        /// </summary>
+        public TableColumnMapping[] ConcurrencyTokenMappings { get; set; } = Array.Empty<TableColumnMapping>();
         public ForeignKeyMapping[] ToForeignKeyMappings { get; set; }
         public ForeignKeyMapping[] FromForeignKeyMappings { get; set; }
     }

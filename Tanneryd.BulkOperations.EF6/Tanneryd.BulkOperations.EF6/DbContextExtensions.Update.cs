@@ -7,6 +7,7 @@ using Microsoft.Data.SqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,8 @@ namespace Tanneryd.BulkOperations.EF6
         /// <summary>
         /// Stages entities in a temp table, UPDATEs the target on key match, and
         /// when InsertIfNew is set INSERTs rows present in temp but not the target
-        /// (EXCEPT anti-join).
+        /// (EXCEPT anti-join). Concurrency tokens (issue #34) are included in the
+        /// UPDATE join; a mismatch throws <see cref="DbUpdateConcurrencyException"/>.
         /// </summary>
         private static async Task DoBulkUpdateAllAsync(
             this DbContext ctx,
@@ -44,6 +46,7 @@ namespace Tanneryd.BulkOperations.EF6
             var mappings = MappingExtractor.GetMappings(ctx, t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
+            var concurrencyTokenMappings = mappings.ConcurrencyTokenMappings ?? Array.Empty<TableColumnMapping>();
             var keyPropertyNames = request.KeyPropertyNames;
             var updatedPropertyNames = request.UpdatedPropertyNames;
             var keyColumnNames = keyPropertyNames.Select(n=>columnMappings[n].TableColumn.Name).ToArray();
@@ -72,9 +75,23 @@ namespace Tanneryd.BulkOperations.EF6
                         .Where(c => updatedColumnNames.Contains(c.TableColumn.Name)).ToArray();
                 }
 
-                var modifiedColumnMappings = modifiedColumnMappingCandidates.ToArray();
+                // Never SET concurrency tokens; SQL Server updates rowversion itself.
+                var concurrencyColumnNames = new HashSet<string>(
+                    concurrencyTokenMappings.Select(m => m.TableColumn.Name),
+                    StringComparer.OrdinalIgnoreCase);
+                var modifiedColumnMappings = modifiedColumnMappingCandidates
+                    .Where(c => !concurrencyColumnNames.Contains(c.TableColumn.Name))
+                    .ToArray();
 
                 var conn = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
+
+                SqlTransaction ownedTransaction = null;
+                if (concurrencyTokenMappings.Length > 0 && transaction == null && !conn.IsLegacy)
+                {
+                    ownedTransaction = conn.AsModernConnection().BeginTransaction();
+                    transaction = ownedTransaction;
+                }
+
                 string tempTableName = null;
                 try
                 {
@@ -86,19 +103,24 @@ namespace Tanneryd.BulkOperations.EF6
                         selectedKeyMappings,
                         modifiedColumnMappings,
                         transaction,
-                        cancellationToken).ConfigureAwait(false);
+                        cancellationToken,
+                        concurrencyTokenMappings).ConfigureAwait(false);
 
                     var setStatements =
                         modifiedColumnMappings.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
                     var setStatementsSql = string.Join(" , ", setStatements);
-                    var conditionStatements =
+                    var keyConditionStatements =
                         selectedKeyMappings.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
-                    var conditionStatementsSql = string.Join(" AND ", conditionStatements);
+                    var updateConditionStatements = keyConditionStatements
+                        .Concat(concurrencyTokenMappings.Select(c =>
+                            $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]"));
+                    var updateConditionStatementsSql = string.Join(" AND ", updateConditionStatements);
+                    var keyConditionStatementsSql = string.Join(" AND ", keyConditionStatements);
                     var cmdBody = $@"UPDATE t0 SET {setStatementsSql}
                                      FROM {tableName.Fullname} AS t0
-                                     INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
+                                     INNER JOIN {tempTableName} AS t1 ON {updateConditionStatementsSql}
                                     ";
-                    using (var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout))
+                    using (var cmd = CreateSqlCommand(cmdBody, conn, transaction, request.CommandTimeout))
                     {
                         rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                     }
@@ -111,24 +133,45 @@ namespace Tanneryd.BulkOperations.EF6
                             .ToArray();
                         var columnNames = string.Join(",", columns.Select(c => $"[{c}]"));
                         var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].[{c}]"));
+                        // InsertIfNew must match on keys only — including concurrency
+                        // tokens would treat a stale existing row as "new" and collide on PK.
                         cmdBody = $@"INSERT INTO {tableName.Fullname}
                                  SELECT {columnNames}
                                  FROM {tempTableName}
                                  EXCEPT
                                  SELECT {t0ColumnNames}
                                  FROM {tempTableName} AS t0
-                                 INNER JOIN {tableName.Fullname} AS t1 ON {conditionStatementsSql}            
+                                 INNER JOIN {tableName.Fullname} AS t1 ON {keyConditionStatementsSql}            
                                 ";
-                        using (var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout))
+                        using (var cmd = CreateSqlCommand(cmdBody, conn, transaction, request.CommandTimeout))
                         {
                             rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                         }
                     }
+
+                    if (concurrencyTokenMappings.Length > 0 && rowsAffected != entities.Count)
+                    {
+                        ownedTransaction?.Rollback();
+                        ownedTransaction = null;
+                        throw new DbUpdateConcurrencyException(
+                            $"BulkUpdate expected to affect {entities.Count} row(s) but affected {rowsAffected}. " +
+                            "One or more entities may have been modified or deleted (optimistic concurrency).");
+                    }
+
+                    ownedTransaction?.Commit();
+                    ownedTransaction = null;
+                }
+                catch
+                {
+                    try { ownedTransaction?.Rollback(); } catch { /* ignore */ }
+                    ownedTransaction = null;
+                    throw;
                 }
                 finally
                 {
+                    ownedTransaction?.Dispose();
                     if (tempTableName != null)
-                        await DropTempTableAsync(conn, transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
+                        await DropTempTableAsync(conn, request.Transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
                 }
             }
 

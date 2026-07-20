@@ -179,6 +179,16 @@
                 .PrimaryKey(t => t.Id)
                 .ForeignKey("dbo.Company", t => t.ParentCompanyId)
                 .Index(t => t.ParentCompanyId);
+
+            CreateTable(
+                "dbo.ConcurrencyItem",
+                c => new
+                    {
+                        Id = c.Int(nullable: false, identity: true),
+                        Name = c.String(nullable: false, maxLength: 100),
+                        RowVersion = c.Binary(nullable: false, fixedLength: true, timestamp: true, storeType: "rowversion"),
+                    })
+                .PrimaryKey(t => t.Id);
             
             CreateTable(
                 "dbo.Employee",
@@ -497,11 +507,25 @@
                 .ForeignKey("dbo.Instructor", t => t.InstructorID, cascadeDelete: true)
                 .Index(t => t.CourseID)
                 .Index(t => t.InstructorID);
-            
+
+            // Computed columns and Contact view (SQL Server-specific; not expressible in CreateTable).
+            Sql("ALTER TABLE dbo.Invoice DROP COLUMN Tax");
+            Sql("ALTER TABLE dbo.Invoice ADD Tax AS (Gross - Net) PERSISTED");
+            Sql("ALTER TABLE dbo.Instructor DROP COLUMN FullName");
+            Sql("ALTER TABLE dbo.Instructor ADD FullName AS (FirstName + ' ' + LastName) PERSISTED");
+            Sql(@"IF OBJECT_ID(N'dbo.Contact', N'U') IS NOT NULL
+                  DROP TABLE dbo.Contact");
+            Sql(@"IF OBJECT_ID(N'dbo.Contact', N'V') IS NULL
+                  EXEC(N'CREATE VIEW dbo.Contact AS SELECT FirstName, LastName FROM dbo.Person')");
         }
         
         public override void Down()
         {
+            Sql("IF OBJECT_ID(N'dbo.Contact', N'V') IS NOT NULL DROP VIEW dbo.Contact");
+            Sql("ALTER TABLE dbo.Invoice DROP COLUMN Tax");
+            AddColumn("dbo.Invoice", "Tax", c => c.Decimal(nullable: false, precision: 18, scale: 2));
+            Sql("ALTER TABLE dbo.Instructor DROP COLUMN FullName");
+
             DropForeignKey("dbo.Person", "MotherId", "dbo.Person");
             DropForeignKey("[In # Some.Complex_Schema @Name].SELECT WORSE FROM NAMES AS Extent1", "SummaryReportID", "dbo.SummaryReportFROMTableASExtent");
             DropForeignKey("[In # Some.Complex_Schema @Name].SELECT WORSE FROM NAMES AS Extent1", "PeriodID", "[Some.Complex_Schema Name].Period");
@@ -589,6 +613,7 @@
             DropTable("dbo.Number");
             DropTable("dbo.Composite");
             DropTable("dbo.Employee");
+            DropTable("dbo.ConcurrencyItem");
             DropTable("dbo.Company");
             DropTable("dbo.PlayerWithUserGeneratedGuid");
             DropTable("dbo.TeamWithUserGeneratedGuid");

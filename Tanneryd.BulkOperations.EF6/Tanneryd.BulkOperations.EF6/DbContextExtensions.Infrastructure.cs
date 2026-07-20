@@ -140,9 +140,13 @@ namespace Tanneryd.BulkOperations.EF6
             Discriminator discriminator,
             string[] columnNames,
             IncludeRowNumber includeRowNumber = IncludeRowNumber.No,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            ISet<string> castToVarBinary8Columns = null)
         {
-            var selectClause = string.Join(",", columnNames.Select(p => $"[{p}]"));
+            var selectClause = string.Join(",", columnNames.Select(p =>
+                castToVarBinary8Columns != null && castToVarBinary8Columns.Contains(p)
+                    ? $"CAST([{p}] AS varbinary(8)) AS [{p}]"
+                    : $"[{p}]"));
 
             if (discriminator != null)
             {
@@ -265,6 +269,39 @@ namespace Tanneryd.BulkOperations.EF6
             await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
             s0.Stop();
             return s0.Elapsed;
+        }
+
+        /// <summary>
+        /// Re-enables CHECK/FK constraints after AllowNotNullSelfReferences NOCHECK.
+        /// Prefers WITH CHECK (trusted). If existing rows violate constraints, falls
+        /// back to WITH NOCHECK so constraints are enabled again, then rethrows the
+        /// WITH CHECK failure so callers still observe FK/CHECK violations (e.g.
+        /// missing self-references). Always uses CancellationToken.None so a
+        /// cancelled caller cannot skip re-enable.
+        /// </summary>
+        private static async Task ReenableCheckConstraintsAsync(
+            DbContext ctx,
+            string tableFullName,
+            SqlTransaction transaction)
+        {
+            var connection = await ResolveSqlConnectionAsync(ctx, CancellationToken.None).ConfigureAwait(false);
+            try
+            {
+                var withCheck =
+                    $"ALTER TABLE {tableFullName} WITH CHECK CHECK CONSTRAINT ALL";
+                using var cmd = CreateSqlCommand(withCheck, connection, transaction, TimeSpan.FromSeconds(30));
+                await cmd.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
+            }
+            catch (SqlException)
+            {
+                // Data may be inconsistent after cancel or a bad self-ref graph.
+                // Still turn constraints back on, then surface the validation error.
+                var withNoCheck =
+                    $"ALTER TABLE {tableFullName} WITH NOCHECK CHECK CONSTRAINT ALL";
+                using var cmd = CreateSqlCommand(withNoCheck, connection, transaction, TimeSpan.FromSeconds(30));
+                await cmd.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
+                throw;
+            }
         }
     }
 }

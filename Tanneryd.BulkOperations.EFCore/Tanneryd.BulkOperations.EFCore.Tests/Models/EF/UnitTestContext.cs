@@ -5,6 +5,7 @@ using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Data.SqlTypes;
+using Tanneryd.BulkOperations.TestModels;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests
 {
@@ -61,6 +62,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public DbSet<TeamWithUserGeneratedGuid> TeamWithUserGeneratedGuids { get; set; } // TeamWithUserGeneratedGuid
         public DbSet<Visitor> Visitors { get; set; } // Visitor
         public DbSet<VisitorPost> VisitorPosts { get; set; } // VisitorPosts
+        public DbSet<ConcurrencyItem> ConcurrencyItems { get; set; }
 
         public bool IsSqlParameterNull(SqlParameter param)
         {
@@ -117,6 +119,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
             modelBuilder.ApplyConfiguration(new TeamWithUserGeneratedGuidConfiguration());
             modelBuilder.ApplyConfiguration(new VisitorConfiguration());
             modelBuilder.ApplyConfiguration(new VisitorPostConfiguration());
+            modelBuilder.ApplyConfiguration(new ConcurrencyItemConfiguration());
         }
 
     }

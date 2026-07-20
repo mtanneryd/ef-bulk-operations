@@ -10,6 +10,14 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
     [TestClass]
     public class BulkOperationValidationTests : BulkOperationTestBase
     {
+        [TestInitialize]
+        public void Initialize()
+        {
+            // These tests open UnitTestContext directly; ensure the catalog exists
+            // after a LocalDB drop (SqlClient reports that as "login failed").
+            InitializeUnitTestContext();
+        }
+
         [TestMethod]
         public void BulkInsertAllShouldRejectNullRequest()
         {

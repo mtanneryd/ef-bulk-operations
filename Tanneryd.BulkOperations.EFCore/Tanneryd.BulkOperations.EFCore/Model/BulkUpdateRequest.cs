@@ -22,7 +22,9 @@ namespace Tanneryd.BulkOperations.EFCore.Model
 {
     /// <summary>
     /// Parameters for BulkUpdateAll. Stages rows in a temp table, UPDATEs the target
-    /// on key match, and optionally INSERTs unmatched rows when InsertIfNew is set.
+    /// on key match (plus concurrency tokens when mapped), and optionally INSERTs
+    /// unmatched rows when InsertIfNew is set. Stale concurrency tokens throw
+    /// DbUpdateConcurrencyException.
     /// </summary>
     public class BulkUpdateRequest
     {

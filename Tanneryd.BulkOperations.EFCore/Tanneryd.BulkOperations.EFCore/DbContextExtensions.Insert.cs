@@ -1285,10 +1285,22 @@ namespace Tanneryd.BulkOperations.EFCore
             TableColumnMapping[] keyColumnMappings,
             TableColumnMapping[] nonKeyColumnMappings,
             SqlTransaction sqlTransaction,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            TableColumnMapping[] concurrencyTokenMappings = null)
         {
+            concurrencyTokenMappings = concurrencyTokenMappings ?? Array.Empty<TableColumnMapping>();
+
             var columnNames = keyColumnMappings.Select(m => m.TableColumn.Column.Name)
-                .Concat(nonKeyColumnMappings.Select(m => m.TableColumn.Column.Name)).ToArray();
+                .Concat(nonKeyColumnMappings.Select(m => m.TableColumn.Column.Name))
+                .Concat(concurrencyTokenMappings.Select(m => m.TableColumn.Column.Name))
+                .ToArray();
+
+            // timestamp/rowversion columns are not insertable; stage them as varbinary(8).
+            var castToVarBinary8 = new HashSet<string>(
+                concurrencyTokenMappings
+                    .Where(RequiresVarBinary8TempColumn)
+                    .Select(m => m.TableColumn.Column.Name),
+                StringComparer.OrdinalIgnoreCase);
 
             var tempTableName = await CreateTempTableAsync(
                 conn,
@@ -1297,7 +1309,8 @@ namespace Tanneryd.BulkOperations.EFCore
                 columnNames,
                 new TableColumn[0],
                 IncludeRowNumber.Yes,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken,
+                castToVarBinary8).ConfigureAwait(false);
 
             var identityInsertEnabled = false;
             try
@@ -1324,13 +1337,30 @@ namespace Tanneryd.BulkOperations.EFCore
                 var selectedColumnProperties = allProperties
                     .Where(p => nonKeyColumnMappings.Any(m => m.EntityProperty.Name == p.Name))
                     .ToArray();
-                var properties = pkColumnProperties.Concat(selectedColumnProperties).ToArray();
+                var concurrencyColumnProperties = allProperties
+                    .Where(p => concurrencyTokenMappings.Any(m => m.EntityProperty.Name == p.Name))
+                    .ToArray();
+                var properties = pkColumnProperties
+                    .Concat(selectedColumnProperties)
+                    .Concat(concurrencyColumnProperties)
+                    .ToArray();
+
+                var effectiveColumnMappings = columnMappings;
+                if (concurrencyTokenMappings.Length > 0)
+                {
+                    effectiveColumnMappings = new Dictionary<string, TableColumnMapping>(columnMappings);
+                    foreach (var token in concurrencyTokenMappings)
+                    {
+                        if (!effectiveColumnMappings.ContainsKey(token.EntityProperty.Name))
+                            effectiveColumnMappings[token.EntityProperty.Name] = token;
+                    }
+                }
 
                 var table = new DataTable();
                 using var bulkCopy = CreateBulkCopy(
                     table,
                     properties,
-                    columnMappings,
+                    effectiveColumnMappings,
                     conn,
                     sqlTransaction,
                     tempTableName,
@@ -1359,6 +1389,30 @@ namespace Tanneryd.BulkOperations.EFCore
                         CancellationToken.None).ConfigureAwait(false);
                 }
             }
+        }
+
+        private static bool IsRowVersionStoreType(string storeType)
+        {
+            if (string.IsNullOrEmpty(storeType))
+                return false;
+            var typeName = storeType;
+            var paren = typeName.IndexOf('(');
+            if (paren >= 0)
+                typeName = typeName.Substring(0, paren);
+            return typeName.Equals("timestamp", StringComparison.OrdinalIgnoreCase) ||
+                   typeName.Equals("rowversion", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static bool RequiresVarBinary8TempColumn(TableColumnMapping mapping)
+        {
+            if (IsRowVersionStoreType(mapping.TableColumn.Column.StoreType))
+                return true;
+
+            var clrType = mapping.EntityProperty.ClrType;
+            if (clrType == typeof(byte[]) || Nullable.GetUnderlyingType(clrType) == typeof(byte[]))
+                return mapping.EntityProperty.ValueGenerated != Microsoft.EntityFrameworkCore.Metadata.ValueGenerated.Never;
+
+            return false;
         }
 
         private static void EnableIdentityInsert(string tableName, SqlConnection conn, SqlTransaction sqlTransaction)

@@ -27,6 +27,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\Shared\TestModels\ConcurrencyItem.cs" Link="Models\DM\Concurrency\ConcurrencyItem.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 

@@ -72,6 +72,13 @@ namespace Tanneryd.BulkOperations.EFCore
                 tableColumnMappings.Add(CreateTableColumnMapping(property, false));
             }
 
+            // Concurrency tokens (often rowversion) are tracked separately so BulkUpdate
+            // can join on them without BulkInsert trying to write them.
+            mappings.ConcurrencyTokenMappings = entityType.GetProperties()
+                .Where(p => p.IsConcurrencyToken)
+                .Select(p => CreateTableColumnMapping(p, false))
+                .ToArray();
+
             var complexPropertyNames = new List<string>();
             foreach (var complexProperty in entityType.GetComplexProperties())
             {

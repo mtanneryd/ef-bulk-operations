@@ -403,14 +403,11 @@ namespace Tanneryd.BulkOperations.EFCore
             }
             finally
             {
-                // Re-enable with CancellationToken.None so a cancelled caller cannot
-                // leave NOCHECK constraints in place after AllowNotNullSelfReferences.
+                // Re-enable even if the caller token is cancelled / insert left bad rows.
                 foreach (var tableName in response.TablesWithNoCheckConstraints)
                 {
-                    var query = $"ALTER TABLE {tableName} WITH CHECK CHECK CONSTRAINT ALL";
-                    var connection = await GetSqlConnectionAsync(ctx, CancellationToken.None).ConfigureAwait(false);
-                    using var cmd = CreateSqlCommand(query, connection, request.Transaction, TimeSpan.FromSeconds(30));
-                    await cmd.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
+                    await ReenableCheckConstraintsAsync(ctx, tableName, request.Transaction)
+                        .ConfigureAwait(false);
                 }
             }
 

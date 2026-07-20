@@ -115,6 +115,9 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
             db.Prices.RemoveRange(db.Prices.ToArray());
             db.SaveChanges();
 
+            db.ConcurrencyItems.RemoveRange(db.ConcurrencyItems.ToArray());
+            db.SaveChanges();
+
             db.LogItems.RemoveRange(db.LogItems.ToArray());
             db.SaveChanges();
 

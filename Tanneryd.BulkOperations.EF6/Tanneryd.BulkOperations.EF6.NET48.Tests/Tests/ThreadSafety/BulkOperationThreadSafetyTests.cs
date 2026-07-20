@@ -17,10 +17,10 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6;
 using Tanneryd.BulkOperations.EF6.Model;
@@ -36,7 +36,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.ThreadSafety
     {
         private const int ThreadCount = 16;
         private const int PerThread = 25;
-        private const int MaxTransientAttempts = 5;
+        private const int MaxTransientAttempts = 10;
 
         [TestInitialize]
         public void Initialize()
@@ -329,16 +329,25 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.ThreadSafety
                 }
                 catch (Exception ex) when (IsTransientSqlError(ex) && attempt < MaxTransientAttempts)
                 {
-                    Thread.Sleep(25 * attempt);
+                    // Jitter avoids a retry stampede on TABLOCK / 4891 under Barrier sync.
+                    Thread.Sleep(25 * attempt + ThreadLocalRandom.Value.Next(0, 40));
                 }
             }
         }
 
         private static bool IsTransientSqlError(Exception ex)
         {
-            var sqlEx = ex as SqlException ?? ex.InnerException as SqlException;
-            return sqlEx != null && (sqlEx.Number == 1205 || sqlEx.Number == 4891);
+            for (var e = ex; e != null; e = e.InnerException)
+            {
+                if (e is SqlException sqlEx && (sqlEx.Number == 1205 || sqlEx.Number == 4891))
+                    return true;
+            }
+            return false;
         }
+
+        // ThreadStatic Random is not safe across threads; use a per-thread instance.
+        private static readonly ThreadLocal<Random> ThreadLocalRandom =
+            new ThreadLocal<Random>(() => new Random(Guid.NewGuid().GetHashCode()));
 
         private static void AssertNoErrors(ConcurrentQueue<Exception> errors)
         {

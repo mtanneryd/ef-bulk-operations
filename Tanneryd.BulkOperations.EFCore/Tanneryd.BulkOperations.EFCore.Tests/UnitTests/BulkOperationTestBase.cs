@@ -110,6 +110,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
             db.Prices.RemoveRange(db.Prices.ToArray());
             db.SaveChanges();
 
+            db.ConcurrencyItems.RemoveRange(db.ConcurrencyItems.ToArray());
+            db.SaveChanges();
+
             db.LogErrors.RemoveRange(db.LogErrors.ToArray());
             db.LogWarnings.RemoveRange(db.LogWarnings.ToArray());
             db.LogItems.RemoveRange(db.LogItems.ToArray());

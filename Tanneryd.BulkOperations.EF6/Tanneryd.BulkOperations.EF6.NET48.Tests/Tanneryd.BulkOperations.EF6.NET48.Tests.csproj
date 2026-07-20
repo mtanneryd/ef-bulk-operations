@@ -28,6 +28,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\Shared\TestModels\ConcurrencyItem.cs" Link="Models\DM\Concurrency\ConcurrencyItem.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- ResourceManager(typeof(InitialCreate)) expects this logical name, not the timestamped filename. -->
+    <EmbeddedResource Update="Migrations\202504301155079_InitialCreate.resx">
+      <LogicalName>Tanneryd.BulkOperations.EF6.NET48.Tests.Migrations.InitialCreate.resources</LogicalName>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 

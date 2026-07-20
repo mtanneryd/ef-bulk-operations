@@ -1301,10 +1301,23 @@ namespace Tanneryd.BulkOperations.EF6
             TableColumnMapping[] keyColumnMappings,
             TableColumnMapping[] nonKeyColumnMappings,
             SqlTransaction sqlTransaction,
-            CancellationToken cancellationToken = default)
+            CancellationToken cancellationToken = default,
+            TableColumnMapping[] concurrencyTokenMappings = null)
         {
+            concurrencyTokenMappings = concurrencyTokenMappings ?? Array.Empty<TableColumnMapping>();
+
             var columnNames = keyColumnMappings.Select(m => m.TableColumn.Name)
-                .Concat(nonKeyColumnMappings.Select(m => m.TableColumn.Name)).ToArray();
+                .Concat(nonKeyColumnMappings.Select(m => m.TableColumn.Name))
+                .Concat(concurrencyTokenMappings.Select(m => m.TableColumn.Name))
+                .ToArray();
+
+            // timestamp/rowversion columns are not insertable; stage them as varbinary(8).
+            // EF6 often exposes SQL rowversion as TypeName "varbinary(max)" in EDM metadata.
+            var castToVarBinary8 = new HashSet<string>(
+                concurrencyTokenMappings
+                    .Where(RequiresVarBinary8TempColumn)
+                    .Select(m => m.TableColumn.Name),
+                StringComparer.OrdinalIgnoreCase);
 
             var tempTableName = await CreateTempTableAsync(
                 conn,
@@ -1313,7 +1326,8 @@ namespace Tanneryd.BulkOperations.EF6
                 null,
                 columnNames,
                 IncludeRowNumber.Yes,
-                cancellationToken).ConfigureAwait(false);
+                cancellationToken,
+                castToVarBinary8).ConfigureAwait(false);
 
             var identityInsertEnabled = false;
             try
@@ -1342,13 +1356,31 @@ namespace Tanneryd.BulkOperations.EF6
                 var selectedColumnProperties = allProperties
                     .Where(p => nonKeyColumnMappings.Any(m => m.EntityProperty.Name == p.Name))
                     .ToArray();
-                var properties = pkColumnProperties.Concat(selectedColumnProperties).ToArray();
+                var concurrencyColumnProperties = allProperties
+                    .Where(p => concurrencyTokenMappings.Any(m => m.EntityProperty.Name == p.Name))
+                    .ToArray();
+                var properties = pkColumnProperties
+                    .Concat(selectedColumnProperties)
+                    .Concat(concurrencyColumnProperties)
+                    .ToArray();
+
+                // FillTempTable also needs concurrency tokens in columnMappings for CreateBulkCopy.
+                var effectiveColumnMappings = columnMappings;
+                if (concurrencyTokenMappings.Length > 0)
+                {
+                    effectiveColumnMappings = new Dictionary<string, TableColumnMapping>(columnMappings);
+                    foreach (var token in concurrencyTokenMappings)
+                    {
+                        if (!effectiveColumnMappings.ContainsKey(token.EntityProperty.Name))
+                            effectiveColumnMappings[token.EntityProperty.Name] = token;
+                    }
+                }
 
                 var table = new DataTable();
                 using var bulkCopy = CreateBulkCopy(
                     table,
                     properties,
-                    columnMappings,
+                    effectiveColumnMappings,
                     conn,
                     sqlTransaction,
                     tempTableName,
@@ -1377,6 +1409,31 @@ namespace Tanneryd.BulkOperations.EF6
                         CancellationToken.None).ConfigureAwait(false);
                 }
             }
+        }
+
+        private static bool IsRowVersionStoreType(string typeName)
+        {
+            if (string.IsNullOrEmpty(typeName))
+                return false;
+            var name = typeName;
+            var paren = name.IndexOf('(');
+            if (paren >= 0)
+                name = name.Substring(0, paren);
+            return name.Equals("timestamp", StringComparison.OrdinalIgnoreCase) ||
+                   name.Equals("rowversion", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// SQL rowversion columns must be staged as varbinary(8). EF6 metadata often
+        /// reports them as varbinary(max) rather than timestamp/rowversion.
+        /// </summary>
+        private static bool RequiresVarBinary8TempColumn(TableColumnMapping mapping)
+        {
+            if (IsRowVersionStoreType(mapping.TableColumn.TypeName))
+                return true;
+
+            var clrType = mapping.EntityProperty.PrimitiveType?.ClrEquivalentType;
+            return clrType == typeof(byte[]) && mapping.TableColumn.IsStoreGeneratedComputed;
         }
 
         private static void EnableIdentityInsert(string tableName, SqlServerConnection conn, SqlTransaction sqlTransaction)

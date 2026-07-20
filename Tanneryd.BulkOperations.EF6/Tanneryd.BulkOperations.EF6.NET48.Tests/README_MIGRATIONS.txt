@@ -10,19 +10,13 @@ Database
   Catalog:  Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.UnitTestContext
   Config:   app.config connection string "UnitTestContext"
 
-Migrations (in order)
----------------------
-  1. InitialCreate
-     Scaffolds the full test schema. Invoice.Tax and Instructor.FullName are
-     created as ordinary columns because EF6 migrations cannot express computed
-     column formulas in CreateTable.
+Migrations
+----------
+  InitialCreate only.
 
-  2. UpdateComputedColumns
-     Hand-written Sql() that:
-       - Converts Invoice.Tax to (Gross - Net) PERSISTED
-       - Converts Instructor.FullName to (FirstName + ' ' + LastName) PERSISTED
-       - Creates the Contact view over Person (mapped via ContactViewContext in tests;
-         ContactViewContext shares the UnitTestContext database via name=UnitTestContext)
+  Creates the full test schema (including ConcurrencyItem with a rowversion
+  column), then applies SQL Server-specific computed columns for Invoice.Tax
+  and Instructor.FullName, and creates the Contact view over Person.
 
 What happens when tests run
 ---------------------------
@@ -34,28 +28,13 @@ What happens when tests run
     3. Ensures dbo.Contact is a view (drops a stray Contact table if present)
     4. Deletes all rows via CleanupUnitTestContext() (schema is kept)
 
-  Migrations are idempotent: after the first run, Update() is a no-op unless a
-  new migration has been added. Tests do not drop or recreate the database.
-
-Creating a new migration (developer workflow)
----------------------------------------------
-  Package Manager Console:
-    Default project: Tanneryd.BulkOperations.EF6.NET48.Tests
-    Working directory: ...\Tanneryd.BulkOperations.EF6.NET48.Tests
-
-    EntityFramework6\Add-Migration <Name>
-    EntityFramework6\Update-Database
-
-  Automatic migrations are disabled (see Migrations\Configuration.cs).
-
-  If the scaffolded migration cannot express what you need (computed columns,
-  views), add raw Sql() in the migration Up()/Down() methods. See
-  UpdateComputedColumns.cs for the pattern used in this project.
-
-Resetting a broken local database
----------------------------------
-  If a previous setup left the database in an inconsistent state, drop it once:
+  When the model or InitialCreate changes, drop the local test database and let
+  the next test run recreate it:
 
     DROP DATABASE [Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.UnitTestContext];
 
-  The next test run will recreate it by applying all migrations from scratch.
+Creating a new migration (developer workflow)
+---------------------------------------------
+  Prefer editing InitialCreate (and its .resx model Target) rather than stacking
+  follow-up migrations for this test project. After model changes, drop the
+  local database as above.

@@ -136,6 +136,19 @@ namespace Tanneryd.BulkOperations.EF6
             var columnMappingByPropertyName = columnMappings.ToDictionary(m => m.EntityProperty.Name, m => m);
             var columnMappingByColumnName = columnMappings.ToDictionary(m => m.TableColumn.Name, m => m);
 
+            // Concurrency tokens (often store-generated rowversion) are tracked separately
+            // so BulkUpdate can join on them without BulkInsert trying to write them.
+            var concurrencyTokenMappings = propertyMappings
+                .Where(p => p is ScalarPropertyMapping)
+                .Cast<ScalarPropertyMapping>()
+                .Where(m => m.Property.ConcurrencyMode == ConcurrencyMode.Fixed)
+                .Select(p => new TableColumnMapping
+                {
+                    EntityProperty = p.Property,
+                    TableColumn = p.Column
+                })
+                .ToArray();
+
             //
             // Add mappings for all navigation properties.
             //
@@ -227,6 +240,7 @@ namespace Tanneryd.BulkOperations.EF6
                 ComplexPropertyNames = complexPropertyMappings.Select(m => m.Property.Name).ToArray(),
                 ColumnMappingByPropertyName = columnMappingByPropertyName,
                 ColumnMappingByColumnName = columnMappingByColumnName,
+                ConcurrencyTokenMappings = concurrencyTokenMappings,
                 ToForeignKeyMappings = foreignKeyMappings.Where(m => m.ToType == entityName).ToArray(),
                 FromForeignKeyMappings = foreignKeyMappings.Where(m => m.FromType == entityName).ToArray()
             };
