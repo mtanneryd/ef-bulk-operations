@@ -182,13 +182,15 @@ namespace Tanneryd.BulkOperations.EF6
             DropTempTableAsync(transaction, tempTableName).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
-        public Task DropTempTableAsync(
+        public async Task DropTempTableAsync(
             SqlTransaction transaction,
             string tempTableName,
             CancellationToken cancellationToken = default)
         {
             var query = $@"IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}";
-            return ExecuteNonQueryAsync(query, transaction, TimeSpan.FromSeconds(30), cancellationToken);
+            await ExecuteNonQueryAsync(query, transaction, TimeSpan.FromSeconds(30), cancellationToken)
+                .ConfigureAwait(false);
+            TempTableTracker.NotifyDropped();
         }
 
         public void EnableIdentityInsert(string tableName, SqlTransaction transaction)

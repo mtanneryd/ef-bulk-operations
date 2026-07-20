@@ -75,54 +75,61 @@ namespace Tanneryd.BulkOperations.EF6
                 var modifiedColumnMappings = modifiedColumnMappingCandidates.ToArray();
 
                 var conn = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
-                var tempTableName = await FillTempTableAsync(
-                    conn,
-                    entities,
-                    tableName,
-                    columnMappings,
-                    selectedKeyMappings,
-                    modifiedColumnMappings,
-                    transaction,
-                    cancellationToken).ConfigureAwait(false);
-
-                var setStatements =
-                    modifiedColumnMappings.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
-                var setStatementsSql = string.Join(" , ", setStatements);
-                var conditionStatements =
-                    selectedKeyMappings.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
-                var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                var cmdBody = $@"UPDATE t0 SET {setStatementsSql}
-                                 FROM {tableName.Fullname} AS t0
-                                 INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
-                                ";
-                using (var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout))
+                string tempTableName = null;
+                try
                 {
-                    rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-                }
+                    tempTableName = await FillTempTableAsync(
+                        conn,
+                        entities,
+                        tableName,
+                        columnMappings,
+                        selectedKeyMappings,
+                        modifiedColumnMappings,
+                        transaction,
+                        cancellationToken).ConfigureAwait(false);
 
-                if (request.InsertIfNew)
-                {
-                    var columns = columnMappings.Values
-                        .Where(m => !primaryKeyMembers.Contains(m.TableColumn.Name))
-                        .Select(m => m.TableColumn.Name)
-                        .ToArray();
-                    var columnNames = string.Join(",", columns.Select(c => $"[{c}]"));
-                    var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].[{c}]"));
-                    cmdBody = $@"INSERT INTO {tableName.Fullname}
-                             SELECT {columnNames}
-                             FROM {tempTableName}
-                             EXCEPT
-                             SELECT {t0ColumnNames}
-                             FROM {tempTableName} AS t0
-                             INNER JOIN {tableName.Fullname} AS t1 ON {conditionStatementsSql}            
-                            ";
+                    var setStatements =
+                        modifiedColumnMappings.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
+                    var setStatementsSql = string.Join(" , ", setStatements);
+                    var conditionStatements =
+                        selectedKeyMappings.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
+                    var conditionStatementsSql = string.Join(" AND ", conditionStatements);
+                    var cmdBody = $@"UPDATE t0 SET {setStatementsSql}
+                                     FROM {tableName.Fullname} AS t0
+                                     INNER JOIN {tempTableName} AS t1 ON {conditionStatementsSql}
+                                    ";
                     using (var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout))
                     {
                         rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                     }
-                }
 
-                await DropTempTableAsync(conn, transaction, tempTableName, cancellationToken).ConfigureAwait(false);
+                    if (request.InsertIfNew)
+                    {
+                        var columns = columnMappings.Values
+                            .Where(m => !primaryKeyMembers.Contains(m.TableColumn.Name))
+                            .Select(m => m.TableColumn.Name)
+                            .ToArray();
+                        var columnNames = string.Join(",", columns.Select(c => $"[{c}]"));
+                        var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].[{c}]"));
+                        cmdBody = $@"INSERT INTO {tableName.Fullname}
+                                 SELECT {columnNames}
+                                 FROM {tempTableName}
+                                 EXCEPT
+                                 SELECT {t0ColumnNames}
+                                 FROM {tempTableName} AS t0
+                                 INNER JOIN {tableName.Fullname} AS t1 ON {conditionStatementsSql}            
+                                ";
+                        using (var cmd = CreateSqlCommand(cmdBody, conn, request.Transaction, request.CommandTimeout))
+                        {
+                            rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                        }
+                    }
+                }
+                finally
+                {
+                    if (tempTableName != null)
+                        await DropTempTableAsync(conn, transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
+                }
             }
 
             response.AffectedRows.Add(new Tuple<Type, long>(t, rowsAffected));

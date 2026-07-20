@@ -535,41 +535,45 @@ namespace Tanneryd.BulkOperations.EFCore
                     .Values
                     .Except(pkColumnMappings)
                     .ToArray();
-                var tempTableName = await FillTempTableAsync(
-                    conn,
-                    entities,
-                    tableName,
-                    columnMappings,
-                    pkColumnMappings,
-                    nonPrimaryKeyColumnMappings,
-                    transaction,
-                    cancellationToken).ConfigureAwait(false);
+                string tempTableName = null;
+                try
+                {
+                    tempTableName = await FillTempTableAsync(
+                        conn,
+                        entities,
+                        tableName,
+                        columnMappings,
+                        pkColumnMappings,
+                        nonPrimaryKeyColumnMappings,
+                        transaction,
+                        cancellationToken).ConfigureAwait(false);
 
-                var conditionStatements =
-                    pkColumnMappings.Select(c => $"[t0].[{c.TableColumn.Column.Name}] = [t1].[{c.TableColumn.Column.Name}]");
-                var conditionStatementsSql = string.Join(" AND ", conditionStatements);
+                    var conditionStatements =
+                        pkColumnMappings.Select(c => $"[t0].[{c.TableColumn.Column.Name}] = [t1].[{c.TableColumn.Column.Name}]");
+                    var conditionStatementsSql = string.Join(" AND ", conditionStatements);
 
-                string listOfPrimaryKeyColumns = string.Join(",",
-                    pkColumnMappings.Select(c => $"[{c.TableColumn.Column.Name}]"));
-                string listOfColumns = string.Join(",",
-                    pkColumnMappings.Concat(nonPrimaryKeyColumnMappings).Select(c => $"[{c.TableColumn.Column.Name}]"));
+                    string listOfPrimaryKeyColumns = string.Join(",",
+                        pkColumnMappings.Select(c => $"[{c.TableColumn.Column.Name}]"));
+                    string listOfColumns = string.Join(",",
+                        pkColumnMappings.Concat(nonPrimaryKeyColumnMappings).Select(c => $"[{c.TableColumn.Column.Name}]"));
 
-                var cmdBody = $@"INSERT INTO {tableName.Fullname} ({listOfColumns})
-                                 SELECT {listOfColumns} 
-                                 FROM {tempTableName} AS [t0]
-                                 WHERE NOT EXISTS (
-                                    SELECT {listOfPrimaryKeyColumns}
-                                    FROM {tableName.Fullname} AS [t1]
-                                    WHERE {conditionStatementsSql}
-                                 )
-                                    ";
-                using var cmd = CreateSqlCommand(cmdBody, conn, transaction, commandTimeout);
-                rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-
-                //
-                // Clean up. Delete the temp table.
-                //
-                await DropTempTableAsync(conn, transaction, tempTableName, cancellationToken).ConfigureAwait(false);
+                    var cmdBody = $@"INSERT INTO {tableName.Fullname} ({listOfColumns})
+                                     SELECT {listOfColumns} 
+                                     FROM {tempTableName} AS [t0]
+                                     WHERE NOT EXISTS (
+                                        SELECT {listOfPrimaryKeyColumns}
+                                        FROM {tableName.Fullname} AS [t1]
+                                        WHERE {conditionStatementsSql}
+                                     )
+                                        ";
+                    using var cmd = CreateSqlCommand(cmdBody, conn, transaction, commandTimeout);
+                    rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                }
+                finally
+                {
+                    if (tempTableName != null)
+                        await DropTempTableAsync(conn, transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
+                }
             }
             else if (IsPrimaryKeyStoreGenerated(pkColumnMappings))
             {
@@ -615,63 +619,72 @@ namespace Tanneryd.BulkOperations.EFCore
                     //
                     if (newEntities.Count > 0)
                     {
-                        var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Column.Name).ToArray();
-                        var tempTableName =
-                            await CreateTempTableAsync(
+                        string tempTableName = null;
+                        try
+                        {
+                            var allColumnNames = columnMappings.Values.Select(v => v.TableColumn.Column.Name).ToArray();
+                            tempTableName =
+                                await CreateTempTableAsync(
+                                    conn,
+                                    transaction,
+                                    tableName,
+                                    allColumnNames,
+                                    discriminatorExtraColumns,
+                                    IncludeRowNumber.Yes,
+                                    cancellationToken).ConfigureAwait(false);
+
+                            using var bulkCopy = CreateBulkCopy(
+                                table,
+                                properties,
+                                columnMappings,
+                                conn,
+                                transaction,
+                                tempTableName,
+                                discriminatorExtraColumns,
+                                SqlBulkCopyOptions.Default,
+                                IncludeRowNumber.Yes);
+
+                            AddEntitiesToTable(table, newEntities, properties, t, mappings.Discriminator, IncludeRowNumber.Yes);
+
+                            var s = new Stopwatch();
+                            s.Start();
+                            await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+                            s.Stop();
+                            var stats = new BulkInsertStatistics
+                            {
+                                TimeElapsedDuringBulkCopy = s.Elapsed
+                            };
+
+                            var pkColumnType = Type.GetType(pkColumn.Property.ClrType.FullName);
+
+                            var nonPrimaryKeyColumnMappings = columnMappings.Values
+                                .Where(m => !primaryKeyMembers.Contains(m.TableColumn.Column.Name))
+                                .ToArray();
+
+                            rowsAffected += await SelectIntoUsingOutputClauseAsync(
                                 conn,
                                 transaction,
                                 tableName,
-                                allColumnNames,
-                                discriminatorExtraColumns,
-                                IncludeRowNumber.Yes,
+                                pkColumnType,
+                                allowNotNullSelfReferences,
+                                response,
+                                nonPrimaryKeyColumnMappings,
+                                pkColumn,
+                                tempTableName,
+                                s,
+                                stats,
+                                newEntities,
+                                pkProperty,
+                                hasComplexProperties,
+                                mappings.Discriminator,
+                                t,
                                 cancellationToken).ConfigureAwait(false);
-
-                        using var bulkCopy = CreateBulkCopy(
-                            table,
-                            properties,
-                            columnMappings,
-                            conn,
-                            transaction,
-                            tempTableName,
-                            discriminatorExtraColumns,
-                            SqlBulkCopyOptions.Default,
-                            IncludeRowNumber.Yes);
-
-                        AddEntitiesToTable(table, newEntities, properties, t, mappings.Discriminator, IncludeRowNumber.Yes);
-
-                        var s = new Stopwatch();
-                        s.Start();
-                        await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
-                        s.Stop();
-                        var stats = new BulkInsertStatistics
+                        }
+                        finally
                         {
-                            TimeElapsedDuringBulkCopy = s.Elapsed
-                        };
-
-                        var pkColumnType = Type.GetType(pkColumn.Property.ClrType.FullName);
-
-                        var nonPrimaryKeyColumnMappings = columnMappings.Values
-                            .Where(m => !primaryKeyMembers.Contains(m.TableColumn.Column.Name))
-                            .ToArray();
-
-                        rowsAffected += await SelectIntoUsingOutputClauseAsync(
-                            conn,
-                            transaction,
-                            tableName,
-                            pkColumnType,
-                            allowNotNullSelfReferences,
-                            response,
-                            nonPrimaryKeyColumnMappings,
-                            pkColumn,
-                            tempTableName,
-                            s,
-                            stats,
-                            newEntities,
-                            pkProperty,
-                            hasComplexProperties,
-                            mappings.Discriminator,
-                            t,
-                            cancellationToken).ConfigureAwait(false);
+                            if (tempTableName != null)
+                                await DropTempTableAsync(conn, transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
+                        }
                     }
                 }
             }

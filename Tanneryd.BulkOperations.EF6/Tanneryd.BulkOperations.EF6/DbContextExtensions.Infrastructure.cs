@@ -165,6 +165,7 @@ namespace Tanneryd.BulkOperations.EF6
                         WHERE 1=0";
             await connection.ExecuteNonQueryAsync(query, transaction, TimeSpan.FromSeconds(30), cancellationToken)
                 .ConfigureAwait(false);
+            TempTableTracker.NotifyCreated();
 
             return tempTableName;
         }

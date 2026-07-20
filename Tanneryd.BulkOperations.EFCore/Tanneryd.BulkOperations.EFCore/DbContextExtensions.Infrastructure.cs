@@ -190,6 +190,7 @@ namespace Tanneryd.BulkOperations.EFCore
                         WHERE 1=0";
             using var cmd = SqlCommandFactory.Create(query, connection, transaction, TimeSpan.FromSeconds(30));
             await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+            TempTableTracker.NotifyCreated();
 
             return tempTableName;
         }

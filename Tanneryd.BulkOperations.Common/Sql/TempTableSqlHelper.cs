@@ -17,14 +17,15 @@ namespace Tanneryd.BulkOperations.Common.Sql
             DropAsync(connection, transaction, tempTableName).GetAwaiter().GetResult();
         }
 
-        public static Task DropAsync(
+        public static async Task DropAsync(
             SqlConnection connection,
             SqlTransaction transaction,
             string tempTableName,
             CancellationToken cancellationToken = default)
         {
             var query = $@"IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}";
-            return ExecuteNonQueryAsync(query, connection, transaction, cancellationToken);
+            await ExecuteNonQueryAsync(query, connection, transaction, cancellationToken).ConfigureAwait(false);
+            TempTableTracker.NotifyDropped();
         }
 
         /// <summary>

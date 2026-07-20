@@ -57,76 +57,83 @@ namespace Tanneryd.BulkOperations.EF6
 
                 // Include rowno even when unused: on some hosts WriteToServer
                 // does nothing if the temp table has no rowno column.
-                var tempTableName = await CreateTempTableAsync(
-                    conn,
-                    request.Transaction,
-                    tableName,
-                    mappings.Discriminator,
-                    keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
-                    IncludeRowNumber.Yes,
-                    cancellationToken).ConfigureAwait(false);
-
-                var keyProperties = GetProperties(t)
-                    .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
-
-                var table = new DataTable();
-                using var bulkCopy = CreateBulkCopy(
-                    table,
-                    keyProperties,
-                    keyMappings,
-                    conn,
-                    request.Transaction,
-                    tempTableName,
-                    mappings.Discriminator,
-                    containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                    IncludeRowNumber.Yes);
-                if (containsIdentityKey)
-                    await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
-
-                int i = 0;
-                var type = items[0].GetType();
-                foreach (var entity in items)
+                string tempTableName = null;
+                try
                 {
-                    var e = entity;
-                    var columnValues = new List<dynamic>();
-                    columnValues.AddRange(keyProperties.Select(p =>
-                        GetProperty(type, itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
-                    columnValues.Add(i++);
-                    table.Rows.Add(columnValues.ToArray());
-                }
+                    tempTableName = await CreateTempTableAsync(
+                        conn,
+                        request.Transaction,
+                        tableName,
+                        mappings.Discriminator,
+                        keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
+                        IncludeRowNumber.Yes,
+                        cancellationToken).ConfigureAwait(false);
 
-                await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+                    var keyProperties = GetProperties(t)
+                        .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
-                var conditionStatements = keyMappings.Values.Select(c =>
-                {
-                    var keyProperty = keyProperties.Single(p => p.Name == c.EntityProperty.Name);
-                    return
-                        $"([t1].[{c.TableColumn.Name}] = [t2].[{c.TableColumn.Name}] OR ([t1].[{c.TableColumn.Name}] IS NULL AND [t2].[{c.TableColumn.Name}] IS NULL))";
-                });
+                    var table = new DataTable();
+                    using var bulkCopy = CreateBulkCopy(
+                        table,
+                        keyProperties,
+                        keyMappings,
+                        conn,
+                        request.Transaction,
+                        tempTableName,
+                        mappings.Discriminator,
+                        containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
+                        IncludeRowNumber.Yes);
+                    if (containsIdentityKey)
+                        await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
 
-                var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                var query = $@"SELECT DISTINCT [t0].[rowno] 
-                               FROM {tempTableName} AS [t0]
-                               EXCEPT
-                               SELECT DISTINCT [t1].[rowno] 
-                               FROM {tempTableName} AS [t1]
-                               INNER JOIN {tableName.Fullname} AS [t2] ON {conditionStatementsSql}";
-
-                using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
-
-                var existingEntities = new List<T1>();
-                using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
-                {
-                    while (await sqlDataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    int i = 0;
+                    var type = items[0].GetType();
+                    foreach (var entity in items)
                     {
-                        var rowNo = (int)sqlDataReader[0];
-                        existingEntities.Add(items[rowNo]);
+                        var e = entity;
+                        var columnValues = new List<dynamic>();
+                        columnValues.AddRange(keyProperties.Select(p =>
+                            GetProperty(type, itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
+                        columnValues.Add(i++);
+                        table.Rows.Add(columnValues.ToArray());
                     }
+
+                    await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+
+                    var conditionStatements = keyMappings.Values.Select(c =>
+                    {
+                        var keyProperty = keyProperties.Single(p => p.Name == c.EntityProperty.Name);
+                        return
+                            $"([t1].[{c.TableColumn.Name}] = [t2].[{c.TableColumn.Name}] OR ([t1].[{c.TableColumn.Name}] IS NULL AND [t2].[{c.TableColumn.Name}] IS NULL))";
+                    });
+
+                    var conditionStatementsSql = string.Join(" AND ", conditionStatements);
+                    var query = $@"SELECT DISTINCT [t0].[rowno] 
+                                   FROM {tempTableName} AS [t0]
+                                   EXCEPT
+                                   SELECT DISTINCT [t1].[rowno] 
+                                   FROM {tempTableName} AS [t1]
+                                   INNER JOIN {tableName.Fullname} AS [t2] ON {conditionStatementsSql}";
+
+                    using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
+
+                    var existingEntities = new List<T1>();
+                    using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        while (await sqlDataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                        {
+                            var rowNo = (int)sqlDataReader[0];
+                            existingEntities.Add(items[rowNo]);
+                        }
+                    }
+
+                    return existingEntities;
                 }
-
-                await DropTempTableAsync(conn, request.Transaction, tempTableName, cancellationToken).ConfigureAwait(false);
-
-                return existingEntities;
+                finally
+                {
+                    if (tempTableName != null)
+                        await DropTempTableAsync(conn, request.Transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
+                }
             }
 
             return new List<T1>();
@@ -169,76 +176,83 @@ namespace Tanneryd.BulkOperations.EF6
 
                 // Include rowno even when unused: on some hosts WriteToServer
                 // does nothing if the temp table has no rowno column.
-                var tempTableName = await CreateTempTableAsync(
-                    conn,
-                    request.Transaction,
-                    tableName,
-                    mappings.Discriminator,
-                    keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
-                    IncludeRowNumber.Yes,
-                    cancellationToken).ConfigureAwait(false);
-
-                var properties = GetProperties(t);
-                var keyProperties = properties
-                    .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
-
-                var table = new DataTable();
-                using var bulkCopy = CreateBulkCopy(
-                    table,
-                    keyProperties,
-                    keyMappings,
-                    conn,
-                    request.Transaction,
-                    tempTableName,
-                    mappings.Discriminator,
-                    containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                    IncludeRowNumber.Yes);
-                if (containsIdentityKey)
-                    await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
-
-                int i = 0;
-                var type = typeof(T1);
-                foreach (var entity in items)
+                string tempTableName = null;
+                try
                 {
-                    var e = entity;
-                    var columnValues = new List<dynamic>();
-                    columnValues.AddRange(keyProperties.Select(p =>
-                        GetProperty(type, itemPropertyByEntityProperty[p.Name], e, DBNull.Value)));
-                    columnValues.Add(i++);
-                    table.Rows.Add(columnValues.ToArray());
+                    tempTableName = await CreateTempTableAsync(
+                        conn,
+                        request.Transaction,
+                        tableName,
+                        mappings.Discriminator,
+                        keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
+                        IncludeRowNumber.Yes,
+                        cancellationToken).ConfigureAwait(false);
+
+                    var properties = GetProperties(t);
+                    var keyProperties = properties
+                        .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
+
+                    var table = new DataTable();
+                    using var bulkCopy = CreateBulkCopy(
+                        table,
+                        keyProperties,
+                        keyMappings,
+                        conn,
+                        request.Transaction,
+                        tempTableName,
+                        mappings.Discriminator,
+                        containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
+                        IncludeRowNumber.Yes);
+                    if (containsIdentityKey)
+                        await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
+
+                    int i = 0;
+                    var type = typeof(T1);
+                    foreach (var entity in items)
+                    {
+                        var e = entity;
+                        var columnValues = new List<dynamic>();
+                        columnValues.AddRange(keyProperties.Select(p =>
+                            GetProperty(type, itemPropertyByEntityProperty[p.Name], e, DBNull.Value)));
+                        columnValues.Add(i++);
+                        table.Rows.Add(columnValues.ToArray());
+                    }
+
+                    await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+
+                    var parameters = new List<SqlParameter>();
+                    var condStatementsSql = BuildParameterizedSqlConditions(
+                        request.SqlConditions,
+                        mappings,
+                        "t0",
+                        parameters,
+                        "deleteCond");
+                    var conditionStatements = keyMappings.Values.Select(c =>
+                    {
+                        return
+                            $"([t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}] OR ([t0].[{c.TableColumn.Name}] IS NULL AND [t1].[{c.TableColumn.Name}] IS NULL))";
+                    });
+
+                    var conditionStatementsSql = string.Join(" AND ", conditionStatements);
+                    var query = $@"DELETE {tableName.Fullname}
+                                   FROM  {tableName.Fullname} AS [t0]
+                                   WHERE {condStatementsSql}
+                                    AND NOT EXISTS (
+                                    SELECT NULL
+                                    FROM {tempTableName} AS [t1]
+                                    WHERE {conditionStatementsSql}
+                                   )";
+
+                    using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
+                    foreach (var parameter in parameters)
+                        cmd.AddParameter(parameter);
+                    await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                 }
-
-                await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
-
-                var parameters = new List<SqlParameter>();
-                var condStatementsSql = BuildParameterizedSqlConditions(
-                    request.SqlConditions,
-                    mappings,
-                    "t0",
-                    parameters,
-                    "deleteCond");
-                var conditionStatements = keyMappings.Values.Select(c =>
+                finally
                 {
-                    return
-                        $"([t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}] OR ([t0].[{c.TableColumn.Name}] IS NULL AND [t1].[{c.TableColumn.Name}] IS NULL))";
-                });
-
-                var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                var query = $@"DELETE {tableName.Fullname}
-                               FROM  {tableName.Fullname} AS [t0]
-                               WHERE {condStatementsSql}
-                                AND NOT EXISTS (
-                                SELECT NULL
-                                FROM {tempTableName} AS [t1]
-                                WHERE {conditionStatementsSql}
-                               )";
-
-                using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
-                foreach (var parameter in parameters)
-                    cmd.AddParameter(parameter);
-                await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
-
-                await DropTempTableAsync(conn, request.Transaction, tempTableName, cancellationToken).ConfigureAwait(false);
+                    if (tempTableName != null)
+                        await DropTempTableAsync(conn, request.Transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
+                }
             }
         }
 
@@ -282,77 +296,84 @@ namespace Tanneryd.BulkOperations.EF6
 
                 // Include rowno even when unused: on some hosts WriteToServer
                 // does nothing if the temp table has no rowno column.
-                var tempTableName = await CreateTempTableAsync(
-                    conn,
-                    request.Transaction,
-                    tableName,
-                    mappings.Discriminator,
-                    keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
-                    IncludeRowNumber.Yes,
-                    cancellationToken).ConfigureAwait(false);
-
-                var properties = GetProperties(t);
-                var keyProperties = properties
-                    .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
-
-                var table = new DataTable();
-                using var bulkCopy = CreateBulkCopy(
-                    table,
-                    keyProperties,
-                    keyMappings,
-                    conn,
-                    request.Transaction,
-                    tempTableName,
-                    mappings.Discriminator,
-                    containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                    IncludeRowNumber.Yes);
-                if (containsIdentityKey)
-                    await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
-
-                int i = 0;
-                var type = items[0].GetType();
-                foreach (var entity in items)
+                string tempTableName = null;
+                try
                 {
-                    var e = entity;
-                    var columnValues = new List<dynamic>();
-                    columnValues.AddRange(keyProperties.Select(p =>
-                        GetProperty(type, itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
-                    columnValues.Add(i++);
-                    table.Rows.Add(columnValues.ToArray());
-                }
+                    tempTableName = await CreateTempTableAsync(
+                        conn,
+                        request.Transaction,
+                        tableName,
+                        mappings.Discriminator,
+                        keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
+                        IncludeRowNumber.Yes,
+                        cancellationToken).ConfigureAwait(false);
 
-                await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+                    var properties = GetProperties(t);
+                    var keyProperties = properties
+                        .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
-                var conditionStatements =
-                    keyMappings.Values.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
-                var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                var query = $@"SELECT [t0].*
-                               FROM {tableName.Fullname} AS [t0]
-                               INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}
-                               ORDER BY [t1].rowno ASC";
+                    var table = new DataTable();
+                    using var bulkCopy = CreateBulkCopy(
+                        table,
+                        keyProperties,
+                        keyMappings,
+                        conn,
+                        request.Transaction,
+                        tempTableName,
+                        mappings.Discriminator,
+                        containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
+                        IncludeRowNumber.Yes);
+                    if (containsIdentityKey)
+                        await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
 
-                using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
-
-                var selectedEntities = new List<T2>();
-                using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
-                {
-                    while (await sqlDataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    int i = 0;
+                    var type = items[0].GetType();
+                    foreach (var entity in items)
                     {
-                        var t2 = new T2();
-                        selectedEntities.Add(t2);
-                        foreach (var property in properties)
+                        var e = entity;
+                        var columnValues = new List<dynamic>();
+                        columnValues.AddRange(keyProperties.Select(p =>
+                            GetProperty(type, itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
+                        columnValues.Add(i++);
+                        table.Rows.Add(columnValues.ToArray());
+                    }
+
+                    await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+
+                    var conditionStatements =
+                        keyMappings.Values.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
+                    var conditionStatementsSql = string.Join(" AND ", conditionStatements);
+                    var query = $@"SELECT [t0].*
+                                   FROM {tableName.Fullname} AS [t0]
+                                   INNER JOIN {tempTableName} AS [t1] ON {conditionStatementsSql}
+                                   ORDER BY [t1].rowno ASC";
+
+                    using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
+
+                    var selectedEntities = new List<T2>();
+                    using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        while (await sqlDataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
                         {
-                            if (!columnMappings.ContainsKey(property.Name)) continue;
-                            var mapping = columnMappings[property.Name];
-                            var val = sqlDataReader[mapping.TableColumn.Name];
-                            SetProperty(property, t2, val);
+                            var t2 = new T2();
+                            selectedEntities.Add(t2);
+                            foreach (var property in properties)
+                            {
+                                if (!columnMappings.ContainsKey(property.Name)) continue;
+                                var mapping = columnMappings[property.Name];
+                                var val = sqlDataReader[mapping.TableColumn.Name];
+                                SetProperty(property, t2, val);
+                            }
                         }
                     }
+
+                    return selectedEntities;
                 }
-
-                await DropTempTableAsync(conn, request.Transaction, tempTableName, cancellationToken).ConfigureAwait(false);
-
-                return selectedEntities;
+                finally
+                {
+                    if (tempTableName != null)
+                        await DropTempTableAsync(conn, request.Transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
+                }
             }
 
             return new List<T2>();
@@ -397,79 +418,86 @@ namespace Tanneryd.BulkOperations.EF6
 
                 // Include rowno even when unused: on some hosts WriteToServer
                 // does nothing if the temp table has no rowno column.
-                var tempTableName = await CreateTempTableAsync(
-                    conn,
-                    request.Transaction,
-                    tableName,
-                    mappings.Discriminator,
-                    keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
-                    IncludeRowNumber.Yes,
-                    cancellationToken).ConfigureAwait(false);
-
-                var keyProperties = GetProperties(t)
-                    .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
-
-                var table = new DataTable();
-                using var bulkCopy = CreateBulkCopy(
-                    table,
-                    keyProperties,
-                    keyMappings,
-                    conn,
-                    request.Transaction,
-                    tempTableName,
-                    mappings.Discriminator,
-                    containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                    IncludeRowNumber.Yes);
-                if (containsIdentityKey)
-                    await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
-
-                int i = 0;
-                var type = items[0].GetType();
-                foreach (var entity in items)
+                string tempTableName = null;
+                try
                 {
-                    var e = entity;
-                    var columnValues = new List<dynamic>();
-                    columnValues.AddRange(keyProperties.Select(p =>
-                        GetProperty(type, itemPropertyByEntityProperty[p.Name], e, DBNull.Value)));
-                    columnValues.Add(i++);
-                    table.Rows.Add(columnValues.ToArray());
-                }
+                    tempTableName = await CreateTempTableAsync(
+                        conn,
+                        request.Transaction,
+                        tableName,
+                        mappings.Discriminator,
+                        keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
+                        IncludeRowNumber.Yes,
+                        cancellationToken).ConfigureAwait(false);
 
-                await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+                    var keyProperties = GetProperties(t)
+                        .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
-                var conditionStatements = keyMappings.Values.Select(c =>
-                {
-                    var keyProperty = keyProperties.Single(p => p.Name == c.EntityProperty.Name);
-                    return
-                        $"([t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}] OR ([t0].[{c.TableColumn.Name}] IS NULL AND [t1].[{c.TableColumn.Name}] IS NULL))";
-                });
+                    var table = new DataTable();
+                    using var bulkCopy = CreateBulkCopy(
+                        table,
+                        keyProperties,
+                        keyMappings,
+                        conn,
+                        request.Transaction,
+                        tempTableName,
+                        mappings.Discriminator,
+                        containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
+                        IncludeRowNumber.Yes);
+                    if (containsIdentityKey)
+                        await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
 
-                var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                var query = $@"SELECT DISTINCT [t0].[rowno], [t1].*
-                               FROM {tempTableName} AS [t0]
-                               INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
-
-                using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
-
-                var existingEntities = new List<T1>();
-
-                using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
-                {
-                    while (await sqlDataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                    int i = 0;
+                    var type = items[0].GetType();
+                    foreach (var entity in items)
                     {
-                        var rowNo = (int)sqlDataReader[0];
-                        var item = items[rowNo];
-                        foreach (var cpm in request.ColumnPropertyMappings)
-                        {
-                            SetProperty(cpm.ItemPropertyName, item, sqlDataReader[cpm.EntityPropertyName]);
-                        }
-                        existingEntities.Add(items[rowNo]);
+                        var e = entity;
+                        var columnValues = new List<dynamic>();
+                        columnValues.AddRange(keyProperties.Select(p =>
+                            GetProperty(type, itemPropertyByEntityProperty[p.Name], e, DBNull.Value)));
+                        columnValues.Add(i++);
+                        table.Rows.Add(columnValues.ToArray());
                     }
+
+                    await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+
+                    var conditionStatements = keyMappings.Values.Select(c =>
+                    {
+                        var keyProperty = keyProperties.Single(p => p.Name == c.EntityProperty.Name);
+                        return
+                            $"([t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}] OR ([t0].[{c.TableColumn.Name}] IS NULL AND [t1].[{c.TableColumn.Name}] IS NULL))";
+                    });
+
+                    var conditionStatementsSql = string.Join(" AND ", conditionStatements);
+                    var query = $@"SELECT DISTINCT [t0].[rowno], [t1].*
+                                   FROM {tempTableName} AS [t0]
+                                   INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
+
+                    using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
+
+                    var existingEntities = new List<T1>();
+
+                    using (var sqlDataReader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
+                    {
+                        while (await sqlDataReader.ReadAsync(cancellationToken).ConfigureAwait(false))
+                        {
+                            var rowNo = (int)sqlDataReader[0];
+                            var item = items[rowNo];
+                            foreach (var cpm in request.ColumnPropertyMappings)
+                            {
+                                SetProperty(cpm.ItemPropertyName, item, sqlDataReader[cpm.EntityPropertyName]);
+                            }
+                            existingEntities.Add(items[rowNo]);
+                        }
+                    }
+
+                    return existingEntities;
                 }
-
-                await DropTempTableAsync(conn, request.Transaction, tempTableName, cancellationToken).ConfigureAwait(false);
-
-                return existingEntities;
+                finally
+                {
+                    if (tempTableName != null)
+                        await DropTempTableAsync(conn, request.Transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
+                }
             }
 
             return new List<T1>();
