@@ -20,6 +20,12 @@ namespace Tanneryd.BulkOperations.EF6.Model
     {
         public string Schema { get; set; }
         public string Name { get; set; }
-        public string Fullname => $"[{Schema}].[{Name}]";
+
+        /// <summary>
+        /// Qualified table name. When schema is unset (EF default schema), omit the
+        /// schema qualifier so SQL uses the connection default instead of emitting [].[Name].
+        /// </summary>
+        public string Fullname =>
+            string.IsNullOrEmpty(Schema) ? $"[{Name}]" : $"[{Schema}].[{Name}]";
     }
 }

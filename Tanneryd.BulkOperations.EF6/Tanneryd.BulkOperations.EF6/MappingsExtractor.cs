@@ -332,7 +332,7 @@ namespace Tanneryd.BulkOperations.EF6
             if (match.Success)
             {
                 var table = match.Groups["table"].Value;
-                return new TableName { Schema = "dbo", Name = table };
+                return new TableName { Schema = null, Name = table };
             }
 
             throw new ArgumentException($"Failed to parse table name from {sql}. Bulk operation failed.");
