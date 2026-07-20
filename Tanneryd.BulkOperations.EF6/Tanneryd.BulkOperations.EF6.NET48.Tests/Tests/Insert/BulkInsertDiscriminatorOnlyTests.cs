@@ -51,20 +51,31 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
         {
             using var db = new DiscriminatorOnlyContext();
 
-            var tags = new TagBase[]
+            // Insert concrete TPH types separately: BulkInsert stamps one
+            // Discriminator.Value for the whole batch from entities[0].GetType().
+            var redTags = new[]
             {
                 new RedTag(),
                 new RedTag(),
+            };
+            var blueTags = new[]
+            {
                 new BlueTag(),
             };
 
-            db.BulkInsertAll(new BulkInsertRequest<TagBase>
+            db.BulkInsertAll(new BulkInsertRequest<RedTag>
             {
-                Entities = tags,
+                Entities = redTags,
+                EnableRecursiveInsert = EnableRecursiveInsert.NoButRetrieveGeneratedPrimaryKeys,
+            });
+            db.BulkInsertAll(new BulkInsertRequest<BlueTag>
+            {
+                Entities = blueTags,
                 EnableRecursiveInsert = EnableRecursiveInsert.NoButRetrieveGeneratedPrimaryKeys,
             });
 
-            Assert.IsTrue(tags.All(t => t.Id > 0), "Expected store-generated identity keys to be written back.");
+            Assert.IsTrue(redTags.Concat<TagBase>(blueTags).All(t => t.Id > 0),
+                "Expected store-generated identity keys to be written back.");
             Assert.AreEqual(2, db.RedTags.Count());
             Assert.AreEqual(1, db.BlueTags.Count());
             Assert.AreEqual(3, db.Tags.Count());

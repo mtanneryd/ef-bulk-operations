@@ -970,18 +970,30 @@ namespace Tanneryd.BulkOperations.EF6
                                inserted.[{pkColumn.Name}]; 
                                  ";
             }
-            else
+            else if (discriminator != null)
             {
-                var columnNames = "rowno";
-                if (discriminator != null)
-                {
-                    columnNames = $"[{discriminator.Column.Name}]," + columnNames;
-                }
-
+                // Identity PK + discriminator only (TPH with no other columns).
+                // Alias list must match SELECT; insert the discriminator value.
+                var discriminatorName = $"[{discriminator.Column.Name}]";
                 query = $@"  
                         MERGE {tableName.Fullname}
                         USING 
-                            (SELECT {columnNames}
+                            (SELECT {discriminatorName}, rowno
+                             FROM   {tempTableName}) t ({discriminatorName}, rowno)
+                        ON 1 = 0
+                        WHEN NOT MATCHED THEN
+                        INSERT ({discriminatorName})
+                        VALUES ({discriminatorName})
+                        OUTPUT t.rowno,
+                               inserted.[{pkColumn.Name}]; 
+                                 ";
+            }
+            else
+            {
+                query = $@"  
+                        MERGE {tableName.Fullname}
+                        USING 
+                            (SELECT rowno
                              FROM   {tempTableName}) t (rowno)
                         ON 1 = 0
                         WHEN NOT MATCHED THEN
