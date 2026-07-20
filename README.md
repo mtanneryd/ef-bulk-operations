@@ -248,7 +248,7 @@ await ctx.BulkSelectAsync<MyKey, Price>(request, cancellationToken);
 
 Deletes database rows that match a set of `SqlCondition` filters **and** do **not** appear in the supplied `Items` list (according to the key mapping).
 
-**Warning:** An empty `Items` list deletes **every** row in the condition window. Always review the conditions and keepers before calling.
+**Warning:** An empty `Items` list is rejected by default. To delete every row in the condition window, set `AllowDeleteAllMatchingConditions = true` (and still review the conditions carefully).
 
 ```csharp
 // Keep these people; delete other people that match the filter
@@ -262,6 +262,15 @@ ctx.BulkDeleteNotExisting<Person, Person>(new BulkDeleteRequest<Person>
     },
     KeyPropertyMappings = KeyPropertyMapping.IdentityMappings(new[] { "Id" }),
     Items = keepers
+});
+
+// Explicit opt-in: delete every row matching the condition window
+ctx.BulkDeleteNotExisting<Person, Person>(new BulkDeleteRequest<Person>
+{
+    SqlConditions = new[] { new SqlCondition("MotherId", motherId) },
+    KeyPropertyMappings = KeyPropertyMapping.IdentityMappings(new[] { "Id" }),
+    Items = Array.Empty<Person>(),
+    AllowDeleteAllMatchingConditions = true
 });
 ```
 

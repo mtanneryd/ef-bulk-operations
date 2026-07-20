@@ -37,6 +37,47 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
                 db.BulkDeleteNotExisting<Person, Person>(null));
         }
 
+        /// <summary>
+        /// Regression for review finding H5: empty Items currently deletes the
+        /// entire SqlConditions window. Safe default must reject empty Items.
+        /// </summary>
+        [TestMethod]
+        public void BulkDeleteNotExistingShouldRejectEmptyItems()
+        {
+            using var db = Factory.CreateDbContext();
+            var request = new BulkDeleteRequest<Person>(
+                new[] { new SqlCondition("MotherId", 1L) },
+                new[] { "FirstName", "LastName" },
+                Array.Empty<Person>());
+
+            Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkDeleteNotExisting<Person, Person>(request));
+        }
+
+        [TestMethod]
+        public void BulkDeleteNotExistingShouldAllowEmptyItemsWhenOptInIsSet()
+        {
+            using var db = Factory.CreateDbContext();
+            var request = new BulkDeleteRequest<Person>(
+                new[] { new SqlCondition("MotherId", 1L) },
+                new[] { "FirstName", "LastName" },
+                Array.Empty<Person>())
+            {
+                AllowDeleteAllMatchingConditions = true
+            };
+
+            // Validation must accept empty Items when the opt-in flag is set.
+            // Execution may still fail later (e.g. no matching rows); that is fine.
+            try
+            {
+                db.BulkDeleteNotExisting<Person, Person>(request);
+            }
+            catch (ArgumentException)
+            {
+                Assert.Fail("Empty Items with AllowDeleteAllMatchingConditions should not be rejected.");
+            }
+        }
+
         [TestMethod]
         public void BulkSelectExistingShouldRejectEmptyKeyMappings()
         {

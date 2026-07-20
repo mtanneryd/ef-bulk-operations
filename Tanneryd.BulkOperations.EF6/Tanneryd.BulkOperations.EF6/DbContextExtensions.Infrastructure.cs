@@ -39,6 +39,15 @@ namespace Tanneryd.BulkOperations.EF6
 
             if (request.Items == null)
                 throw new ArgumentNullException(nameof(request.Items));
+
+            if (request.Items.Count == 0 && !request.AllowDeleteAllMatchingConditions)
+            {
+                throw new ArgumentException(
+                    "Items is empty. Refusing to delete the entire SqlConditions window. " +
+                    "Provide at least one keeper in Items, or set AllowDeleteAllMatchingConditions to true " +
+                    "to explicitly opt in to deleting every matching row.",
+                    nameof(request.Items));
+            }
         }
 
         private static void ValidateBulkSelectRequest<T>(BulkSelectRequest<T> request)

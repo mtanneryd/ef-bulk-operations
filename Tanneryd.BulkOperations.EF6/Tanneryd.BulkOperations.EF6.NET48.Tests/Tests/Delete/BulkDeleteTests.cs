@@ -116,6 +116,42 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Delete
             }
         }
 
+        /// <summary>
+        /// Regression for review finding H5: empty Items must not wipe the
+        /// condition window unless an explicit opt-in is provided.
+        /// </summary>
+        [TestMethod]
+        public void BulkDeleteNotExisting_WithEmptyItems_ShouldNotDeleteMatchingRows()
+        {
+            var mother = new Person
+            {
+                FirstName = "Angelica",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now
+            };
+            var child = new Person
+            {
+                FirstName = "Arvid",
+                LastName = "Tånneryd",
+                BirthDate = DateTime.Now,
+                Mother = mother
+            };
+
+            using var db = new UnitTestContext();
+            db.People.AddRange(new[] { mother, child });
+            db.SaveChanges();
+
+            Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkDeleteNotExisting<Person, Person>(new BulkDeleteRequest<Person>(
+                    new[] { new SqlCondition("MotherId", mother.Id) },
+                    new[] { "FirstName", "LastName" })
+                {
+                    Items = Array.Empty<Person>()
+                }));
+
+            Assert.AreEqual(2, db.People.Count());
+        }
+
         [TestMethod]
         public void DeleteNotExistingEntities2()
         {
@@ -223,7 +259,8 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Delete
                     new[] { new SqlCondition("MotherId", p0.Id) },
                     new[] { "FirstName", "EmployeeNumber", "LastName" })
                 {
-                    Items = Array.Empty<Person>().ToList()
+                    Items = Array.Empty<Person>().ToList(),
+                    AllowDeleteAllMatchingConditions = true
                 });
 
                 people = db.People.OrderBy(p => p.FirstName).ToArray();
@@ -293,7 +330,8 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Delete
                     new[] { new SqlCondition("MotherId", p0.Id) },
                     new[] { "FirstName", "EmployeeNumber", "LastName" })
                 {
-                    Items = Array.Empty<Person>().ToList()
+                    Items = Array.Empty<Person>().ToList(),
+                    AllowDeleteAllMatchingConditions = true
                 });
 
                 people = db.People.OrderBy(p => p.FirstName).ToArray();

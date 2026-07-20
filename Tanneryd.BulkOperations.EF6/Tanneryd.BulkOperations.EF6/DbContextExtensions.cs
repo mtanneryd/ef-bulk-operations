@@ -70,12 +70,10 @@ namespace Tanneryd.BulkOperations.EF6
         }
 
         /// <summary>
-        /// The bulk delete request contains a SqlCondition. It has
-        /// a list of column name/column value pairs and will be used
-        /// to build an AND where clause. This method will delete any
-        /// rows in the database that matches this SQL condition unless
-        /// it also matches one of the supplied entities according to
-        /// the key selector used.
+        /// Deletes database rows that match <see cref="BulkDeleteRequest{T}.SqlConditions"/>
+        /// and do not appear in <see cref="BulkDeleteRequest{T}.Items"/> according to the
+        /// key mapping. Empty <c>Items</c> is rejected unless
+        /// <see cref="BulkDeleteRequest{T}.AllowDeleteAllMatchingConditions"/> is true.
         ///
         /// !!! IMPORTANT !!!
         /// MAKE SURE THAT YOU FULLY UNDERSTAND THIS LOGIC

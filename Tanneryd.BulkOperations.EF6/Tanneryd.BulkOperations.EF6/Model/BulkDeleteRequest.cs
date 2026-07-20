@@ -6,8 +6,8 @@ namespace Tanneryd.BulkOperations.EF6.Model
 {
     /// <summary>
     /// Parameters for BulkDeleteNotExisting. Deletes rows matching SqlConditions
-    /// that do not appear in Items according to KeyPropertyMappings. An empty
-    /// Items list therefore deletes the entire condition window.
+    /// that do not appear in Items according to KeyPropertyMappings.
+    /// Empty Items is rejected unless <see cref="AllowDeleteAllMatchingConditions"/> is true.
     /// </summary>
     public class BulkDeleteRequest<T>
     {
@@ -17,6 +17,12 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public IList<T> Items { get; set; }
         public SqlTransaction Transaction { get; set; }
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(1);
+
+        /// <summary>
+        /// When true, an empty <see cref="Items"/> list is allowed and deletes every
+        /// row in the SqlConditions window. Default is false (safe).
+        /// </summary>
+        public bool AllowDeleteAllMatchingConditions { get; set; }
 
         public BulkDeleteRequest(
             SqlCondition[] sqlConditions,
