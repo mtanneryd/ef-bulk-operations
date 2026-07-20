@@ -37,14 +37,15 @@ namespace Tanneryd.BulkOperations.Common.Sql
             EnableIdentityInsertAsync(tableName, connection, transaction).GetAwaiter().GetResult();
         }
 
-        public static Task EnableIdentityInsertAsync(
+        public static async Task EnableIdentityInsertAsync(
             string tableName,
             SqlConnection connection,
             SqlTransaction transaction,
             CancellationToken cancellationToken = default)
         {
             var query = $@"SET IDENTITY_INSERT {tableName} ON";
-            return ExecuteNonQueryAsync(query, connection, transaction, cancellationToken);
+            await ExecuteNonQueryAsync(query, connection, transaction, cancellationToken).ConfigureAwait(false);
+            IdentityInsertTracker.NotifyEnabled();
         }
 
         public static void DisableIdentityInsert(string tableName, SqlConnection connection, SqlTransaction transaction)
@@ -52,14 +53,15 @@ namespace Tanneryd.BulkOperations.Common.Sql
             DisableIdentityInsertAsync(tableName, connection, transaction).GetAwaiter().GetResult();
         }
 
-        public static Task DisableIdentityInsertAsync(
+        public static async Task DisableIdentityInsertAsync(
             string tableName,
             SqlConnection connection,
             SqlTransaction transaction,
             CancellationToken cancellationToken = default)
         {
             var query = $@"SET IDENTITY_INSERT {tableName} OFF";
-            return ExecuteNonQueryAsync(query, connection, transaction, cancellationToken);
+            await ExecuteNonQueryAsync(query, connection, transaction, cancellationToken).ConfigureAwait(false);
+            IdentityInsertTracker.NotifyDisabled();
         }
 
         private static async Task ExecuteNonQueryAsync(

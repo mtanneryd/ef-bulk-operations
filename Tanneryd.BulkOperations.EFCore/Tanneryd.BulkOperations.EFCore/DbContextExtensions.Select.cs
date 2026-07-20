@@ -53,6 +53,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 var containsIdentityKey = keyMappings.Any(m => m.Value.IsIdentity);
 
                 string tempTableName = null;
+                var identityInsertEnabled = false;
                 try
                 {
                     tempTableName = await CreateTempTableAsync(
@@ -81,7 +82,10 @@ namespace Tanneryd.BulkOperations.EFCore
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes);
                     if (containsIdentityKey)
+                    {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
+                        identityInsertEnabled = true;
+                    }
 
                     int i = 0;
                     var type = items[0].GetType();
@@ -130,6 +134,14 @@ namespace Tanneryd.BulkOperations.EFCore
                 }
                 finally
                 {
+                    if (identityInsertEnabled)
+                    {
+                        await DisableIdentityInsertAsync(
+                            tempTableName,
+                            conn,
+                            request.Transaction,
+                            CancellationToken.None).ConfigureAwait(false);
+                    }
                     if (tempTableName != null)
                         await DropTempTableAsync(conn, request.Transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
                 }
@@ -175,6 +187,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 // Include rowno even when unused: on some hosts WriteToServer
                 // does nothing if the temp table has no rowno column.
                 string tempTableName = null;
+                var identityInsertEnabled = false;
                 try
                 {
                     tempTableName = await CreateTempTableAsync(
@@ -202,7 +215,10 @@ namespace Tanneryd.BulkOperations.EFCore
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes);
                     if (containsIdentityKey)
+                    {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
+                        identityInsertEnabled = true;
+                    }
 
                     int i = 0;
                     var type = typeof(T1);
@@ -248,6 +264,14 @@ namespace Tanneryd.BulkOperations.EFCore
                 }
                 finally
                 {
+                    if (identityInsertEnabled)
+                    {
+                        await DisableIdentityInsertAsync(
+                            tempTableName,
+                            conn,
+                            request.Transaction,
+                            CancellationToken.None).ConfigureAwait(false);
+                    }
                     if (tempTableName != null)
                         await DropTempTableAsync(conn, request.Transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
                 }
@@ -300,6 +324,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 // Include rowno even when unused: on some hosts WriteToServer
                 // does nothing if the temp table has no rowno column.
                 string tempTableName = null;
+                var identityInsertEnabled = false;
                 try
                 {
                     tempTableName = await CreateTempTableAsync(
@@ -327,7 +352,10 @@ namespace Tanneryd.BulkOperations.EFCore
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes);
                     if (containsIdentityKey)
+                    {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
+                        identityInsertEnabled = true;
+                    }
 
                     int i = 0;
                     var type = items[0].GetType();
@@ -374,6 +402,14 @@ namespace Tanneryd.BulkOperations.EFCore
                 }
                 finally
                 {
+                    if (identityInsertEnabled)
+                    {
+                        await DisableIdentityInsertAsync(
+                            tempTableName,
+                            conn,
+                            request.Transaction,
+                            CancellationToken.None).ConfigureAwait(false);
+                    }
                     if (tempTableName != null)
                         await DropTempTableAsync(conn, request.Transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
                 }
@@ -496,6 +532,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     extraColumnNames.Add(extraColumn);
                 }
                 string tempTableName = null;
+                var identityInsertEnabled = false;
                 try
                 {
                     tempTableName = await CreateTempTableAsync(
@@ -522,7 +559,10 @@ namespace Tanneryd.BulkOperations.EFCore
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes);
                     if (containsIdentityKey)
+                    {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
+                        identityInsertEnabled = true;
+                    }
 
                     int i = 0;
                     var type = items[0].GetType();
@@ -594,6 +634,14 @@ namespace Tanneryd.BulkOperations.EFCore
                 }
                 finally
                 {
+                    if (identityInsertEnabled)
+                    {
+                        await DisableIdentityInsertAsync(
+                            tempTableName,
+                            conn,
+                            request.Transaction,
+                            CancellationToken.None).ConfigureAwait(false);
+                    }
                     if (tempTableName != null)
                         await DropTempTableAsync(conn, request.Transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
                 }

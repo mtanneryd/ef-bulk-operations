@@ -1299,50 +1299,66 @@ namespace Tanneryd.BulkOperations.EFCore
                 IncludeRowNumber.Yes,
                 cancellationToken).ConfigureAwait(false);
 
-            // Temp table inherits identity metadata from the source; KeepIdentity
-            // bulk-copy of explicit key values requires IDENTITY_INSERT ON.
-            if (keyColumnMappings.Length == 1 && 
-                keyColumnMappings[0].IsIdentity)
+            var identityInsertEnabled = false;
+            try
             {
-                await EnableIdentityInsertAsync(tempTableName, conn, sqlTransaction, cancellationToken).ConfigureAwait(false);
+                // Temp table inherits identity metadata from the source; KeepIdentity
+                // bulk-copy of explicit key values requires IDENTITY_INSERT ON.
+                if (keyColumnMappings.Length == 1 &&
+                    keyColumnMappings[0].IsIdentity)
+                {
+                    await EnableIdentityInsertAsync(tempTableName, conn, sqlTransaction, cancellationToken).ConfigureAwait(false);
+                    identityInsertEnabled = true;
+                }
+
+                var allProperties = GetProperties(entities[0]);
+                //
+                // Select the primary key clr properties 
+                //
+                var pkColumnProperties = allProperties
+                    .Where(p => keyColumnMappings.Any(m => m.EntityProperty.Name == p.Name))
+                    .ToArray();
+                //
+                // Select the clr properties for the selected non primary key columns.
+                //
+                var selectedColumnProperties = allProperties
+                    .Where(p => nonKeyColumnMappings.Any(m => m.EntityProperty.Name == p.Name))
+                    .ToArray();
+                var properties = pkColumnProperties.Concat(selectedColumnProperties).ToArray();
+
+                var table = new DataTable();
+                using var bulkCopy = CreateBulkCopy(
+                    table,
+                    properties,
+                    columnMappings,
+                    conn,
+                    sqlTransaction,
+                    tempTableName,
+                    new TableColumn[0],
+                    SqlBulkCopyOptions.KeepIdentity,
+                    IncludeRowNumber.Yes);
+
+                var type = entities[0].GetType();
+                AddEntitiesToTable(table, entities, properties, type, null, IncludeRowNumber.Yes);
+
+                //
+                // Fill the temp table.
+                //
+                await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+
+                return tempTableName;
             }
-
-            var allProperties = GetProperties(entities[0]);
-            //
-            // Select the primary key clr properties 
-            //
-            var pkColumnProperties = allProperties
-                .Where(p => keyColumnMappings.Any(m => m.EntityProperty.Name == p.Name))
-                .ToArray();
-            //
-            // Select the clr properties for the selected non primary key columns.
-            //
-            var selectedColumnProperties = allProperties
-                .Where(p => nonKeyColumnMappings.Any(m => m.EntityProperty.Name == p.Name))
-                .ToArray();
-            var properties = pkColumnProperties.Concat(selectedColumnProperties).ToArray();
-
-            var table = new DataTable();
-            using var bulkCopy = CreateBulkCopy(
-                table,
-                properties,
-                columnMappings,
-                conn,
-                sqlTransaction,
-                tempTableName,
-                new TableColumn[0],
-                SqlBulkCopyOptions.KeepIdentity,
-                IncludeRowNumber.Yes);
-
-            var type = entities[0].GetType();
-            AddEntitiesToTable(table, entities, properties, type, null, IncludeRowNumber.Yes);
-
-            //
-            // Fill the temp table.
-            //
-            await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
-
-            return tempTableName;
+            finally
+            {
+                if (identityInsertEnabled)
+                {
+                    await DisableIdentityInsertAsync(
+                        tempTableName,
+                        conn,
+                        sqlTransaction,
+                        CancellationToken.None).ConfigureAwait(false);
+                }
+            }
         }
 
         private static void EnableIdentityInsert(string tableName, SqlConnection conn, SqlTransaction sqlTransaction)

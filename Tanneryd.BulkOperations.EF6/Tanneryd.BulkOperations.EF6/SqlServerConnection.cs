@@ -198,16 +198,17 @@ namespace Tanneryd.BulkOperations.EF6
             EnableIdentityInsertAsync(tableName, transaction).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
-        public Task EnableIdentityInsertAsync(
+        public async Task EnableIdentityInsertAsync(
             string tableName,
             SqlTransaction transaction,
             CancellationToken cancellationToken = default)
         {
-            return ExecuteNonQueryAsync(
+            await ExecuteNonQueryAsync(
                 $@"SET IDENTITY_INSERT {tableName} ON",
                 transaction,
                 TimeSpan.FromSeconds(30),
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
+            IdentityInsertTracker.NotifyEnabled();
         }
 
         public void DisableIdentityInsert(string tableName, SqlTransaction transaction)
@@ -215,16 +216,17 @@ namespace Tanneryd.BulkOperations.EF6
             DisableIdentityInsertAsync(tableName, transaction).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
-        public Task DisableIdentityInsertAsync(
+        public async Task DisableIdentityInsertAsync(
             string tableName,
             SqlTransaction transaction,
             CancellationToken cancellationToken = default)
         {
-            return ExecuteNonQueryAsync(
+            await ExecuteNonQueryAsync(
                 $@"SET IDENTITY_INSERT {tableName} OFF",
                 transaction,
                 TimeSpan.FromSeconds(30),
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
+            IdentityInsertTracker.NotifyDisabled();
         }
 
         private void ValidateTransaction(SqlTransaction transaction)
