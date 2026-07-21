@@ -11,6 +11,7 @@ using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Tanneryd.BulkOperations.Common.Sql;
 using Tanneryd.BulkOperations.EFCore.Model;
 
 namespace Tanneryd.BulkOperations.EFCore
@@ -80,26 +81,25 @@ namespace Tanneryd.BulkOperations.EFCore
                         tempTableName,
                         new TableColumn[0],
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                        IncludeRowNumber.Yes);
+                        IncludeRowNumber.Yes,
+                        request.CommandTimeout,
+                        request.UseTableLock);
                     if (containsIdentityKey)
                     {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
                         identityInsertEnabled = true;
                     }
 
-                    int i = 0;
                     var type = items[0].GetType();
-                    foreach (var entity in items)
+                    using (var reader = new ObjectListDataReader(table, (System.Collections.IList)items, (entity, rowIndex) =>
                     {
-                        var e = entity;
-                        var columnValues = new List<dynamic>();
+                        var columnValues = new List<object>();
                         columnValues.AddRange(keyProperties.Select(p =>
-                            GetProperty(type, itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
-                        columnValues.Add(i++);
-                        table.Rows.Add(columnValues.ToArray());
-                    }
-
-                    await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+                            (object)GetProperty(type, itemPropertByEntityProperty[p.Name], entity, DBNull.Value)));
+                        columnValues.Add(rowIndex);
+                        return columnValues.ToArray();
+                    }))
+                        await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
                     var conditionStatements = keyMappings.Values.Select(c =>
                     {
@@ -213,26 +213,25 @@ namespace Tanneryd.BulkOperations.EFCore
                         tempTableName,
                         new TableColumn[0],
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                        IncludeRowNumber.Yes);
+                        IncludeRowNumber.Yes,
+                        request.CommandTimeout,
+                        request.UseTableLock);
                     if (containsIdentityKey)
                     {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
                         identityInsertEnabled = true;
                     }
 
-                    int i = 0;
                     var type = typeof(T1);
-                    foreach (var entity in items)
+                    using (var reader = new ObjectListDataReader(table, (System.Collections.IList)items, (entity, rowIndex) =>
                     {
-                        var e = entity;
-                        var columnValues = new List<dynamic>();
+                        var columnValues = new List<object>();
                         columnValues.AddRange(keyProperties.Select(p =>
-                            GetProperty(type, itemPropertyByEntityProperty[p.Name], e, DBNull.Value)));
-                        columnValues.Add(i++);
-                        table.Rows.Add(columnValues.ToArray());
-                    }
-
-                    await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+                            (object)GetProperty(type, itemPropertyByEntityProperty[p.Name], entity, DBNull.Value)));
+                        columnValues.Add(rowIndex);
+                        return columnValues.ToArray();
+                    }))
+                        await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
                     var parameters = new List<SqlParameter>();
                     var condStatementsSql = BuildParameterizedSqlConditions(
@@ -357,19 +356,16 @@ namespace Tanneryd.BulkOperations.EFCore
                         identityInsertEnabled = true;
                     }
 
-                    int i = 0;
                     var type = items[0].GetType();
-                    foreach (var entity in items)
+                    using (var reader = new ObjectListDataReader(table, (System.Collections.IList)items, (entity, rowIndex) =>
                     {
-                        var e = entity;
-                        var columnValues = new List<dynamic>();
+                        var columnValues = new List<object>();
                         columnValues.AddRange(keyProperties.Select(p =>
-                            GetProperty(type, itemPropertByEntityProperty[p.Name], e, DBNull.Value)));
-                        columnValues.Add(i++);
-                        table.Rows.Add(columnValues.ToArray());
-                    }
-
-                    await bulkCopy.WriteToServerAsync(table.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+                            (object)GetProperty(type, itemPropertByEntityProperty[p.Name], entity, DBNull.Value)));
+                        columnValues.Add(rowIndex);
+                        return columnValues.ToArray();
+                    }))
+                        await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
                     var conditionStatements =
                         keyMappings.Values.Select(c => $"t0.[{c.TableColumn.Column.Name}] = t1.[{c.TableColumn.Column.Name}]");
@@ -557,28 +553,27 @@ namespace Tanneryd.BulkOperations.EFCore
                         tempTableName,
                         extraColumnNames.ToArray(),
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                        IncludeRowNumber.Yes);
+                        IncludeRowNumber.Yes,
+                        request.CommandTimeout,
+                        request.UseTableLock);
                     if (containsIdentityKey)
                     {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
                         identityInsertEnabled = true;
                     }
 
-                    int i = 0;
                     var type = items[0].GetType();
-                    foreach (var entity in items)
+                    using (var reader = new ObjectListDataReader(dataTable, (System.Collections.IList)items, (entity, rowIndex) =>
                     {
-                        var e = entity;
-                        var columnValues = new List<dynamic>();
+                        var columnValues = new List<object>();
                         columnValues.AddRange(keyProperties.Select(p =>
-                            GetProperty(type, itemPropertyByEntityProperty[p.Name], e, DBNull.Value)));
+                            (object)GetProperty(type, itemPropertyByEntityProperty[p.Name], entity, DBNull.Value)));
                         columnValues.AddRange(extraColumnNames.Select(p =>
-                            GetProperty(type, p.Name, e, DBNull.Value)));
-                        columnValues.Add(i++);
-                        dataTable.Rows.Add(columnValues.ToArray());
-                    }
-
-                    await bulkCopy.WriteToServerAsync(dataTable.CreateDataReader(), cancellationToken).ConfigureAwait(false);
+                            (object)GetProperty(type, p.Name, entity, DBNull.Value)));
+                        columnValues.Add(rowIndex);
+                        return columnValues.ToArray();
+                    }))
+                        await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
                     var conditionStatements = keyMappings.Values.Select(c =>
                     {

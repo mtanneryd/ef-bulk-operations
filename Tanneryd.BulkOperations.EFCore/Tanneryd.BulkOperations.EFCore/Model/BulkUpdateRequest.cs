@@ -54,6 +54,11 @@ namespace Tanneryd.BulkOperations.EFCore.Model
         /// </summary>
         public bool InsertIfNew { get; set; }
 
+        /// <summary>
+        /// When true, SqlBulkCopy into the staging temp table uses TABLOCK.
+        /// </summary>
+        public bool UseTableLock { get; set; } = false;
+
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(30);
     }
 }

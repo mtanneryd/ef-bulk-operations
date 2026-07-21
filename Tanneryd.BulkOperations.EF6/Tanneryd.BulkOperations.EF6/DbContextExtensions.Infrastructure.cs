@@ -192,9 +192,9 @@ namespace Tanneryd.BulkOperations.EF6
         }
 
         /// <summary>
-        /// Builds a SqlBulkCopy session and DataTable columns for the mapped properties.
-        /// Always ORs in TableLock (TABLOCK) for throughput; expect reduced concurrency
-        /// on the destination during the copy. Unmapped CLR properties are skipped.
+        /// Builds a SqlBulkCopy session and DataTable column schema for the mapped properties.
+        /// Rows are streamed via <see cref="ObjectListDataReader"/>; do not fill the DataTable.
+        /// TableLock (TABLOCK) is opt-in. Unmapped CLR properties are skipped.
         /// </summary>
         private static SqlBulkCopySession CreateBulkCopy(
             DataTable table,
@@ -205,13 +205,17 @@ namespace Tanneryd.BulkOperations.EF6
             string tableName,
             Discriminator discriminator,
             SqlBulkCopyOptions options = SqlBulkCopyOptions.Default,
-            IncludeRowNumber includeRowNumber = IncludeRowNumber.No)
+            IncludeRowNumber includeRowNumber = IncludeRowNumber.No,
+            TimeSpan? bulkCopyTimeout = null,
+            bool useTableLock = false)
         {
-            options = options | SqlBulkCopyOptions.TableLock;
+            if (useTableLock)
+                options |= SqlBulkCopyOptions.TableLock;
+
             var bulkCopy = connection.CreateBulkCopy(options, transaction, tableName);
             bulkCopy.EnableStreaming = true;
-            bulkCopy.BatchSize = 1000000;
-            bulkCopy.BulkCopyTimeout = 10 * 60;
+            // BatchSize left at ADO.NET default (0). Avoid the previous hard-coded 1_000_000.
+            bulkCopy.BulkCopyTimeout = (int)(bulkCopyTimeout ?? TimeSpan.FromMinutes(10)).TotalSeconds;
 
             foreach (var property in properties)
             {

@@ -19,6 +19,11 @@ namespace Tanneryd.BulkOperations.EFCore.Model
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
+        /// When true, SqlBulkCopy into the staging temp table uses TABLOCK.
+        /// </summary>
+        public bool UseTableLock { get; set; } = false;
+
+        /// <summary>
         /// When true, an empty <see cref="Items"/> list is allowed and deletes every
         /// row in the SqlConditions window. Default is false (safe).
         /// </summary>

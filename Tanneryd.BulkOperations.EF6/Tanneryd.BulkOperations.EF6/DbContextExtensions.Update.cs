@@ -103,6 +103,8 @@ namespace Tanneryd.BulkOperations.EF6
                         selectedKeyMappings,
                         modifiedColumnMappings,
                         transaction,
+                        request.CommandTimeout,
+                        request.UseTableLock,
                         cancellationToken,
                         concurrencyTokenMappings).ConfigureAwait(false);
 

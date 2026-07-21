@@ -49,6 +49,11 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public SqlTransaction Transaction { get; set; }
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(1);
 
+        /// <summary>
+        /// When true, SqlBulkCopy into the staging temp table uses TABLOCK.
+        /// </summary>
+        public bool UseTableLock { get; set; } = false;
+
         public BulkSelectRequest()
         {
             KeyPropertyMappings = new KeyPropertyMapping[0];

@@ -387,6 +387,7 @@ namespace Tanneryd.BulkOperations.EF6
                     new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
                     mappingsByType,
                     response,
+                    request.UseTableLock,
                     cancellationToken).ConfigureAwait(false);
 
                 if (request.UpdateStatistics)

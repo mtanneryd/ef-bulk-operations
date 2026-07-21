@@ -115,6 +115,8 @@ namespace Tanneryd.BulkOperations.EFCore
                         selectedKeyMappings,
                         modifiedColumnMappings,
                         transaction,
+                        request.CommandTimeout,
+                        request.UseTableLock,
                         cancellationToken,
                         concurrencyTokenMappings).ConfigureAwait(false);
 

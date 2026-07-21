@@ -400,6 +400,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     new Dictionary<object, object>(new IdentityEqualityComparer<object>()),
                     mappingsByType,
                     response,
+                    request.UseTableLock,
                     cancellationToken).ConfigureAwait(false);
 
                 if (request.UpdateStatistics)

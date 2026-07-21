@@ -50,6 +50,12 @@ namespace Tanneryd.BulkOperations.EFCore.Model
         /// </summary>
         public bool SortUsingClusteredIndex { get; set; } = true;
 
+        /// <summary>
+        /// When true, SqlBulkCopy uses TABLOCK on the destination. Opt-in: improves throughput
+        /// for large exclusive loads but reduces concurrency with other writers.
+        /// </summary>
+        public bool UseTableLock { get; set; } = false;
+
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(30);
     }
 
