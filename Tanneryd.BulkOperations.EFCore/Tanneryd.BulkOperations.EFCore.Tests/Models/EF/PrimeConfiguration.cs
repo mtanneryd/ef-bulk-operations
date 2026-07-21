@@ -21,7 +21,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
             // Foreign keys
             builder.HasOne(a => a.Number).WithOne(b => b.Prime).HasForeignKey<Prime>(c => c.NumberId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_dbo.Prime_dbo.Number_NumberId");
 
-            builder.HasIndex(x => x.NumberId).HasName("IX_NumberId");
+            builder.HasIndex(x => x.NumberId).HasDatabaseName("IX_NumberId");
         }
     }
 

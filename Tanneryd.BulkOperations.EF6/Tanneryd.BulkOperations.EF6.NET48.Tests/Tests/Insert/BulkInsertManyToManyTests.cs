@@ -42,6 +42,10 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
             CleanupUnitTestContext();
         }
 
+        /// <summary>
+        /// Recursive insert of a many-to-many must persist related entities and
+        /// join-table rows (not only the parent). Mirrors EF Core M8 coverage.
+        /// </summary>
         [TestMethod]
         public void JoinTablesWithGuidKeysShouldBeProperlyInserted()
         {
@@ -65,11 +69,56 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
                     SortUsingClusteredIndex = true,
                     EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 };
-                var response = db.BulkInsertAll(req);
+                db.BulkInsertAll(req);
+
                 var posts = db.Posts
                     .Include(p => p.Blog)
+                    .Include(p => p.Visitors)
                     .ToArray();
-                Assert.AreEqual(1, posts.Count());
+                Assert.AreEqual(1, posts.Length);
+                Assert.AreEqual("My Blog", posts[0].Blog.Name);
+                Assert.AreEqual(1, posts[0].Visitors.Count);
+                Assert.AreEqual("Visitor1", posts[0].Visitors.Single().Name);
+
+                Assert.AreEqual(1, db.Visitors.Count());
+                Assert.AreEqual(
+                    1,
+                    db.Database.SqlQuery<int>("SELECT COUNT(*) AS [Value] FROM [dbo].[VisitorPosts]").Single(),
+                    "Join-table row for Post↔Visitor must be inserted.");
+            }
+        }
+
+        [TestMethod]
+        public void JoinTablesWithGuidKeysShouldBeProperlyInserted_FromVisitorSide()
+        {
+            using (var db = new UnitTestContext())
+            {
+                var blog = new Blog { Name = "My Blog" };
+                var post = new Post
+                {
+                    Blog = blog,
+                    Text = "My first blogpost.",
+                };
+                var visitor = new Visitor { Name = "Visitor1" };
+                visitor.Posts.Add(post);
+
+                db.BulkInsertAll(new BulkInsertRequest<Visitor>
+                {
+                    Entities = new[] { visitor }.ToList(),
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No
+                });
+
+                var visitors = db.Visitors
+                    .Include(v => v.Posts)
+                    .Include(v => v.Posts.Select(p => p.Blog))
+                    .ToArray();
+                Assert.AreEqual(1, visitors.Length);
+                Assert.AreEqual(1, visitors[0].Posts.Count);
+                Assert.AreEqual("My Blog", visitors[0].Posts.Single().Blog.Name);
+                Assert.AreEqual(
+                    1,
+                    db.Database.SqlQuery<int>("SELECT COUNT(*) AS [Value] FROM [dbo].[VisitorPosts]").Single());
             }
         }
 

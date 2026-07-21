@@ -3,6 +3,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Collections.Generic;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests
 {
@@ -18,17 +19,26 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
             builder.Property(x => x.BlogId).HasColumnName(@"BlogId").HasColumnType("uniqueidentifier").IsRequired();
             builder.Property(x => x.Text).HasColumnName(@"Text").HasColumnType("nvarchar(max)").IsRequired();
 
-            // Foreign keys
             builder.HasOne(a => a.Blog).WithMany(b => b.Posts).HasForeignKey(c => c.BlogId).HasConstraintName("FK_dbo.Post_dbo.Blog_BlogId");
+            builder.HasIndex(x => x.BlogId).HasDatabaseName("IX_BlogId");
 
-            builder.HasIndex(x => x.BlogId).HasName("IX_BlogId");
-            
-            // builder
-            //     .HasMany(p => p.Visitors)
-            //     .WithMany(p => p.Posts)
-            //     .UsingEntity(j => j.ToTable("VisitorPosts"));
+            // Pure many-to-many, matches EF6 VisitorPosts (VisitorId, PostId).
+            builder.HasMany(p => p.Visitors)
+                .WithMany(v => v.Posts)
+                .UsingEntity<Dictionary<string, object>>(
+                    "VisitorPosts",
+                    r => r.HasOne<Visitor>().WithMany().HasForeignKey("VisitorId")
+                        .HasConstraintName("FK_dbo.VisitorPosts_dbo.Visitor_VisitorId"),
+                    l => l.HasOne<Post>().WithMany().HasForeignKey("PostId")
+                        .HasConstraintName("FK_dbo.VisitorPosts_dbo.Post_PostId"),
+                    j =>
+                    {
+                        j.HasKey("VisitorId", "PostId").HasName("PK_dbo.VisitorPosts");
+                        j.ToTable("VisitorPosts", "dbo");
+                        j.HasIndex("PostId").HasDatabaseName("IX_PostId");
+                        j.HasIndex("VisitorId").HasDatabaseName("IX_VisitorId");
+                    });
         }
     }
-
 }
 // </auto-generated>

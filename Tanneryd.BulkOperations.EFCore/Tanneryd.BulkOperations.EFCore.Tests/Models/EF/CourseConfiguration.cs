@@ -3,6 +3,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Collections.Generic;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests
 {
@@ -19,12 +20,26 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
             builder.Property(x => x.Credits).HasColumnName(@"Credits").HasColumnType("int").IsRequired();
             builder.Property(x => x.DepartmentId).HasColumnName(@"DepartmentID").HasColumnType("int").IsRequired();
 
-            // Foreign keys
             builder.HasOne(a => a.Department).WithMany(b => b.Courses).HasForeignKey(c => c.DepartmentId).HasConstraintName("FK_dbo.Course_dbo.Department_DepartmentID");
+            builder.HasIndex(x => x.DepartmentId).HasDatabaseName("IX_DepartmentID");
 
-            builder.HasIndex(x => x.DepartmentId).HasName("IX_DepartmentID");
+            // Pure many-to-many, matches EF6 CourseInstructor (CourseID, InstructorID).
+            builder.HasMany(c => c.Instructors)
+                .WithMany(i => i.Courses)
+                .UsingEntity<Dictionary<string, object>>(
+                    "CourseInstructor",
+                    r => r.HasOne<Instructor>().WithMany().HasForeignKey("InstructorID")
+                        .HasConstraintName("FK_dbo.CourseInstructor_dbo.Instructor_InstructorID"),
+                    l => l.HasOne<Course>().WithMany().HasForeignKey("CourseID")
+                        .HasConstraintName("FK_dbo.CourseInstructor_dbo.Course_CourseID"),
+                    j =>
+                    {
+                        j.HasKey("CourseID", "InstructorID").HasName("PK_dbo.CourseInstructor");
+                        j.ToTable("CourseInstructor", "dbo");
+                        j.HasIndex("CourseID").HasDatabaseName("IX_CourseID");
+                        j.HasIndex("InstructorID").HasDatabaseName("IX_InstructorID");
+                    });
         }
     }
-
 }
 // </auto-generated>

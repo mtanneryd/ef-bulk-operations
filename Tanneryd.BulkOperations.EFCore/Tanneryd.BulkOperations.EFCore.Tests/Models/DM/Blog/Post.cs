@@ -3,8 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests
 {
@@ -16,32 +14,18 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public string Text { get; set; } // Text
 
         // Reverse navigation
-
-        /// <summary>
-        /// Child Keywords where [Keyword].[PostId] point to this entity (FK_dbo.Keyword_dbo.Post_PostId)
-        /// </summary>
-        public ICollection<Keyword> Keywords { get; set; } // Keyword.FK_dbo.Keyword_dbo.Post_PostId
-
-        /// <summary>
-        /// Child VisitorPosts where [VisitorPosts].[PostId] point to this entity (FK_dbo.VisitorPosts_dbo.Post_PostId)
-        /// </summary>
-        public ICollection<VisitorPost> VisitorPosts { get; set; } // VisitorPosts.FK_dbo.VisitorPosts_dbo.Post_PostId
+        public ICollection<Keyword> Keywords { get; set; }
         public ICollection<Visitor> Visitors { get; set; }
-        // Foreign keys
 
-        /// <summary>
-        /// Parent Blog pointed by [Post].([BlogId]) (FK_dbo.Post_dbo.Blog_BlogId)
-        /// </summary>
-        public Blog Blog { get; set; } // FK_dbo.Post_dbo.Blog_BlogId
+        // Foreign keys
+        public Blog Blog { get; set; }
 
         public Post()
         {
             Id = Guid.NewGuid();
             Keywords = new List<Keyword>();
-            VisitorPosts = new List<VisitorPost>();
             Visitors = new List<Visitor>();
         }
     }
-
 }
 // </auto-generated>

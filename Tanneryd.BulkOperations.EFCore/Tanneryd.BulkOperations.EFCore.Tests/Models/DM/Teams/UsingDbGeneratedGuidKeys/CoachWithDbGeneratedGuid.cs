@@ -3,10 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests
 {
@@ -17,27 +13,14 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public string Firstname { get; set; } // Firstname
         public string Lastname { get; set; } // Lastname
 
-        // Reverse navigation
+        // Reverse navigation (pure many-to-many, matches EF6)
+        public ICollection<TeamWithDbGeneratedGuid> Teams { get; set; }
 
-        /// <summary>
-        /// Child CoachTeamsWithDbGeneratedGuids where [CoachTeamsWithDbGeneratedGuid].[CoachId] point to this entity (FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.CoachWithDbGeneratedGuid_CoachId)
-        /// </summary>
-        public ICollection<CoachTeamsWithDbGeneratedGuid> CoachTeamsWithDbGeneratedGuids { get; set; } // CoachTeamsWithDbGeneratedGuid.FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.CoachWithDbGeneratedGuid_CoachId
-        
-        [NotMapped]
-        List<TeamWithDbGeneratedGuid> Teams
-        {
-            get
-            {
-                return CoachTeamsWithDbGeneratedGuids.Select(ct => ct.TeamWithDbGeneratedGuid).ToList();
-            }
-        }
         public CoachWithDbGeneratedGuid()
         {
             Id = Guid.NewGuid();
-            CoachTeamsWithDbGeneratedGuids = new List<CoachTeamsWithDbGeneratedGuid>();
+            Teams = new List<TeamWithDbGeneratedGuid>();
         }
     }
-
 }
 // </auto-generated>

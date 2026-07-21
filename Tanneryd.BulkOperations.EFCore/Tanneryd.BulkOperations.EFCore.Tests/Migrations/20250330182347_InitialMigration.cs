@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -101,12 +101,11 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     Id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: false)
+                    RowVersion = table.Column<byte[]>(type: "rowversion", rowVersion: true, nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_ConcurrencyItem", x => x.Id)
-                        .Annotation("SqlServer:Clustered", true);
+                    table.PrimaryKey("PK_ConcurrencyItem", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -181,7 +180,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     PrimaryKey = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Net = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
                     Gross = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    Tax = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
+                    Tax = table.Column<decimal>(type: "decimal(19,2)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -203,25 +202,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "LogItem",
-                schema: "dbo",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    Timestamp = table.Column<DateTime>(type: "datetime", nullable: false),
-                    Severity = table.Column<int>(type: "int", nullable: true),
-                    Recommendation = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    LogType = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_dbo.LogItem", x => x.Id)
-                        .Annotation("SqlServer:Clustered", true);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Level1",
                 schema: "dbo",
                 columns: table => new
@@ -236,6 +216,25 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_dbo.Level1", x => x.Id)
+                        .Annotation("SqlServer:Clustered", true);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LogItem",
+                schema: "dbo",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Message = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Timestamp = table.Column<DateTime>(type: "datetime", nullable: false),
+                    LogType = table.Column<string>(type: "nvarchar(8)", maxLength: 8, nullable: false),
+                    Severity = table.Column<int>(type: "int", nullable: true),
+                    Recommendation = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_dbo.LogItem", x => x.Id)
                         .Annotation("SqlServer:Clustered", true);
                 });
 
@@ -588,8 +587,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_dbo.CoachTeamsWithDbGeneratedGuid", x => new { x.CoachId, x.TeamId })
-                        .Annotation("SqlServer:Clustered", true);
+                    table.PrimaryKey("PK_dbo.CoachTeamsWithDbGeneratedGuid", x => new { x.CoachId, x.TeamId });
                     table.ForeignKey(
                         name: "FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.CoachWithDbGeneratedGuid_CoachId",
                         column: x => x.CoachId,
@@ -639,8 +637,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_dbo.CoachTeamsWithUserGeneratedGuid", x => new { x.CoachId, x.TeamId })
-                        .Annotation("SqlServer:Clustered", true);
+                    table.PrimaryKey("PK_dbo.CoachTeamsWithUserGeneratedGuid", x => new { x.CoachId, x.TeamId });
                     table.ForeignKey(
                         name: "FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.CoachWithUserGeneratedGuid_CoachId",
                         column: x => x.CoachId,
@@ -703,33 +700,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PostVisitor",
-                schema: "dbo",
-                columns: table => new
-                {
-                    PostsId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    VisitorsId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PostVisitor", x => new { x.PostsId, x.VisitorsId });
-                    table.ForeignKey(
-                        name: "FK_PostVisitor_Post_PostsId",
-                        column: x => x.PostsId,
-                        principalSchema: "dbo",
-                        principalTable: "Post",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PostVisitor_Visitor_VisitorsId",
-                        column: x => x.VisitorsId,
-                        principalSchema: "dbo",
-                        principalTable: "Visitor",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "VisitorPosts",
                 schema: "dbo",
                 columns: table => new
@@ -739,8 +709,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_dbo.VisitorPosts", x => new { x.VisitorId, x.PostId })
-                        .Annotation("SqlServer:Clustered", true);
+                    table.PrimaryKey("PK_dbo.VisitorPosts", x => new { x.VisitorId, x.PostId });
                     table.ForeignKey(
                         name: "FK_dbo.VisitorPosts_dbo.Post_PostId",
                         column: x => x.PostId,
@@ -767,8 +736,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_dbo.CourseInstructor", x => new { x.CourseID, x.InstructorID })
-                        .Annotation("SqlServer:Clustered", true);
+                    table.PrimaryKey("PK_dbo.CourseInstructor", x => new { x.CourseID, x.InstructorID });
                     table.ForeignKey(
                         name: "FK_dbo.CourseInstructor_dbo.Course_CourseID",
                         column: x => x.CourseID,
@@ -837,8 +805,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_dbo.CompositePrime", x => new { x.CompositeId, x.PrimeId })
-                        .Annotation("SqlServer:Clustered", true);
+                    table.PrimaryKey("PK_dbo.CompositePrime", x => new { x.CompositeId, x.PrimeId });
                     table.ForeignKey(
                         name: "FK_dbo.CompositePrime_dbo.Composite_CompositeId",
                         column: x => x.CompositeId,
@@ -1006,12 +973,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                 column: "BlogId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PostVisitor_VisitorsId",
-                schema: "dbo",
-                table: "PostVisitor",
-                column: "VisitorsId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_NumberId",
                 schema: "dbo",
                 table: "Prime",
@@ -1084,6 +1045,10 @@ EXEC(N'CREATE VIEW dbo.Contact AS SELECT FirstName, LastName FROM dbo.Person')")
                 schema: "dbo");
 
             migrationBuilder.DropTable(
+                name: "ConcurrencyItem",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
                 name: "CourseInstructor",
                 schema: "dbo");
 
@@ -1132,10 +1097,6 @@ EXEC(N'CREATE VIEW dbo.Contact AS SELECT FirstName, LastName FROM dbo.Person')")
                 schema: "dbo");
 
             migrationBuilder.DropTable(
-                name: "PostVisitor",
-                schema: "dbo");
-
-            migrationBuilder.DropTable(
                 name: "Price",
                 schema: "dbo");
 
@@ -1173,10 +1134,6 @@ EXEC(N'CREATE VIEW dbo.Contact AS SELECT FirstName, LastName FROM dbo.Person')")
 
             migrationBuilder.DropTable(
                 name: "Course",
-                schema: "dbo");
-
-            migrationBuilder.DropTable(
-                name: "ConcurrencyItem",
                 schema: "dbo");
 
             migrationBuilder.DropTable(

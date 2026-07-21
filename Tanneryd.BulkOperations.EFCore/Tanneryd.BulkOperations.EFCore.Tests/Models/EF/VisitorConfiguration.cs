@@ -16,13 +16,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
 
             builder.Property(x => x.Id).HasColumnName(@"Id").HasColumnType("uniqueidentifier").IsRequired().ValueGeneratedOnAdd();
             builder.Property(x => x.Name).HasColumnName(@"Name").HasColumnType("nvarchar(max)").IsRequired();
-            
-            // builder
-            //     .HasMany(p => p.Posts)
-            //     .WithMany(p => p.Visitors)
-            //     .UsingEntity(j => j.ToTable("VisitorPosts"));
         }
     }
-
 }
 // </auto-generated>

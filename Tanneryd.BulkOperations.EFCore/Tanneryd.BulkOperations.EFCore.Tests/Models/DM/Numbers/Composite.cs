@@ -3,8 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests
 {
@@ -15,25 +13,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public DateTime UpdatedAt { get; set; } // UpdatedAt
         public string UpdatedBy { get; set; } // UpdatedBy
 
-        // Reverse navigation
-
-        /// <summary>
-        /// Child CompositePrimes where [CompositePrime].[CompositeId] point to this entity (FK_dbo.CompositePrime_dbo.Composite_CompositeId)
-        /// </summary>
-        public ICollection<CompositePrime> CompositePrimes { get; set; } // CompositePrime.FK_dbo.CompositePrime_dbo.Composite_CompositeId
+        // Reverse navigation (pure many-to-many, matches EF6)
+        public ICollection<Prime> Primes { get; set; }
 
         // Foreign keys
-
-        /// <summary>
-        /// Parent Number pointed by [Composite].([NumberId]) (FK_dbo.Composite_dbo.Number_NumberId)
-        /// </summary>
-        public Number Number { get; set; } // FK_dbo.Composite_dbo.Number_NumberId
+        public Number Number { get; set; }
 
         public Composite()
         {
-            CompositePrimes = new List<CompositePrime>();
+            Primes = new HashSet<Prime>();
         }
     }
-
 }
 // </auto-generated>

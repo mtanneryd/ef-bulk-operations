@@ -304,7 +304,7 @@ namespace Tanneryd.BulkOperations.EFCore
                         foreach (var joinTableNavPropertiesForEntity in joinTableNavPropertiesByEntity)
                         {
                             var entity = joinTableNavPropertiesForEntity.Key;
-                            if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.Name ==
+                            if (GetAssociationEndClrTypeName(fkMapping.AssociationMapping.Source) ==
                                 entity.GetType().Name)
                             {
                                 foreach (var navProperty in joinTableNavPropertiesForEntity.Value)
@@ -371,14 +371,18 @@ namespace Tanneryd.BulkOperations.EFCore
                                 new TableColumnMapping
                                 {
                                     EntityProperty = fkMapping.AssociationMapping.Source.EntityProperty,
-                                    TableColumn = fkMapping.AssociationMapping.Source.TableColumn
+                                    TableColumn = fkMapping.AssociationMapping.Source.TableColumn,
+                                    IsPrimaryKey = fkMapping.AssociationMapping.Source.IsPrimaryKey,
+                                    IsForeignKey = true,
                                 });
                             expandoMappings.ColumnMappingByPropertyName.Add(
                                 fkMapping.AssociationMapping.Target.TableColumn.Column.Name,
                                 new TableColumnMapping
                                 {
                                     EntityProperty = fkMapping.AssociationMapping.Target.EntityProperty,
-                                    TableColumn = fkMapping.AssociationMapping.Target.TableColumn
+                                    TableColumn = fkMapping.AssociationMapping.Target.TableColumn,
+                                    IsPrimaryKey = fkMapping.AssociationMapping.Target.IsPrimaryKey,
+                                    IsForeignKey = true,
                                 });
                             await DoBulkCopyAsync(
                                 ctx,
@@ -1355,19 +1359,28 @@ namespace Tanneryd.BulkOperations.EFCore
 
                 var allProperties = GetProperties(entities[0]);
                 //
-                // Select the primary key clr properties 
+                // Select the primary key clr properties.
+                // For normal entities EntityProperty.Name matches the CLR property.
+                // For many-to-many join Expando rows, property names are the join
+                // table column names (same pattern as EF6).
                 //
                 var pkColumnProperties = allProperties
-                    .Where(p => keyColumnMappings.Any(m => m.EntityProperty.Name == p.Name))
+                    .Where(p => keyColumnMappings.Any(m =>
+                        string.Equals(m.EntityProperty.Name, p.Name, StringComparison.Ordinal) ||
+                        string.Equals(m.TableColumn.Column.Name, p.Name, StringComparison.Ordinal)))
                     .ToArray();
                 //
                 // Select the clr properties for the selected non primary key columns.
                 //
                 var selectedColumnProperties = allProperties
-                    .Where(p => nonKeyColumnMappings.Any(m => m.EntityProperty.Name == p.Name))
+                    .Where(p => nonKeyColumnMappings.Any(m =>
+                        string.Equals(m.EntityProperty.Name, p.Name, StringComparison.Ordinal) ||
+                        string.Equals(m.TableColumn.Column.Name, p.Name, StringComparison.Ordinal)))
                     .ToArray();
                 var concurrencyColumnProperties = allProperties
-                    .Where(p => concurrencyTokenMappings.Any(m => m.EntityProperty.Name == p.Name))
+                    .Where(p => concurrencyTokenMappings.Any(m =>
+                        string.Equals(m.EntityProperty.Name, p.Name, StringComparison.Ordinal) ||
+                        string.Equals(m.TableColumn.Column.Name, p.Name, StringComparison.Ordinal)))
                     .ToArray();
                 var properties = pkColumnProperties
                     .Concat(selectedColumnProperties)
@@ -1472,6 +1485,16 @@ namespace Tanneryd.BulkOperations.EFCore
             CancellationToken cancellationToken = default)
         {
             return TempTableSqlHelper.DisableIdentityInsertAsync(tableName, conn, sqlTransaction, cancellationToken);
+        }
+
+        /// <summary>
+        /// EF Core <see cref="IProperty.DeclaringType"/>.Name is often the full entity
+        /// type name; compare using CLR type Name to match <c>entity.GetType().Name</c>
+        /// (same short-name convention EF6 EdmProperty.DeclaringType.Name uses).
+        /// </summary>
+        private static string GetAssociationEndClrTypeName(TableColumnMapping end)
+        {
+            return end.EntityProperty.DeclaringType.ClrType.Name;
         }
     }
 }

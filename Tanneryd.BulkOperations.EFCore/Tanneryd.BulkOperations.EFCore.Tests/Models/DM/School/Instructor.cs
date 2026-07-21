@@ -2,11 +2,7 @@
 // ReSharper disable All
 
 using System;
-using System.Linq;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests
 {
@@ -20,30 +16,13 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public string FullName { get; private set; } // FullName
 
         // Reverse navigation
-
-        /// <summary>
-        /// Child CourseInstructors where [CourseInstructor].[InstructorID] point to this entity (FK_dbo.CourseInstructor_dbo.Instructor_InstructorID)
-        /// </summary>
-        public ICollection<CourseInstructor> CourseInstructors { get; set; } // CourseInstructor.FK_dbo.CourseInstructor_dbo.Instructor_InstructorID
-        
-        [NotMapped]
-        public List<Course> Courses
-        {
-            get
-            {
-                return CourseInstructors.Select(i => i.Course).ToList();
-            }
-        }
-        /// <summary>
-        /// Parent (One-to-One) Instructor pointed by [OfficeAssignment].[InstructorID] (FK_dbo.OfficeAssignment_dbo.Instructor_InstructorID)
-        /// </summary>
-        public OfficeAssignment OfficeAssignment { get; set; } // OfficeAssignment.FK_dbo.OfficeAssignment_dbo.Instructor_InstructorID
+        public ICollection<Course> Courses { get; set; }
+        public OfficeAssignment OfficeAssignment { get; set; }
 
         public Instructor()
         {
-            CourseInstructors = new List<CourseInstructor>();
+            Courses = new List<Course>();
         }
     }
-
 }
 // </auto-generated>

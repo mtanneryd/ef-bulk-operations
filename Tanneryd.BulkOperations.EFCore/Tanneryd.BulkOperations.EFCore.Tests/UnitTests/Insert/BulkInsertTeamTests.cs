@@ -60,7 +60,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                             Id = Guid.NewGuid(),
                             Name = $"Team {j}"
                         };
-                        c.CoachTeamsWithUserGeneratedGuids.Add(new CoachTeamsWithUserGeneratedGuid { TeamWithUserGeneratedGuid = t});
+                        c.Teams.Add(t);
                     }
 
                     coaches.Add(c);
@@ -74,8 +74,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                 });
 
                 var actual = db.CoachWithUserGeneratedGuids
-                    .Include(c => c.CoachTeamsWithUserGeneratedGuids)
-                    .ThenInclude(ct=>ct.TeamWithUserGeneratedGuid)
+                    .Include(c => c.Teams)
                     .ToArray();
 
                 Assert.AreEqual(1000, actual.Count());

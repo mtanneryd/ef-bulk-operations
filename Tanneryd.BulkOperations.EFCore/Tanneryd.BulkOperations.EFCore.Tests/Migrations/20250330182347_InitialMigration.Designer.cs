@@ -21,24 +21,89 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.8")
+                .HasAnnotation("ProductVersion", "10.0.10")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("PostVisitor", b =>
+            modelBuilder.Entity("CoachTeamsWithDbGeneratedGuid", b =>
                 {
-                    b.Property<Guid>("PostsId")
+                    b.Property<Guid>("CoachId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("VisitorsId")
+                    b.Property<Guid>("TeamId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("PostsId", "VisitorsId");
+                    b.HasKey("CoachId", "TeamId")
+                        .HasName("PK_dbo.CoachTeamsWithDbGeneratedGuid");
 
-                    b.HasIndex("VisitorsId");
+                    b.HasIndex("CoachId")
+                        .HasDatabaseName("IX_CoachId");
 
-                    b.ToTable("PostVisitor", "dbo");
+                    b.HasIndex("TeamId")
+                        .HasDatabaseName("IX_TeamId");
+
+                    b.ToTable("CoachTeamsWithDbGeneratedGuid", "dbo");
+                });
+
+            modelBuilder.Entity("CoachTeamsWithUserGeneratedGuid", b =>
+                {
+                    b.Property<Guid>("CoachId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("TeamId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CoachId", "TeamId")
+                        .HasName("PK_dbo.CoachTeamsWithUserGeneratedGuid");
+
+                    b.HasIndex("CoachId")
+                        .HasDatabaseName("IX_CoachId");
+
+                    b.HasIndex("TeamId")
+                        .HasDatabaseName("IX_TeamId");
+
+                    b.ToTable("CoachTeamsWithUserGeneratedGuid", "dbo");
+                });
+
+            modelBuilder.Entity("CompositePrime", b =>
+                {
+                    b.Property<long>("CompositeId")
+                        .HasColumnType("bigint");
+
+                    b.Property<long>("PrimeId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("CompositeId", "PrimeId")
+                        .HasName("PK_dbo.CompositePrime");
+
+                    b.HasIndex("CompositeId")
+                        .HasDatabaseName("IX_CompositeId");
+
+                    b.HasIndex("PrimeId")
+                        .HasDatabaseName("IX_PrimeId");
+
+                    b.ToTable("CompositePrime", "dbo");
+                });
+
+            modelBuilder.Entity("CourseInstructor", b =>
+                {
+                    b.Property<int>("CourseID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("InstructorID")
+                        .HasColumnType("int");
+
+                    b.HasKey("CourseID", "InstructorID")
+                        .HasName("PK_dbo.CourseInstructor");
+
+                    b.HasIndex("CourseID")
+                        .HasDatabaseName("IX_CourseID");
+
+                    b.HasIndex("InstructorID")
+                        .HasDatabaseName("IX_InstructorID");
+
+                    b.ToTable("CourseInstructor", "dbo");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.BatchInvoice", b =>
@@ -101,54 +166,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
 
                     b.ToTable("Blog", "dbo");
-                });
-
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.CoachTeamsWithDbGeneratedGuid", b =>
-                {
-                    b.Property<Guid>("CoachId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("CoachId");
-
-                    b.Property<Guid>("TeamId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("TeamId");
-
-                    b.HasKey("CoachId", "TeamId")
-                        .HasName("PK_dbo.CoachTeamsWithDbGeneratedGuid");
-
-                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("CoachId", "TeamId"));
-
-                    b.HasIndex("CoachId")
-                        .HasDatabaseName("IX_CoachId");
-
-                    b.HasIndex("TeamId")
-                        .HasDatabaseName("IX_TeamId");
-
-                    b.ToTable("CoachTeamsWithDbGeneratedGuid", "dbo");
-                });
-
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.CoachTeamsWithUserGeneratedGuid", b =>
-                {
-                    b.Property<Guid>("CoachId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("CoachId");
-
-                    b.Property<Guid>("TeamId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("TeamId");
-
-                    b.HasKey("CoachId", "TeamId")
-                        .HasName("PK_dbo.CoachTeamsWithUserGeneratedGuid");
-
-                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("CoachId", "TeamId"));
-
-                    b.HasIndex("CoachId")
-                        .HasDatabaseName("IX_CoachId");
-
-                    b.HasIndex("TeamId")
-                        .HasDatabaseName("IX_TeamId");
-
-                    b.ToTable("CoachTeamsWithUserGeneratedGuid", "dbo");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.CoachWithDbGeneratedGuid", b =>
@@ -229,35 +246,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.ToTable("Company", "dbo");
                 });
 
-            modelBuilder.Entity("Tanneryd.BulkOperations.TestModels.ConcurrencyItem", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasColumnName("Id");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("Name");
-
-                    b.Property<byte[]>("RowVersion")
-                        .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("rowversion")
-                        .HasColumnName("RowVersion");
-
-                    b.HasKey("Id");
-
-                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("Id"));
-
-                    b.ToTable("ConcurrencyItem", "dbo");
-                });
-
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Composite", b =>
                 {
                     b.Property<long>("NumberId")
@@ -281,30 +269,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasDatabaseName("IX_NumberId");
 
                     b.ToTable("Composite", "dbo");
-                });
-
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.CompositePrime", b =>
-                {
-                    b.Property<long>("CompositeId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("CompositeId");
-
-                    b.Property<long>("PrimeId")
-                        .HasColumnType("bigint")
-                        .HasColumnName("PrimeId");
-
-                    b.HasKey("CompositeId", "PrimeId")
-                        .HasName("PK_dbo.CompositePrime");
-
-                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("CompositeId", "PrimeId"));
-
-                    b.HasIndex("CompositeId")
-                        .HasDatabaseName("IX_CompositeId");
-
-                    b.HasIndex("PrimeId")
-                        .HasDatabaseName("IX_PrimeId");
-
-                    b.ToTable("CompositePrime", "dbo");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Contact", b =>
@@ -375,30 +339,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasDatabaseName("IX_DepartmentID");
 
                     b.ToTable("Course", "dbo");
-                });
-
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.CourseInstructor", b =>
-                {
-                    b.Property<int>("CourseId")
-                        .HasColumnType("int")
-                        .HasColumnName("CourseID");
-
-                    b.Property<int>("InstructorId")
-                        .HasColumnType("int")
-                        .HasColumnName("InstructorID");
-
-                    b.HasKey("CourseId", "InstructorId")
-                        .HasName("PK_dbo.CourseInstructor");
-
-                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("CourseId", "InstructorId"));
-
-                    b.HasIndex("CourseId")
-                        .HasDatabaseName("IX_CourseID");
-
-                    b.HasIndex("InstructorId")
-                        .HasDatabaseName("IX_InstructorID");
-
-                    b.ToTable("CourseInstructor", "dbo");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Department", b =>
@@ -1131,20 +1071,42 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.ToTable("Visitor", "dbo");
                 });
 
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.VisitorPost", b =>
+            modelBuilder.Entity("Tanneryd.BulkOperations.TestModels.ConcurrencyItem", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("Name");
+
+                    b.Property<byte[]>("RowVersion")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("rowversion")
+                        .HasColumnName("RowVersion");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ConcurrencyItem", "dbo");
+                });
+
+            modelBuilder.Entity("VisitorPosts", b =>
                 {
                     b.Property<Guid>("VisitorId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("VisitorId");
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("PostId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("PostId");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("VisitorId", "PostId")
                         .HasName("PK_dbo.VisitorPosts");
-
-                    SqlServerKeyBuilderExtensions.IsClustered(b.HasKey("VisitorId", "PostId"));
 
                     b.HasIndex("PostId")
                         .HasDatabaseName("IX_PostId");
@@ -1177,19 +1139,72 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.HasDiscriminator().HasValue("Warning");
                 });
 
-            modelBuilder.Entity("PostVisitor", b =>
+            modelBuilder.Entity("CoachTeamsWithDbGeneratedGuid", b =>
                 {
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Post", null)
+                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.CoachWithDbGeneratedGuid", null)
                         .WithMany()
-                        .HasForeignKey("PostsId")
+                        .HasForeignKey("CoachId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.CoachWithDbGeneratedGuid_CoachId");
 
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Visitor", null)
+                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.TeamWithDbGeneratedGuid", null)
                         .WithMany()
-                        .HasForeignKey("VisitorsId")
+                        .HasForeignKey("TeamId")
                         .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId");
+                });
+
+            modelBuilder.Entity("CoachTeamsWithUserGeneratedGuid", b =>
+                {
+                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.CoachWithUserGeneratedGuid", null)
+                        .WithMany()
+                        .HasForeignKey("CoachId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.CoachWithUserGeneratedGuid_CoachId");
+
+                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.TeamWithUserGeneratedGuid", null)
+                        .WithMany()
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId");
+                });
+
+            modelBuilder.Entity("CompositePrime", b =>
+                {
+                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Composite", null)
+                        .WithMany()
+                        .HasForeignKey("CompositeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CompositePrime_dbo.Composite_CompositeId");
+
+                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Prime", null)
+                        .WithMany()
+                        .HasForeignKey("PrimeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CompositePrime_dbo.Prime_PrimeId");
+                });
+
+            modelBuilder.Entity("CourseInstructor", b =>
+                {
+                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Course", null)
+                        .WithMany()
+                        .HasForeignKey("CourseID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CourseInstructor_dbo.Course_CourseID");
+
+                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Instructor", null)
+                        .WithMany()
+                        .HasForeignKey("InstructorID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_dbo.CourseInstructor_dbo.Instructor_InstructorID");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.BatchInvoiceItem", b =>
@@ -1211,48 +1226,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Navigation("BatchInvoice");
 
                     b.Navigation("Invoice");
-                });
-
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.CoachTeamsWithDbGeneratedGuid", b =>
-                {
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.CoachWithDbGeneratedGuid", "CoachWithDbGeneratedGuid")
-                        .WithMany("CoachTeamsWithDbGeneratedGuids")
-                        .HasForeignKey("CoachId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.CoachWithDbGeneratedGuid_CoachId");
-
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.TeamWithDbGeneratedGuid", "TeamWithDbGeneratedGuid")
-                        .WithMany("CoachTeamsWithDbGeneratedGuids")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_dbo.CoachTeamsWithDbGeneratedGuid_dbo.TeamWithDbGeneratedGuid_TeamId");
-
-                    b.Navigation("CoachWithDbGeneratedGuid");
-
-                    b.Navigation("TeamWithDbGeneratedGuid");
-                });
-
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.CoachTeamsWithUserGeneratedGuid", b =>
-                {
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.CoachWithUserGeneratedGuid", "CoachWithUserGeneratedGuid")
-                        .WithMany("CoachTeamsWithUserGeneratedGuids")
-                        .HasForeignKey("CoachId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.CoachWithUserGeneratedGuid_CoachId");
-
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.TeamWithUserGeneratedGuid", "TeamWithUserGeneratedGuid")
-                        .WithMany("CoachTeamsWithUserGeneratedGuids")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_dbo.CoachTeamsWithUserGeneratedGuid_dbo.TeamWithUserGeneratedGuid_TeamId");
-
-                    b.Navigation("CoachWithUserGeneratedGuid");
-
-                    b.Navigation("TeamWithUserGeneratedGuid");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Company", b =>
@@ -1277,27 +1250,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Navigation("Number");
                 });
 
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.CompositePrime", b =>
-                {
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Composite", "Composite")
-                        .WithMany("CompositePrimes")
-                        .HasForeignKey("CompositeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_dbo.CompositePrime_dbo.Composite_CompositeId");
-
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Prime", "Prime")
-                        .WithMany("CompositePrimes")
-                        .HasForeignKey("PrimeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_dbo.CompositePrime_dbo.Prime_PrimeId");
-
-                    b.Navigation("Composite");
-
-                    b.Navigation("Prime");
-                });
-
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Course", b =>
                 {
                     b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Department", "Department")
@@ -1308,27 +1260,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                         .HasConstraintName("FK_dbo.Course_dbo.Department_DepartmentID");
 
                     b.Navigation("Department");
-                });
-
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.CourseInstructor", b =>
-                {
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Course", "Course")
-                        .WithMany("CourseInstructors")
-                        .HasForeignKey("CourseId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_dbo.CourseInstructor_dbo.Course_CourseID");
-
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Instructor", "Instructor")
-                        .WithMany("CourseInstructors")
-                        .HasForeignKey("InstructorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_dbo.CourseInstructor_dbo.Instructor_InstructorID");
-
-                    b.Navigation("Course");
-
-                    b.Navigation("Instructor");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Employee", b =>
@@ -1474,25 +1405,21 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Navigation("Number");
                 });
 
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.VisitorPost", b =>
+            modelBuilder.Entity("VisitorPosts", b =>
                 {
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Post", "Post")
-                        .WithMany("VisitorPosts")
+                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Post", null)
+                        .WithMany()
                         .HasForeignKey("PostId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_dbo.VisitorPosts_dbo.Post_PostId");
 
-                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Visitor", "Visitor")
-                        .WithMany("VisitorPosts")
+                    b.HasOne("Tanneryd.BulkOperations.EFCore.Tests.Visitor", null)
+                        .WithMany()
                         .HasForeignKey("VisitorId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("FK_dbo.VisitorPosts_dbo.Visitor_VisitorId");
-
-                    b.Navigation("Post");
-
-                    b.Navigation("Visitor");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.BatchInvoice", b =>
@@ -1505,26 +1432,11 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Navigation("Posts");
                 });
 
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.CoachWithDbGeneratedGuid", b =>
-                {
-                    b.Navigation("CoachTeamsWithDbGeneratedGuids");
-                });
-
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.CoachWithUserGeneratedGuid", b =>
-                {
-                    b.Navigation("CoachTeamsWithUserGeneratedGuids");
-                });
-
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Company", b =>
                 {
                     b.Navigation("Companies");
 
                     b.Navigation("Employees");
-                });
-
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Composite", b =>
-                {
-                    b.Navigation("CompositePrimes");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Coordinate", b =>
@@ -1534,11 +1446,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
                     b.Navigation("Points_YCoordinateId");
                 });
 
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Course", b =>
-                {
-                    b.Navigation("CourseInstructors");
-                });
-
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Department", b =>
                 {
                     b.Navigation("Courses");
@@ -1546,8 +1453,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Instructor", b =>
                 {
-                    b.Navigation("CourseInstructors");
-
                     b.Navigation("OfficeAssignment");
                 });
 
@@ -1583,32 +1488,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Migrations
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Post", b =>
                 {
                     b.Navigation("Keywords");
-
-                    b.Navigation("VisitorPosts");
-                });
-
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Prime", b =>
-                {
-                    b.Navigation("CompositePrimes");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.TeamWithDbGeneratedGuid", b =>
                 {
-                    b.Navigation("CoachTeamsWithDbGeneratedGuids");
-
                     b.Navigation("PlayerWithDbGeneratedGuids");
                 });
 
             modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.TeamWithUserGeneratedGuid", b =>
                 {
-                    b.Navigation("CoachTeamsWithUserGeneratedGuids");
-
                     b.Navigation("PlayerWithUserGeneratedGuids");
-                });
-
-            modelBuilder.Entity("Tanneryd.BulkOperations.EFCore.Tests.Visitor", b =>
-                {
-                    b.Navigation("VisitorPosts");
                 });
 #pragma warning restore 612, 618
         }

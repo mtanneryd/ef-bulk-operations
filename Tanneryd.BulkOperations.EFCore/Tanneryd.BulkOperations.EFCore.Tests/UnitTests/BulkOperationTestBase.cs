@@ -66,13 +66,12 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
             db.OfficeAssignments.RemoveRange(db.OfficeAssignments.ToArray());
             foreach (var i in db.Instructors)
             {
-                i.CourseInstructors.Clear();
+                i.Courses.Clear();
             }
-            foreach (var i in db.Courses)
+            foreach (var c in db.Courses)
             {
-                i.CourseInstructors.Clear();
+                c.Instructors.Clear();
             }
-            db.CourseInstructors.RemoveRange(db.CourseInstructors.ToArray());
             db.Instructors.RemoveRange(db.Instructors.ToArray());
             db.Courses.RemoveRange(db.Courses.ToArray());
             db.Departments.RemoveRange(db.Departments.ToArray());
@@ -83,6 +82,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
             db.Points.RemoveRange(db.Points.ToArray());
             db.SaveChanges();
 
+            db.Database.ExecuteSqlRaw(@"DELETE FROM [dbo].[VisitorPosts]");
             db.Blogs.RemoveRange(db.Blogs.ToArray());
             db.Posts.RemoveRange(db.Posts.ToArray());
             db.Keywords.RemoveRange(db.Keywords.ToArray());
@@ -101,6 +101,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
             db.Companies.RemoveRange(db.Companies.ToArray());
             db.SaveChanges();
 
+            db.Database.ExecuteSqlRaw(@"DELETE FROM [dbo].[CompositePrime]");
             db.Composites.RemoveRange(db.Composites.ToArray());
             db.Primes.RemoveRange(db.Primes.ToArray());
             db.Numbers.RemoveRange(db.Numbers.ToArray());

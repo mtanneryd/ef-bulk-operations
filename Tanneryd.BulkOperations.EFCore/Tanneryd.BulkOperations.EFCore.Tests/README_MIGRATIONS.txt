@@ -41,11 +41,22 @@ Creating a new migration (developer workflow)
   stacking follow-up migrations for this test project. After model changes, drop
   the local database as above.
 
-  From the repository root:
+  Keep the existing migration id/filename stable:
 
-    dotnet ef migrations add <Name> \
+    20250330182347_InitialMigration.cs
+    20250330182347_InitialMigration.Designer.cs
+
+  Do not let `dotnet ef migrations add` leave a new timestamped migration in the
+  tree — that shows up as delete+add in git and obscures the schema diff. If you
+  scaffold a temporary migration to generate code, fold its Up/Down and snapshot
+  changes into InitialMigration, keep
+  `[Migration("20250330182347_InitialMigration")]`, then delete the temporary
+  migration files.
+
+  From the repository root (optional scaffold aid):
+
+    dotnet ef migrations add <TempName> \
       --project Tanneryd.BulkOperations.EFCore/Tanneryd.BulkOperations.EFCore.Tests \
       --context UnitTestContext
 
-  Then fold the generated changes into InitialMigration if you want to keep a
-  single-migration test schema, or keep the new migration if you prefer.
+  Then fold the generated changes into InitialMigration and remove <TempName>.

@@ -39,12 +39,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
             CleanupUnitTestContext();
         }
 
+        /// <summary>
+        /// M8: recursive insert of a skip-navigation many-to-many must persist
+        /// the related entities and the join-table rows (not only the parent).
+        /// </summary>
         [TestMethod]
         public void JoinTablesWithGuidKeysShouldBeProperlyInserted()
         {
             using (var db = Factory.CreateDbContext())
             {
-                var blog = new Blog {Name = "My Blog"};
+                var blog = new Blog { Name = "My Blog" };
                 var firstPost = new Post
                 {
                     Blog = blog,
@@ -57,19 +61,66 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                 firstPost.Visitors.Add(visitor);
                 var req = new BulkInsertRequest<Post>
                 {
-                    Entities = new[] {firstPost}.ToList(),
+                    Entities = new[] { firstPost }.ToList(),
                     AllowNotNullSelfReferences = AllowNotNullSelfReferences.No,
                     SortUsingClusteredIndex = true,
                     EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 };
-                var response = db.BulkInsertAll(req);
+                db.BulkInsertAll(req);
+
                 var posts = db.Posts
                     .Include(p => p.Blog)
+                    .Include(p => p.Visitors)
                     .ToArray();
-                Assert.AreEqual(1, posts.Count());
+                Assert.AreEqual(1, posts.Length);
+                Assert.AreEqual("My Blog", posts[0].Blog.Name);
+                Assert.AreEqual(1, db.Visitors.Count(), "Related Visitor rows must be inserted.");
+                Assert.AreEqual(1, posts[0].Visitors.Count, "Post.Visitors skip navigation must be linked.");
+                Assert.AreEqual("Visitor1", posts[0].Visitors.Single().Name);
+                Assert.AreEqual(
+                    1,
+                    db.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS [Value] FROM [dbo].[VisitorPosts]").Single(),
+                    "Join-table row for Post↔Visitor must be inserted.");
             }
         }
 
+        /// <summary>
+        /// M8: same AssociationMapping path when inserting from the other end
+        /// of the skip-navigation many-to-many.
+        /// </summary>
+        [TestMethod]
+        public void JoinTablesWithGuidKeysShouldBeProperlyInserted_FromVisitorSide()
+        {
+            using (var db = Factory.CreateDbContext())
+            {
+                var blog = new Blog { Name = "My Blog" };
+                var post = new Post
+                {
+                    Blog = blog,
+                    Text = "My first blogpost.",
+                };
+                var visitor = new Visitor { Name = "Visitor1" };
+                visitor.Posts.Add(post);
+
+                db.BulkInsertAll(new BulkInsertRequest<Visitor>
+                {
+                    Entities = new[] { visitor }.ToList(),
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                    AllowNotNullSelfReferences = AllowNotNullSelfReferences.No
+                });
+
+                var visitors = db.Visitors
+                    .Include(v => v.Posts)
+                    .ThenInclude(p => p.Blog)
+                    .ToArray();
+                Assert.AreEqual(1, visitors.Length);
+                Assert.AreEqual(1, visitors[0].Posts.Count);
+                Assert.AreEqual("My Blog", visitors[0].Posts.Single().Blog.Name);
+                Assert.AreEqual(
+                    1,
+                    db.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS [Value] FROM [dbo].[VisitorPosts]").Single());
+            }
+        }
 
         [TestMethod]
         public void StackOverflowTest()
@@ -81,7 +132,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                     FirstName = "Mickey",
                     LastName = "Mouse",
                     HireDate = new DateTime(1928, 5, 15),
-                    OfficeAssignment = new OfficeAssignment {Location = "Room 1A"}
+                    OfficeAssignment = new OfficeAssignment { Location = "Room 1A" }
                 };
                 db.Instructors.Add(i1);
                 db.SaveChanges();
@@ -103,38 +154,37 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                 db.SaveChanges();
 
                 i1.Courses.Add(c1);
+                // Context factory disables AutoDetectChanges; detect skip-nav mutations.
+                db.ChangeTracker.DetectChanges();
                 db.SaveChanges();
+                db.ChangeTracker.Clear();
 
-                var courses = db.Instructors
-                    .Include(i => i.CourseInstructors)
-                    .ThenInclude(ci => ci.Course)
-                    .Distinct()
-                    .ToArray();
-
-                Assert.AreEqual(1, courses.Count());
+                Assert.AreEqual(
+                    1,
+                    db.Instructors.Include(i => i.Courses).Single().Courses.Count);
 
                 var instructor = db.Instructors
-                    .Include(i => i.CourseInstructors)
-                    .ThenInclude(ci => ci.Course)
+                    .Include(i => i.Courses)
+                    .ThenInclude(c => c.Department)
                     .Include(i => i.OfficeAssignment)
+                    .AsNoTracking()
                     .Single();
 
+                // Same as EF6: clone instructor (+ office) as new rows, reuse existing courses.
                 instructor.InstructorId = 0;
                 instructor.OfficeAssignment.InstructorId = 0;
 
                 var request = new BulkInsertRequest<Instructor>
                 {
-                    Entities = new[] {instructor}.ToList(),
+                    Entities = new[] { instructor }.ToList(),
                     EnableRecursiveInsert = EnableRecursiveInsert.Yes,
                     AllowNotNullSelfReferences = AllowNotNullSelfReferences.No
                 };
                 db.BulkInsertAll(request);
 
-                courses = db.Instructors
-                    .Include(i => i.CourseInstructors)
-                    .ThenInclude(ci => ci.Course)
-                    .ToArray();
-                Assert.AreEqual(2, courses.Count());
+                Assert.AreEqual(
+                    2,
+                    db.Instructors.Include(i => i.Courses).SelectMany(i => i.Courses).Count());
             }
         }
 
@@ -149,11 +199,11 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
             {
                 var instructors = GetInstructors().ToArray();
                 var courses = GetCourses().ToArray();
-                instructors[0].CourseInstructors.Add(new CourseInstructor {Course = courses[0]});
-                instructors[0].CourseInstructors.Add(new CourseInstructor {Course = courses[1]});
-                instructors[0].CourseInstructors.Add(new CourseInstructor {Course = courses[2]});
-                instructors[1].CourseInstructors.Add(new CourseInstructor {Course = courses[3]});
-                instructors[1].CourseInstructors.Add(new CourseInstructor {Course = courses[4]});
+                instructors[0].Courses.Add(courses[0]);
+                instructors[0].Courses.Add(courses[1]);
+                instructors[0].Courses.Add(courses[2]);
+                instructors[1].Courses.Add(courses[3]);
+                instructors[1].Courses.Add(courses[4]);
 
                 var request = new BulkInsertRequest<Instructor>
                 {
@@ -163,10 +213,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                 };
                 db.BulkInsertAll(request);
                 var dbInstructors = db.Instructors
-                    .Include(i => i.CourseInstructors)
-                    .ThenInclude(ci => ci.Course)
+                    .Include(i => i.Courses)
                     .ToArray();
-                var dbCourses = db.Courses.ToArray();
+                var dbCourses = db.Courses.Include(c => c.Instructors).ToArray();
                 Assert.AreEqual(2, dbInstructors.Length);
                 Assert.AreEqual(5, dbInstructors.SelectMany(i => i.Courses).Count());
                 Assert.AreEqual(3, dbInstructors[0].Courses.Count);
@@ -180,7 +229,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         /// <summary>
         /// Test that five courses, each with a single instructor, can
         /// be bulk inserted. There are only two instructors. Three courses
-        /// share the first of them and two courses share the second. 
+        /// share the first of them and two courses share the second.
         /// </summary>
         [TestMethod]
         public void CoursesWithSingleInstructorShouldBeBulkInserted()
@@ -189,12 +238,12 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
             {
                 var instructors = GetInstructors().ToArray();
                 var courses = GetCourses().ToArray();
-                courses[0].CourseInstructors.Add(new CourseInstructor {Instructor = instructors[0]});
-                courses[1].CourseInstructors.Add(new CourseInstructor {Instructor = instructors[0]});
-                courses[2].CourseInstructors.Add(new CourseInstructor {Instructor = instructors[0]});
-                courses[3].CourseInstructors.Add(new CourseInstructor {Instructor = instructors[1]});
-                courses[4].CourseInstructors.Add(new CourseInstructor {Instructor = instructors[1]});
-                
+                courses[0].Instructors.Add(instructors[0]);
+                courses[1].Instructors.Add(instructors[0]);
+                courses[2].Instructors.Add(instructors[0]);
+                courses[3].Instructors.Add(instructors[1]);
+                courses[4].Instructors.Add(instructors[1]);
+
                 var request = new BulkInsertRequest<Course>
                 {
                     Entities = courses.ToList(),
@@ -204,10 +253,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                 db.BulkInsertAll(request);
 
                 var dbInstructors = db.Instructors
-                    .Include(i => i.CourseInstructors)
-                    .ThenInclude(ci => ci.Course)
+                    .Include(i => i.Courses)
                     .ToArray();
-                var dbCourses = db.Courses.ToArray();
+                var dbCourses = db.Courses.Include(c => c.Instructors).ToArray();
                 Assert.AreEqual(2, dbInstructors.Length);
                 Assert.AreEqual(5, dbInstructors.SelectMany(i => i.Courses).Count());
                 Assert.AreEqual(3, dbInstructors[0].Courses.Count);
@@ -218,11 +266,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
             }
         }
 
-
-        /// <summary>
-        /// Create two instructor entities.
-        /// </summary>
-        /// <returns></returns>
         private IEnumerable<Instructor> GetInstructors()
         {
             yield return new Instructor
@@ -230,21 +273,17 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                 FirstName = "Mickey",
                 LastName = "Mouse",
                 HireDate = new DateTime(1928, 5, 15),
-                OfficeAssignment = new OfficeAssignment {Location = "Room 1A"}
+                OfficeAssignment = new OfficeAssignment { Location = "Room 1A" }
             };
             yield return new Instructor
             {
                 FirstName = "Donald",
                 LastName = "Duck",
                 HireDate = new DateTime(1934, 6, 9),
-                OfficeAssignment = new OfficeAssignment {Location = "Room 1B"}
+                OfficeAssignment = new OfficeAssignment { Location = "Room 1B" }
             };
         }
 
-        /// <summary>
-        /// Create five course entities belonging two the same department.
-        /// </summary>
-        /// <returns></returns>
         private IEnumerable<Course> GetCourses()
         {
             var department = new Department

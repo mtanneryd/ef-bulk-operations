@@ -3,8 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests
 {
@@ -15,20 +13,13 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public string Name { get; set; } // Name
 
         // Reverse navigation
-
-        /// <summary>
-        /// Child VisitorPosts where [VisitorPosts].[VisitorId] point to this entity (FK_dbo.VisitorPosts_dbo.Visitor_VisitorId)
-        /// </summary>
-        public ICollection<VisitorPost> VisitorPosts { get; set; } // VisitorPosts.FK_dbo.VisitorPosts_dbo.Visitor_VisitorId
         public ICollection<Post> Posts { get; set; }
+
         public Visitor()
         {
             Id = Guid.NewGuid();
             Posts = new List<Post>();
-            VisitorPosts = new List<VisitorPost>();
-
         }
     }
-
 }
 // </auto-generated>

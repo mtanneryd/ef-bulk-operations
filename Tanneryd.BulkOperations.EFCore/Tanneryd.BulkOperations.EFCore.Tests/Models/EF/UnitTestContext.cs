@@ -23,16 +23,12 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public DbSet<BatchInvoice> BatchInvoices { get; set; } // BatchInvoice
         public DbSet<BatchInvoiceItem> BatchInvoiceItems { get; set; } // BatchInvoiceItem
         public DbSet<Blog> Blogs { get; set; } // Blog
-        public DbSet<CoachTeamsWithDbGeneratedGuid> CoachTeamsWithDbGeneratedGuids { get; set; } // CoachTeamsWithDbGeneratedGuid
-        public DbSet<CoachTeamsWithUserGeneratedGuid> CoachTeamsWithUserGeneratedGuids { get; set; } // CoachTeamsWithUserGeneratedGuid
         public DbSet<CoachWithDbGeneratedGuid> CoachWithDbGeneratedGuids { get; set; } // CoachWithDbGeneratedGuid
         public DbSet<CoachWithUserGeneratedGuid> CoachWithUserGeneratedGuids { get; set; } // CoachWithUserGeneratedGuid
         public DbSet<Company> Companies { get; set; } // Company
         public DbSet<Composite> Composites { get; set; } // Composite
-        public DbSet<CompositePrime> CompositePrimes { get; set; } // CompositePrime
         public DbSet<Coordinate> Coordinates { get; set; } // Coordinate
         public DbSet<Course> Courses { get; set; } // Course
-        public DbSet<CourseInstructor> CourseInstructors { get; set; } // CourseInstructor
         public DbSet<Department> Departments { get; set; } // Department
         public DbSet<Employee> Employees { get; set; } // Employee
         public DbSet<EmptyTable> EmptyTables { get; set; } // EmptyTable
@@ -61,7 +57,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public DbSet<TeamWithDbGeneratedGuid> TeamWithDbGeneratedGuids { get; set; } // TeamWithDbGeneratedGuid
         public DbSet<TeamWithUserGeneratedGuid> TeamWithUserGeneratedGuids { get; set; } // TeamWithUserGeneratedGuid
         public DbSet<Visitor> Visitors { get; set; } // Visitor
-        public DbSet<VisitorPost> VisitorPosts { get; set; } // VisitorPosts
         public DbSet<ConcurrencyItem> ConcurrencyItems { get; set; }
 
         public bool IsSqlParameterNull(SqlParameter param)
@@ -80,16 +75,12 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
             modelBuilder.ApplyConfiguration(new BatchInvoiceConfiguration());
             modelBuilder.ApplyConfiguration(new BatchInvoiceItemConfiguration());
             modelBuilder.ApplyConfiguration(new BlogConfiguration());
-            modelBuilder.ApplyConfiguration(new CoachTeamsWithDbGeneratedGuidConfiguration());
-            modelBuilder.ApplyConfiguration(new CoachTeamsWithUserGeneratedGuidConfiguration());
             modelBuilder.ApplyConfiguration(new CoachWithDbGeneratedGuidConfiguration());
             modelBuilder.ApplyConfiguration(new CoachWithUserGeneratedGuidConfiguration());
             modelBuilder.ApplyConfiguration(new CompanyConfiguration());
             modelBuilder.ApplyConfiguration(new CompositeConfiguration());
-            modelBuilder.ApplyConfiguration(new CompositePrimeConfiguration());
             modelBuilder.ApplyConfiguration(new CoordinateConfiguration());
             modelBuilder.ApplyConfiguration(new CourseConfiguration());
-            modelBuilder.ApplyConfiguration(new CourseInstructorConfiguration());
             modelBuilder.ApplyConfiguration(new DepartmentConfiguration());
             modelBuilder.ApplyConfiguration(new EmployeeConfiguration());
             modelBuilder.ApplyConfiguration(new EmptyTableConfiguration());
@@ -118,7 +109,6 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
             modelBuilder.ApplyConfiguration(new TeamWithDbGeneratedGuidConfiguration());
             modelBuilder.ApplyConfiguration(new TeamWithUserGeneratedGuidConfiguration());
             modelBuilder.ApplyConfiguration(new VisitorConfiguration());
-            modelBuilder.ApplyConfiguration(new VisitorPostConfiguration());
             modelBuilder.ApplyConfiguration(new ConcurrencyItemConfiguration());
         }
 

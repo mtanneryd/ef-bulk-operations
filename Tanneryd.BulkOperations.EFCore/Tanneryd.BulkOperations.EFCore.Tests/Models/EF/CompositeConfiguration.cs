@@ -3,6 +3,7 @@
 
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using System.Collections.Generic;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests
 {
@@ -18,12 +19,26 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
             builder.Property(x => x.UpdatedAt).HasColumnName(@"UpdatedAt").HasColumnType("datetime").IsRequired();
             builder.Property(x => x.UpdatedBy).HasColumnName(@"UpdatedBy").HasColumnType("nvarchar(max)").IsRequired(false);
 
-            // Foreign keys
             builder.HasOne(a => a.Number).WithOne(b => b.Composite).HasForeignKey<Composite>(c => c.NumberId).OnDelete(DeleteBehavior.ClientSetNull).HasConstraintName("FK_dbo.Composite_dbo.Number_NumberId");
+            builder.HasIndex(x => x.NumberId).HasDatabaseName("IX_NumberId");
 
-            builder.HasIndex(x => x.NumberId).HasName("IX_NumberId");
+            // Pure many-to-many, matches EF6 CompositePrime (CompositeId, PrimeId).
+            builder.HasMany(c => c.Primes)
+                .WithMany(p => p.Composites)
+                .UsingEntity<Dictionary<string, object>>(
+                    "CompositePrime",
+                    r => r.HasOne<Prime>().WithMany().HasForeignKey("PrimeId")
+                        .HasConstraintName("FK_dbo.CompositePrime_dbo.Prime_PrimeId"),
+                    l => l.HasOne<Composite>().WithMany().HasForeignKey("CompositeId")
+                        .HasConstraintName("FK_dbo.CompositePrime_dbo.Composite_CompositeId"),
+                    j =>
+                    {
+                        j.HasKey("CompositeId", "PrimeId").HasName("PK_dbo.CompositePrime");
+                        j.ToTable("CompositePrime", "dbo");
+                        j.HasIndex("CompositeId").HasDatabaseName("IX_CompositeId");
+                        j.HasIndex("PrimeId").HasDatabaseName("IX_PrimeId");
+                    });
         }
     }
-
 }
 // </auto-generated>

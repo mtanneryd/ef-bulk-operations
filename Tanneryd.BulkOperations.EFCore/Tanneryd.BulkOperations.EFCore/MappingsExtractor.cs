@@ -41,6 +41,10 @@ namespace Tanneryd.BulkOperations.EFCore
 
             foreach (var entityType in entityTypes)
             {
+                // Shadow many-to-many join entities use Dictionary<string, object>;
+                // AssociationMapping on the principal types covers those tables.
+                if (entityType.ClrType == typeof(Dictionary<string, object>))
+                    continue;
                 if (_mappingsByType.ContainsKey(entityType.ClrType))
                     continue;
 
@@ -133,10 +137,101 @@ namespace Tanneryd.BulkOperations.EFCore
                 }
             }
 
+            // Pure many-to-many (skip navigations) — same role as EF6 AssociationSetMappings.
+            foreach (var skipNavigation in entityType.GetSkipNavigations())
+            {
+                // Unidirectional relationships still expose a shadow inverse skip
+                // navigation with no CLR property; those cannot be walked from entities.
+                if (skipNavigation.PropertyInfo == null)
+                    continue;
+                if (foreignKeyMappings.Any(m => m.NavigationPropertyName == skipNavigation.Name))
+                    continue;
+
+                var associationMapping = CreateAssociationMapping(skipNavigation);
+                if (associationMapping == null)
+                    continue;
+
+                foreignKeyMappings.Add(new ForeignKeyMapping
+                {
+                    NavigationPropertyName = skipNavigation.Name,
+                    IsCollection = skipNavigation.IsCollection,
+                    // Declaring entity is "from", target is "to" so this navigation lands in
+                    // FromForeignKeyMappings for the declaring type (and the inverse skip
+                    // nav does the same on the other side).
+                    FromType = entityType.Name,
+                    ToType = skipNavigation.TargetEntityType.Name,
+                    AssociationMapping = associationMapping,
+                    ForeignKeyRelations = Array.Empty<ForeignKeyRelation>(),
+                });
+            }
+
             mappings.ToForeignKeyMappings = foreignKeyMappings.Where(m => m.FromType == entityType.Name).ToArray();
             mappings.FromForeignKeyMappings = foreignKeyMappings.Where(m => m.ToType == entityType.Name).ToArray();
 
+            foreach (var associationMapping in mappings.ToForeignKeyMappings
+                         .Concat(mappings.FromForeignKeyMappings)
+                         .Where(m => m.AssociationMapping != null)
+                         .Select(m => m.AssociationMapping))
+            {
+                associationMapping.Source.IsForeignKey = true;
+                associationMapping.Target.IsForeignKey = true;
+            }
+
             return mappings;
+        }
+
+        /// <summary>
+        /// Build join-table Source/Target mappings for a skip navigation.
+        /// Only single-column association ends are supported (same as EF6).
+        /// </summary>
+        private static AssociationMapping CreateAssociationMapping(ISkipNavigation skipNavigation)
+        {
+            var inverse = skipNavigation.Inverse;
+            if (inverse == null)
+                return null;
+
+            var thisFk = skipNavigation.ForeignKey;
+            var otherFk = inverse.ForeignKey;
+            if (thisFk.Properties.Count != 1 || otherFk.Properties.Count != 1)
+                return null;
+            if (thisFk.PrincipalKey.Properties.Count != 1 || otherFk.PrincipalKey.Properties.Count != 1)
+                return null;
+
+            var joinEntityType = skipNavigation.JoinEntityType;
+            var thisJoinProperty = thisFk.Properties[0];
+            var otherJoinProperty = otherFk.Properties[0];
+            var thisPrincipalProperty = thisFk.PrincipalKey.Properties[0];
+            var otherPrincipalProperty = otherFk.PrincipalKey.Properties[0];
+
+            var thisColumn = thisJoinProperty.GetTableColumnMappings().FirstOrDefault();
+            var otherColumn = otherJoinProperty.GetTableColumnMappings().FirstOrDefault();
+            if (thisColumn == null || otherColumn == null)
+                return null;
+
+            return new AssociationMapping
+            {
+                TableName = new TableName
+                {
+                    Name = joinEntityType.GetTableName(),
+                    Schema = joinEntityType.GetSchema(),
+                },
+                // Source = declaring entity end; Target = other end.
+                // Both join columns form the composite PK of the join table.
+                Source = new TableColumnMapping
+                {
+                    EntityProperty = thisPrincipalProperty,
+                    TableColumn = thisColumn,
+                    IsPrimaryKey = true,
+                    IsForeignKey = true,
+                },
+                Target = new TableColumnMapping
+                {
+                    EntityProperty = otherPrincipalProperty,
+                    TableColumn = otherColumn,
+                    IsPrimaryKey = true,
+                    IsForeignKey = true,
+                },
+            };
         }
 
         private static TableColumnMapping CreateTableColumnMapping(IProperty property, bool isIncludedFromComplexType)

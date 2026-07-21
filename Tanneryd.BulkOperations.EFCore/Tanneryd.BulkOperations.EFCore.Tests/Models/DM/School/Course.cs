@@ -3,10 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests
 {
@@ -19,32 +15,15 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public int DepartmentId { get; set; } // DepartmentID
 
         // Reverse navigation
+        public ICollection<Instructor> Instructors { get; set; }
 
-        /// <summary>
-        /// Child CourseInstructors where [CourseInstructor].[CourseID] point to this entity (FK_dbo.CourseInstructor_dbo.Course_CourseID)
-        /// </summary>
-        public ICollection<CourseInstructor> CourseInstructors { get; set; } // CourseInstructor.FK_dbo.CourseInstructor_dbo.Course_CourseID
-
-        [NotMapped]
-        public List<Instructor> Instructors
-        {
-            get
-            {
-                return CourseInstructors.Select(i => i.Instructor).ToList();
-            }
-        }
         // Foreign keys
-
-        /// <summary>
-        /// Parent Department pointed by [Course].([DepartmentId]) (FK_dbo.Course_dbo.Department_DepartmentID)
-        /// </summary>
-        public Department Department { get; set; } // FK_dbo.Course_dbo.Department_DepartmentID
+        public Department Department { get; set; }
 
         public Course()
         {
-            CourseInstructors = new List<CourseInstructor>();
+            Instructors = new HashSet<Instructor>();
         }
     }
-
 }
 // </auto-generated>
