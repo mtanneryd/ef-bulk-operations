@@ -190,19 +190,30 @@ namespace Tanneryd.BulkOperations.EF6
             return DoBulkSelectNotExistingAsync<T1, T2>(ctx, request, cancellationToken);
         }
 
-        private static IList BulkSelectNotExisting(DbContext ctx, Type t, IList entities,
-            TableColumnMapping[] pkColumnMappings, SqlTransaction sqlTransaction)
+        /// <summary>
+        /// Runtime-typed wrapper used by the insert path when the entity CLR type is
+        /// only known dynamically (must await, not block via the sync API).
+        /// </summary>
+        private static async Task<IList> BulkSelectNotExistingByTypeAsync(
+            DbContext ctx,
+            Type t,
+            IList entities,
+            TableColumnMapping[] pkColumnMappings,
+            SqlTransaction sqlTransaction,
+            CancellationToken cancellationToken = default)
         {
-            var request = typeof(BulkSelectRequest<>).MakeGenericType(t);
+            var requestType = typeof(BulkSelectRequest<>).MakeGenericType(t);
             var keyPropertyNames = pkColumnMappings.Select(m => m.EntityProperty.Name).ToArray();
-            var r = Activator.CreateInstance(request, keyPropertyNames, entities.ToArray(t), sqlTransaction);
-            Type ex = typeof(DbContextExtensions);
-            MethodInfo mi = ex.GetMethod("BulkSelectNotExisting");
-            MethodInfo miGeneric = mi.MakeGenericMethod(new[] { t, t });
-            object[] args = { ctx, r };
-            var notExistingEntities = (IList)miGeneric.Invoke(null, args);
+            var request = Activator.CreateInstance(requestType, keyPropertyNames, entities.ToArray(t), sqlTransaction);
 
-            return notExistingEntities;
+            var method = typeof(DbContextExtensions)
+                .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Single(m => m.Name == nameof(BulkSelectNotExistingAsync) && m.IsGenericMethodDefinition)
+                .MakeGenericMethod(t, t);
+
+            var task = (Task)method.Invoke(null, new object[] { ctx, request, cancellationToken });
+            await task.ConfigureAwait(false);
+            return (IList)task.GetType().GetProperty("Result").GetValue(task);
         }
 
         /// <summary>

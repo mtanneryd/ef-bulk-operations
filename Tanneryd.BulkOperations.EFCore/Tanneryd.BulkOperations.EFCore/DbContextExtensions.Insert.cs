@@ -277,12 +277,13 @@ namespace Tanneryd.BulkOperations.EFCore
                     {
                         var navPropertyType = (Type)joinTableNavProperties[0].GetType();
                         var pkColumnMappings = GetPrimaryKeyColumnMappings(ctx, navPropertyType, mappingsByType);
-                        var notExistingNavProperties = BulkSelectNotExisting(
+                        var notExistingNavProperties = await BulkSelectNotExistingByTypeAsync(
                             ctx,
                             navPropertyType,
                             joinTableNavProperties,
                             pkColumnMappings,
-                            sqlTransaction);
+                            sqlTransaction,
+                            cancellationToken).ConfigureAwait(false);
                         await DoBulkInsertAllAsync(ctx,
                             notExistingNavProperties.ToArray(navPropertyType),
                             sqlTransaction,
@@ -702,7 +703,8 @@ namespace Tanneryd.BulkOperations.EFCore
                     IncludeRowNumber.No);
 
                 // Make sure that we only insert entities not already in the database.
-                var notExistingEntities = BulkSelectNotExisting(ctx, t, entities, pkColumnMappings, transaction);
+                var notExistingEntities = await BulkSelectNotExistingByTypeAsync(
+                    ctx, t, entities, pkColumnMappings, transaction, cancellationToken).ConfigureAwait(false);
                 AddEntitiesToTable(table, notExistingEntities, properties, t, mappings.Discriminator, IncludeRowNumber.No);
                 rowsAffected += notExistingEntities.Count;
 
