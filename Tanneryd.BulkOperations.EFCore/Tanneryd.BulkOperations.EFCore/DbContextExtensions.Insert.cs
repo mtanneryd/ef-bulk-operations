@@ -697,6 +697,7 @@ namespace Tanneryd.BulkOperations.EFCore
                                 hasComplexProperties,
                                 mappings.Discriminator,
                                 t,
+                                commandTimeout,
                                 cancellationToken).ConfigureAwait(false);
                         }
                         finally
@@ -770,7 +771,8 @@ namespace Tanneryd.BulkOperations.EFCore
             ArrayList newEntities,
             IProperty pkProperty,
             bool hasComplexProperties,
-            Type t)
+            Type t,
+            TimeSpan commandTimeout)
         {
             return SelectIntoForIntegerTypePrimaryKeyAsync(
                 conn,
@@ -787,7 +789,8 @@ namespace Tanneryd.BulkOperations.EFCore
                 newEntities,
                 pkProperty,
                 hasComplexProperties,
-                t).ConfigureAwait(false).GetAwaiter().GetResult();
+                t,
+                commandTimeout).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         // Legacy identity-range approach (IDENT_CURRENT ± count). Unsafe under
@@ -809,11 +812,10 @@ namespace Tanneryd.BulkOperations.EFCore
             IProperty pkProperty,
             bool hasComplexProperties,
             Type t,
+            TimeSpan commandTimeout,
             CancellationToken cancellationToken = default)
         {
-            using var cmd = conn.CreateCommand();
-            cmd.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
-            cmd.Transaction = transaction;
+            using var cmd = CreateSqlCommand(string.Empty, conn, transaction, commandTimeout);
 
             // Get the number of existing rows in the table.
             cmd.CommandText = $@"SELECT CASE WHEN EXISTS (SELECT TOP 1 * FROM {tableName.Fullname}) THEN 1 ELSE 0 END";
@@ -909,7 +911,8 @@ namespace Tanneryd.BulkOperations.EFCore
             IProperty pkProperty,
             bool hasComplexProperties,
             Discriminator discriminator,
-            Type t)
+            Type t,
+            TimeSpan commandTimeout)
         {
             return SelectIntoUsingOutputClauseAsync(
                 conn,
@@ -927,7 +930,8 @@ namespace Tanneryd.BulkOperations.EFCore
                 pkProperty,
                 hasComplexProperties,
                 discriminator,
-                t).ConfigureAwait(false).GetAwaiter().GetResult();
+                t,
+                commandTimeout).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         /// <summary>
@@ -936,6 +940,8 @@ namespace Tanneryd.BulkOperations.EFCore
         /// Required because SqlBulkCopy into a real table cannot reliably return
         /// per-row identities. When AllowNotNullSelfReferences is Yes, CHECK/FK
         /// constraints are temporarily disabled (re-enabled by the outer finally).
+        /// Command timeout comes from <see cref="BulkInsertRequest{T}.CommandTimeout"/>
+        /// (default 30 minutes).
         /// </summary>
         private static async Task<int> SelectIntoUsingOutputClauseAsync(
             SqlConnection conn,
@@ -954,11 +960,10 @@ namespace Tanneryd.BulkOperations.EFCore
             bool hasComplexProperties,
             Discriminator discriminator,
             Type t,
+            TimeSpan commandTimeout,
             CancellationToken cancellationToken = default)
         {
-            using var cmd = conn.CreateCommand();
-            cmd.CommandTimeout = (int)TimeSpan.FromMinutes(30).TotalSeconds;
-            cmd.Transaction = transaction;
+            using var cmd = CreateSqlCommand(string.Empty, conn, transaction, commandTimeout);
 
             string query;
             if (allowNotNullSelfReferences == AllowNotNullSelfReferences.Yes)

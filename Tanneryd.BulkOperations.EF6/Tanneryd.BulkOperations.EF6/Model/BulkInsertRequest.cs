@@ -56,6 +56,10 @@ namespace Tanneryd.BulkOperations.EF6.Model
         /// </summary>
         public bool UseTableLock { get; set; } = false;
 
+        /// <summary>
+        /// Timeout for SQL commands and SqlBulkCopy during the insert, including the
+        /// MERGE … OUTPUT identity retrieval path. Default is 30 minutes.
+        /// </summary>
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(30);
     }
 
