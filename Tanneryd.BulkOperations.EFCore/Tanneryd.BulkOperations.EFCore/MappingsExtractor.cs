@@ -147,8 +147,36 @@ namespace Tanneryd.BulkOperations.EFCore
                 TableColumn = property.GetTableColumnMappings().First(),
                 IsPrimaryKey = property.IsPrimaryKey(),
                 IsIdentity = property.GetValueGenerationStrategy() == SqlServerValueGenerationStrategy.IdentityColumn,
+                IsStoreGenerated = IsStoreGeneratedProperty(property),
                 IsIncludedFromComplexType = isIncludedFromComplexType
             };
+        }
+
+        /// <summary>
+        /// True when omitting the column from INSERT lets SQL Server supply the value
+        /// (IDENTITY, DEFAULT constraints such as NEWSEQUENTIALID, computed columns).
+        /// Client-side generators (SequenceHiLo, bare Guid ValueGeneratedOnAdd) are excluded.
+        /// Aligned with EF6 identity-or-computed PK detection for the MERGE … OUTPUT path.
+        /// </summary>
+        private static bool IsStoreGeneratedProperty(IProperty property)
+        {
+            var strategy = property.GetValueGenerationStrategy();
+            if (strategy == SqlServerValueGenerationStrategy.IdentityColumn)
+                return true;
+            if (strategy == SqlServerValueGenerationStrategy.SequenceHiLo)
+                return false;
+
+            // Explicit SQL default (e.g. NEWSEQUENTIALID()) => store generates on INSERT.
+            if (!string.IsNullOrEmpty(property.GetDefaultValueSql()))
+                return true;
+
+            // Computed / rowversion-style store generation.
+            if (property.ValueGenerated == ValueGenerated.OnAddOrUpdate)
+                return true;
+
+            // Bare ValueGeneratedOnAdd without a store default is typically a client
+            // value generator (e.g. SequentialGuidValueGenerator) — not store-generated.
+            return false;
         }
 
         private static void AddComplexTypeColumnMappings(

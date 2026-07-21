@@ -68,6 +68,9 @@ namespace Tanneryd.BulkOperations.EF6.Model
 
         public bool IsPrimaryKeyStoreGenerated(TableColumnMapping[] pkColumnMappings)
         {
+            // Single PK that is IDENTITY or computed/store-generated (e.g. Guid
+            // DatabaseGeneratedOption.Identity → NEWSEQUENTIALID). Aligned with
+            // EF Core IsStoreGenerated detection for the MERGE … OUTPUT insert path.
             return pkColumnMappings.Length == 1 &&
                    (pkColumnMappings[0].TableColumn.IsStoreGeneratedIdentity ||
                     pkColumnMappings[0].TableColumn.IsStoreGeneratedComputed);

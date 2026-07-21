@@ -91,7 +91,17 @@ Namespaces: `Tanneryd.BulkOperations.EF6` / `Tanneryd.BulkOperations.EFCore` (an
 
 ### Bulk insert
 
-Uses `SqlBulkCopy`. For tables with a single store-generated primary key, generated values can be written back onto your entities (via a temp table + `MERGE … OUTPUT`).
+Uses `SqlBulkCopy`. For tables with a **single store-generated primary key**, generated values can be written back onto your entities (via a temp table + `MERGE … OUTPUT`).
+
+Supported store-generated key modes (EF6 and EF Core) — used for the MERGE … OUTPUT key-retrieval path:
+
+| Mode | EF6 | EF Core |
+|------|-----|---------|
+| SQL Server `IDENTITY` | `DatabaseGeneratedOption.Identity` on integer keys | `UseIdentityColumn()` / `IdentityColumn` strategy |
+| Guid (or other) DB default | `DatabaseGeneratedOption.Identity` on Guid (migration emits `NEWSEQUENTIALID()`) | `ValueGeneratedOnAdd()` **plus** `HasDefaultValueSql("NEWSEQUENTIALID()")` (or similar) |
+| Computed PK | `DatabaseGeneratedOption.Computed` | `ValueGeneratedOnAddOrUpdate` |
+
+Not treated as store-generated: client-side generators (EF Core bare `ValueGeneratedOnAdd` on Guid without a SQL default, **SequenceHiLo**), user-assigned keys (`None` / `ValueGeneratedNever`), and composite keys. For those, supply key values before bulk insert (or rely on the non-identity insert path).
 
 ```csharp
 var numbers = Enumerable.Range(1, 10_000)

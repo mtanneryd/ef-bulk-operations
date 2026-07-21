@@ -750,10 +750,16 @@ namespace Tanneryd.BulkOperations.EFCore
         /// </summary>
         /// <param name="pkColumnMappings"></param>
         /// <returns></returns>
+        /// <summary>
+        /// True for a single primary key whose value is supplied by SQL Server when
+        /// the column is omitted from INSERT (IDENTITY, DEFAULT such as
+        /// NEWSEQUENTIALID, computed). Matches EF6 identity-or-computed detection.
+        /// Client-side generators (bare Guid OnAdd, SequenceHiLo) are excluded.
+        /// </summary>
         private static bool IsPrimaryKeyStoreGenerated(TableColumnMapping[] pkColumnMappings)
         {
             return pkColumnMappings.Length == 1 &&
-                   (pkColumnMappings[0].IsIdentity);
+                   pkColumnMappings[0].IsStoreGenerated;
         }
 
         private static int SelectIntoForIntegerTypePrimaryKey(

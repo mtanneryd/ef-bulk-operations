@@ -20,18 +20,29 @@ using Microsoft.EntityFrameworkCore.Metadata;
 namespace Tanneryd.BulkOperations.EFCore.Model
 {
     /// <summary>
-    /// This class is used to map an entity property
-    /// to a table column.
-    /// 
-    /// In conceptual-space, EdmProperty represents a property on an Entity.
-    /// In store-space, EdmProperty represents a column in a table.
+    /// Maps an entity property to a table column.
     /// </summary>
     public class TableColumnMapping
     {
         public bool IsIncludedFromComplexType { get; set; }
         public bool IsForeignKey { get; set; }
         public bool IsPrimaryKey { get; set; }
+
+        /// <summary>
+        /// True when the column is a SQL Server IDENTITY column
+        /// (<c>SqlServerValueGenerationStrategy.IdentityColumn</c>).
+        /// Used for IDENTITY_INSERT on staging temps.
+        /// </summary>
         public bool IsIdentity { get; set; }
+
+        /// <summary>
+        /// True when omitting the column from INSERT lets SQL Server supply the value
+        /// (IDENTITY, DEFAULT such as NEWSEQUENTIALID, computed). Client-side
+        /// generators (SequenceHiLo, bare Guid ValueGeneratedOnAdd) are excluded.
+        /// Used to choose the MERGE … OUTPUT insert path for single primary keys.
+        /// </summary>
+        public bool IsStoreGenerated { get; set; }
+
         public IProperty EntityProperty { get; set; }
         public IColumnMapping TableColumn { get; set; }
     }
