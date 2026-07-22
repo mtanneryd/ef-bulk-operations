@@ -21,6 +21,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Blog;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Invoice;
+using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Miscellaneous;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Prices;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF;
 
@@ -143,6 +144,57 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Update
             var updated = verify.Invoices.Single(i => i.Id == invoice.Id);
             Assert.AreEqual(200m, updated.Net);
             Assert.AreEqual(250m, updated.Gross);
+        }
+
+        /// <summary>
+        /// UpdatedPropertyNames that only list key columns leave an empty UPDATE SET.
+        /// Must reject with ArgumentException before generating invalid SQL.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdateAllShouldRejectWhenUpdatedPropertyNamesLeaveNoColumns()
+        {
+            using var db = new UnitTestContext();
+            var price = new Price
+            {
+                Date = new DateTime(2023, 5, 29),
+                Name = "A",
+                Value = 1m
+            };
+            db.Prices.Add(price);
+            db.SaveChanges();
+
+            price.Value = 2m;
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkUpdateAll(new BulkUpdateRequest
+                {
+                    Entities = new[] { price },
+                    KeyPropertyNames = new[] { nameof(Price.Date), nameof(Price.Name) },
+                    UpdatedPropertyNames = new[] { nameof(Price.Date), nameof(Price.Name) },
+                }));
+
+            StringAssert.Contains(ex.Message, "updat", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Tables with only key columns (no non-key mapped properties) must not
+        /// emit UPDATE … SET with an empty assignment list.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdateAllShouldRejectWhenEntityHasNoUpdatableColumns()
+        {
+            using var db = new UnitTestContext();
+            var row = new EmptyTable();
+            db.EmptyTables.Add(row);
+            db.SaveChanges();
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkUpdateAll(new BulkUpdateRequest
+                {
+                    Entities = new[] { row },
+                }));
+
+            StringAssert.Contains(ex.Message, "updat", StringComparison.OrdinalIgnoreCase);
         }
 
         [TestMethod]

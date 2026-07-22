@@ -107,6 +107,57 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Update
             Assert.AreEqual(2.0m, prices[2].Value);
         }
 
+        /// <summary>
+        /// UpdatedPropertyNames that only list key columns leave an empty UPDATE SET.
+        /// Must reject with ArgumentException before generating invalid SQL.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdateAllShouldRejectWhenUpdatedPropertyNamesLeaveNoColumns()
+        {
+            using var db = Factory.CreateDbContext();
+            var price = new Price
+            {
+                Date = new DateTime(2023, 5, 29),
+                Name = "A",
+                Value = 1m
+            };
+            db.Prices.Add(price);
+            db.SaveChanges();
+
+            price.Value = 2m;
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkUpdateAll(new BulkUpdateRequest
+                {
+                    Entities = new[] { price },
+                    KeyPropertyNames = new[] { nameof(Price.Date), nameof(Price.Name) },
+                    UpdatedPropertyNames = new[] { nameof(Price.Date), nameof(Price.Name) },
+                }));
+
+            StringAssert.Contains(ex.Message, "updat", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Tables with only key columns (no non-key mapped properties) must not
+        /// emit UPDATE … SET with an empty assignment list.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdateAllShouldRejectWhenEntityHasNoUpdatableColumns()
+        {
+            using var db = Factory.CreateDbContext();
+            var row = new EmptyTable();
+            db.EmptyTables.Add(row);
+            db.SaveChanges();
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkUpdateAll(new BulkUpdateRequest
+                {
+                    Entities = new[] { row },
+                }));
+
+            StringAssert.Contains(ex.Message, "updat", StringComparison.OrdinalIgnoreCase);
+        }
+
         [TestMethod]
         public void ModifiedEntityShouldBeUpdated()
         {

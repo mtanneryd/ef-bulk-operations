@@ -83,6 +83,14 @@ namespace Tanneryd.BulkOperations.EF6
                     .Where(c => !concurrencyColumnNames.Contains(c.TableColumn.Name))
                     .ToArray();
 
+                if (modifiedColumnMappings.Length == 0)
+                {
+                    throw new ArgumentException(
+                        "BulkUpdate requires at least one updatable column. " +
+                        "UpdatedPropertyNames must include a non-key, non-concurrency-token mapped property, " +
+                        "or the entity must have such columns when UpdatedPropertyNames is empty.");
+                }
+
                 var conn = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
 
                 SqlTransaction ownedTransaction = null;

@@ -92,6 +92,14 @@ namespace Tanneryd.BulkOperations.EFCore
                     .Where(c => !concurrencyColumnNames.Contains(c.TableColumn.Column.Name))
                     .ToArray();
 
+                if (modifiedColumnMappings.Length == 0)
+                {
+                    throw new ArgumentException(
+                        "BulkUpdate requires at least one updatable column. " +
+                        "UpdatedPropertyNames must include a non-key, non-concurrency-token mapped property, " +
+                        "or the entity must have such columns when UpdatedPropertyNames is empty.");
+                }
+
                 //
                 // Create and populate a temp table to hold the updated values.
                 //
