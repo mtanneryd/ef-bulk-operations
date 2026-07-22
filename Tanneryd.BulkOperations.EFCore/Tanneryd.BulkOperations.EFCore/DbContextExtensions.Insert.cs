@@ -40,6 +40,32 @@ namespace Tanneryd.BulkOperations.EFCore
         {
             if (entities.Count == 0) return;
 
+            // One TPH discriminator is stamped per batch from entities[0]. Split
+            // mixed concrete CLR types so each group gets the correct value.
+            var typeGroups = entities
+                .GroupBy(e => (Type)e.GetType())
+                .ToList();
+            if (typeGroups.Count > 1)
+            {
+                foreach (var typeGroup in typeGroups)
+                {
+                    await DoBulkInsertAllAsync(
+                        ctx,
+                        typeGroup.ToList(),
+                        sqlTransaction,
+                        enableRecursiveInsert,
+                        allowNotNullSelfReferences,
+                        commandTimeout,
+                        savedEntities,
+                        mappingsByType,
+                        response,
+                        useTableLock,
+                        cancellationToken).ConfigureAwait(false);
+                }
+
+                return;
+            }
+
             Type t = entities[0].GetType();
             if (!mappingsByType.ContainsKey(t))
             {
