@@ -839,7 +839,9 @@ namespace Tanneryd.BulkOperations.EF6
 
             if (ids.Length != newEntities.Count)
                 throw new ArgumentException(
-                    $@"Inserting {newEntities.Count} entities of type {t} generated {ids.Length} primary key identities. Weird shit. Please log a bug report.");
+                    $"Bulk insert of {newEntities.Count} entities of type {t} returned {ids.Length} " +
+                    "generated primary key values; the counts must match. " +
+                    "This usually indicates a MERGE OUTPUT / staging mismatch. Please file a bug report with a repro.");
 
             for (int i = 0; i < newEntities.Count; i++)
             {

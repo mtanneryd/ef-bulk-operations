@@ -38,10 +38,20 @@ namespace Tanneryd.BulkOperations.EF6
         #region Public API
 
         /// <summary>
-        /// Clears the SQL Server plan cache via DBCC FREEPROCCACHE.
-        /// Expensive and instance-wide for the connection context—use only for
-        /// plan-cache troubleshooting, not routine operations.
+        /// Clears the SQL Server plan cache via <c>DBCC FREEPROCCACHE</c>.
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// <b>Warning:</b> <c>DBCC FREEPROCCACHE</c> (without a plan handle) flushes
+        /// the plan cache for the entire SQL Server instance, not just the current
+        /// database or connection. That forces recompiles across all workloads on
+        /// the instance and can cause a temporary CPU spike.
+        /// </para>
+        /// <para>
+        /// Use only for plan-cache troubleshooting or diagnostics—never as part of
+        /// routine application flow.
+        /// </para>
+        /// </remarks>
         public static void DeleteAllExecutionPlansFromCache(this DbContext ctx, SqlTransaction sqlTransaction)
         {
             DeleteAllExecutionPlansFromCacheAsync(ctx, sqlTransaction).ConfigureAwait(false).GetAwaiter().GetResult();
