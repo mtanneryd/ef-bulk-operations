@@ -87,8 +87,22 @@ namespace Tanneryd.BulkOperations.EF6
                 var conn = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
 
                 SqlTransaction ownedTransaction = null;
-                if (concurrencyTokenMappings.Length > 0 && transaction == null && !conn.IsLegacy)
+                if (concurrencyTokenMappings.Length > 0 && transaction == null)
                 {
+                    // MDS can own a SqlTransaction. Legacy System.Data.SqlClient cannot use
+                    // Microsoft.Data.SqlClient.SqlTransaction (request.Transaction or owned),
+                    // so a mixed stale/current batch would auto-commit matching rows before
+                    // the concurrency throw (H1). Refuse rather than partially commit.
+                    if (conn.IsLegacy)
+                    {
+                        throw new NotSupportedException(
+                            "BulkUpdate with optimistic concurrency tokens requires a transaction, but " +
+                            "System.Data.SqlClient contexts cannot use Microsoft.Data.SqlClient.SqlTransaction. " +
+                            "Migrate the EF6 context to providerName=\"Microsoft.Data.SqlClient\" " +
+                            "(and Microsoft.EntityFramework.SqlServer), or supply a Microsoft.Data.SqlClient " +
+                            "connection so an owned transaction can be created.");
+                    }
+
                     ownedTransaction = conn.AsModernConnection().BeginTransaction();
                     transaction = ownedTransaction;
                 }

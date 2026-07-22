@@ -14,6 +14,7 @@
 * limitations under the License.
 */
 
+using System;
 using System.Data.Entity.Infrastructure;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -26,6 +27,8 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Update
     /// <summary>
     /// Regression for GitHub issue #34: BulkUpdate must honour rowversion /
     /// concurrency tokens the same way SaveChanges does.
+    /// Also covers: concurrency updates must not partially commit when the
+    /// provider cannot own a Microsoft.Data.SqlClient transaction (legacy SqlClient).
     /// </summary>
     [TestClass]
     public class BulkUpdateConcurrencyTests : BulkOperationTestBase
@@ -128,6 +131,132 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Update
                         "Updated via bulk",
                         verify.ConcurrencyItems.Single(x => x.Id == item.Id).Name);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Microsoft.Data.SqlClient path: BulkUpdate auto-begins a transaction when
+        /// concurrency tokens are present. A mixed stale/current batch must roll back
+        /// entirely — the current row must not stay updated after the concurrency throw.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_ShouldNotPartiallyCommit_WhenMixedStaleAndCurrentRowVersions()
+        {
+            int currentId;
+            int staleId;
+
+            using (var seed = new UnitTestContext())
+            {
+                var current = new ConcurrencyItem { Name = "Current-original" };
+                var stale = new ConcurrencyItem { Name = "Stale-original" };
+                seed.ConcurrencyItems.Add(current);
+                seed.ConcurrencyItems.Add(stale);
+                seed.SaveChanges();
+                currentId = current.Id;
+                staleId = stale.Id;
+            }
+
+            using (var db1 = new UnitTestContext())
+            using (var db2 = new UnitTestContext())
+            {
+                var current = db1.ConcurrencyItems.Single(x => x.Id == currentId);
+                var stale = db1.ConcurrencyItems.Single(x => x.Id == staleId);
+
+                // Advance only the stale row's rowversion from another context.
+                var other = db2.ConcurrencyItems.Single(x => x.Id == staleId);
+                other.Name = "Stale-changed-by-other";
+                db2.SaveChanges();
+
+                current.Name = "Current-bulk";
+                stale.Name = "Stale-bulk";
+
+                Assert.ThrowsExactly<DbUpdateConcurrencyException>(() =>
+                    db1.BulkUpdateAll(new BulkUpdateRequest
+                    {
+                        Entities = new[] { current, stale },
+                        KeyPropertyNames = new[] { nameof(ConcurrencyItem.Id) },
+                        UpdatedPropertyNames = new[] { nameof(ConcurrencyItem.Name) },
+                    }));
+            }
+
+            using (var verify = new UnitTestContext())
+            {
+                Assert.AreEqual(
+                    "Current-original",
+                    verify.ConcurrencyItems.Single(x => x.Id == currentId).Name,
+                    "Current row must roll back with the failed concurrency batch (owned transaction).");
+                Assert.AreEqual(
+                    "Stale-changed-by-other",
+                    verify.ConcurrencyItems.Single(x => x.Id == staleId).Name,
+                    "Stale row must keep the other writer's value.");
+            }
+        }
+
+        /// <summary>
+        /// On System.Data.SqlClient, BulkUpdate cannot own a Microsoft.Data.SqlClient
+        /// transaction, and request.Transaction cannot be used either. Without a guard,
+        /// a mixed stale/current batch auto-commits the matching UPDATE rows before the
+        /// concurrency exception. Refuse the operation instead of partially committing.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_WithConcurrencyTokens_OnLegacySqlClient_ShouldRefuseRatherThanPartiallyCommit()
+        {
+            using (var probe = new LegacyUnitTestContext())
+            {
+                Assert.IsInstanceOfType(
+                    probe.Database.Connection,
+                    typeof(System.Data.SqlClient.SqlConnection),
+                    "LegacyUnitTestContext must use System.Data.SqlClient for this regression.");
+            }
+
+            int currentId;
+            int staleId;
+
+            using (var seed = new UnitTestContext())
+            {
+                var current = new ConcurrencyItem { Name = "Legacy-current-original" };
+                var stale = new ConcurrencyItem { Name = "Legacy-stale-original" };
+                seed.ConcurrencyItems.Add(current);
+                seed.ConcurrencyItems.Add(stale);
+                seed.SaveChanges();
+                currentId = current.Id;
+                staleId = stale.Id;
+            }
+
+            using (var db1 = new LegacyUnitTestContext())
+            using (var db2 = new UnitTestContext())
+            {
+                var current = db1.ConcurrencyItems.Single(x => x.Id == currentId);
+                var stale = db1.ConcurrencyItems.Single(x => x.Id == staleId);
+
+                var other = db2.ConcurrencyItems.Single(x => x.Id == staleId);
+                other.Name = "Legacy-stale-changed-by-other";
+                db2.SaveChanges();
+
+                current.Name = "Legacy-current-bulk";
+                stale.Name = "Legacy-stale-bulk";
+
+                var ex = Assert.ThrowsExactly<NotSupportedException>(() =>
+                    db1.BulkUpdateAll(new BulkUpdateRequest
+                    {
+                        Entities = new[] { current, stale },
+                        KeyPropertyNames = new[] { nameof(ConcurrencyItem.Id) },
+                        UpdatedPropertyNames = new[] { nameof(ConcurrencyItem.Name) },
+                    }));
+
+                StringAssert.Contains(ex.Message, "System.Data.SqlClient");
+                StringAssert.Contains(ex.Message, "concurrency");
+            }
+
+            using (var verify = new UnitTestContext())
+            {
+                Assert.AreEqual(
+                    "Legacy-current-original",
+                    verify.ConcurrencyItems.Single(x => x.Id == currentId).Name,
+                    "Legacy path must not partially commit the current row (H1).");
+                Assert.AreEqual(
+                    "Legacy-stale-changed-by-other",
+                    verify.ConcurrencyItems.Single(x => x.Id == staleId).Name);
             }
         }
     }
