@@ -145,14 +145,16 @@ namespace Tanneryd.BulkOperations.EFCore
 
                     if (request.InsertIfNew)
                     {
+                        // Include client-assigned PKs; omit store-generated columns
+                        // (IDENTITY, computed, rowversion) so SQL Server supplies them.
+                        // Matching existing rows still uses keyCondition only (not tokens).
                         var columns = columnMappings.Values
-                            .Where(m => !primaryKeyMembers.Contains(m.TableColumn.Column.Name))
+                            .Where(m => !m.IsStoreGenerated)
+                            .Where(m => !concurrencyColumnNames.Contains(m.TableColumn.Column.Name))
                             .Select(m => m.TableColumn.Column.Name)
                             .ToArray();
                         var columnNames = string.Join(",", columns.Select(c => $"[{c}]"));
                         var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].[{c}]"));
-                        // InsertIfNew must match on keys only — including concurrency
-                        // tokens would treat a stale existing row as "new" and collide on PK.
                         cmdBody = $@"INSERT INTO {tableName.Fullname}
                                  SELECT {columnNames}
                                  FROM {tempTableName}

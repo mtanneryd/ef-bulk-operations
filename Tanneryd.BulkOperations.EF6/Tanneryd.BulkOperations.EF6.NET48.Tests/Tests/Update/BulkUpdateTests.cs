@@ -23,6 +23,7 @@ using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Blog;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Invoice;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Miscellaneous;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Prices;
+using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Teams.UsingUserGeneratedGuidKeys;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF;
 
 namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Update
@@ -195,6 +196,96 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Update
                 }));
 
             StringAssert.Contains(ex.Message, "updat", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// H2: InsertIfNew must include client-assigned Guid PKs in the INSERT
+        /// column list (identity/computed PKs stay omitted for the DB to generate).
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_InsertIfNew_ShouldPreserveClientAssignedGuidPrimaryKey()
+        {
+            var existingId = Guid.NewGuid();
+            var newId = Guid.NewGuid();
+
+            using (var db = new UnitTestContext())
+            {
+                db.TeamsWithUserGeneratedGuids.Add(new TeamWithUserGeneratedGuidKey
+                {
+                    Id = existingId,
+                    Name = "Existing",
+                });
+                db.SaveChanges();
+
+                db.BulkUpdateAll(new BulkUpdateRequest
+                {
+                    Entities = new object[]
+                    {
+                        new TeamWithUserGeneratedGuidKey { Id = existingId, Name = "Existing-updated" },
+                        new TeamWithUserGeneratedGuidKey { Id = newId, Name = "Brand-new" },
+                    },
+                    KeyPropertyNames = new[] { nameof(TeamWithUserGeneratedGuidKey.Id) },
+                    UpdatedPropertyNames = new[] { nameof(TeamWithUserGeneratedGuidKey.Name) },
+                    InsertIfNew = true,
+                });
+            }
+
+            using (var verify = new UnitTestContext())
+            {
+                Assert.AreEqual(2, verify.TeamsWithUserGeneratedGuids.Count());
+                Assert.AreEqual(
+                    "Existing-updated",
+                    verify.TeamsWithUserGeneratedGuids.Single(t => t.Id == existingId).Name);
+                Assert.AreEqual(
+                    "Brand-new",
+                    verify.TeamsWithUserGeneratedGuids.Single(t => t.Id == newId).Name,
+                    "InsertIfNew must insert the caller-supplied Guid PK, not omit it from the INSERT column list.");
+            }
+        }
+
+        /// <summary>
+        /// Control: identity PKs should keep working with InsertIfNew (DB generates Id).
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_InsertIfNew_ShouldInsertRowWithIdentityPrimaryKey()
+        {
+            using (var db = new UnitTestContext())
+            {
+                db.Prices.Add(new Price
+                {
+                    Date = new DateTime(2023, 5, 29),
+                    Name = "Existing",
+                    Value = 1m,
+                });
+                db.SaveChanges();
+
+                var existing = db.Prices.Single();
+                existing.Value = 2m;
+
+                db.BulkUpdateAll(new BulkUpdateRequest
+                {
+                    Entities = new object[]
+                    {
+                        existing,
+                        new Price
+                        {
+                            Date = new DateTime(2023, 5, 30),
+                            Name = "Brand-new",
+                            Value = 3m,
+                        },
+                    },
+                    KeyPropertyNames = new[] { nameof(Price.Id) },
+                    UpdatedPropertyNames = new[] { nameof(Price.Value), nameof(Price.Name), nameof(Price.Date) },
+                    InsertIfNew = true,
+                });
+            }
+
+            using (var verify = new UnitTestContext())
+            {
+                Assert.AreEqual(2, verify.Prices.Count());
+                Assert.AreEqual(2m, verify.Prices.Single(p => p.Name == "Existing").Value);
+                Assert.AreEqual(3m, verify.Prices.Single(p => p.Name == "Brand-new").Value);
+            }
         }
 
         [TestMethod]
