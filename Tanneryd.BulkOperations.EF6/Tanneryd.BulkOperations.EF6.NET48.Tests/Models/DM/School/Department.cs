@@ -25,7 +25,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.School
             this.Courses = new HashSet<Course>();
         }
         // Primary key 
-        public int DepartmentID { get; set; }
+        public int DepartmentId { get; set; }
         public string Name { get; set; }
         public decimal Budget { get; set; }
         public int? Administrator { get; set; }

@@ -23,11 +23,11 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Blog
     {
         public Blog()
         {
-            BlogPosts = new HashSet<Post>();
+            Posts = new HashSet<Post>();
         }
         public Guid Id { get; set; }
         public string Name { get; set; }
-        public virtual ICollection<Post> BlogPosts { get; set; }
+        public virtual ICollection<Post> Posts { get; set; }
     }
 
     public class Post
@@ -35,14 +35,14 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Blog
         public Post()
         {
             Visitors = new HashSet<Visitor>();
-            PostKeywords = new HashSet<Keyword>();
+            Keywords = new HashSet<Keyword>();
         }
 
         public Guid Id { get; set; }
         public Guid BlogId { get; set; }
         public Blog Blog { get; set; }
         public string Text { get; set; }
-        public ICollection<Keyword> PostKeywords { get; set; }
+        public ICollection<Keyword> Keywords { get; set; }
         public ICollection<Visitor> Visitors { get; set; }
     }
 

@@ -21,6 +21,9 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EFCore.Model;
 
+using Tanneryd.BulkOperations.EFCore.Tests.Models.DM.Teams.UsingDbGeneratedGuidKeys;
+using Tanneryd.BulkOperations.EFCore.Tests.Models.DM.Teams.UsingUserGeneratedGuidKeys;
+
 namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
 {
     [TestClass]
@@ -44,10 +47,10 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         {
             using (var db = Factory.CreateDbContext())
             {
-                var coaches = new List<CoachWithUserGeneratedGuid>();
+                var coaches = new List<CoachWithUserGeneratedGuidKey>();
                 for (int i = 0; i < 1000; i++)
                 {
-                    var c = new CoachWithUserGeneratedGuid
+                    var c = new CoachWithUserGeneratedGuidKey
                     {
                         Id = Guid.NewGuid(),
                         Firstname = $"Coach {i}",
@@ -55,7 +58,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                     };
                     for (int j = 0; j < 25; j++)
                     {
-                        var t = new TeamWithUserGeneratedGuid()
+                        var t = new TeamWithUserGeneratedGuidKey()
                         {
                             Id = Guid.NewGuid(),
                             Name = $"Team {j}"
@@ -67,13 +70,13 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                 }
 
 
-                db.BulkInsertAll(new BulkInsertRequest<CoachWithUserGeneratedGuid>
+                db.BulkInsertAll(new BulkInsertRequest<CoachWithUserGeneratedGuidKey>
                 {
                     Entities = coaches,
                     EnableRecursiveInsert = EnableRecursiveInsert.Yes
                 });
 
-                var actual = db.CoachWithUserGeneratedGuids
+                var actual = db.CoachesWithUserGeneratedGuids
                     .Include(c => c.Teams)
                     .ToArray();
 
@@ -90,26 +93,26 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         {
             using (var db = Factory.CreateDbContext())
             {
-                var team1 = new TeamWithUserGeneratedGuid()
+                var team1 = new TeamWithUserGeneratedGuidKey()
                 {
                     Id = Guid.NewGuid(),
                     Name = "Team #1",
                 };
 
-                db.BulkInsertAll(new BulkInsertRequest<TeamWithUserGeneratedGuid>
+                db.BulkInsertAll(new BulkInsertRequest<TeamWithUserGeneratedGuidKey>
                 {
                     Entities = new[] { team1 }.ToList()
                 });
 
 
-                Assert.AreEqual(1, db.TeamWithUserGeneratedGuids.Count());
+                Assert.AreEqual(1, db.TeamsWithUserGeneratedGuids.Count());
 
-                db.BulkInsertAll(new BulkInsertRequest<TeamWithUserGeneratedGuid>
+                db.BulkInsertAll(new BulkInsertRequest<TeamWithUserGeneratedGuidKey>
                 {
                     Entities = new[] { team1 }.ToList()
                 });
 
-                Assert.AreEqual(1, db.TeamWithUserGeneratedGuids.Count());
+                Assert.AreEqual(1, db.TeamsWithUserGeneratedGuids.Count());
 
             }
         }
@@ -119,25 +122,25 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
         {
             using (var db = Factory.CreateDbContext())
             {
-                var team1 = new TeamWithDbGeneratedGuid()
+                var team1 = new TeamWithDbGeneratedGuidKey()
                 {
                     Name = "Team #1",
                 };
 
-                db.BulkInsertAll(new BulkInsertRequest<TeamWithDbGeneratedGuid>
+                db.BulkInsertAll(new BulkInsertRequest<TeamWithDbGeneratedGuidKey>
                 {
                     Entities = new[] { team1 }.ToList()
                 });
 
 
-                Assert.AreEqual(1, db.TeamWithDbGeneratedGuids.Count());
+                Assert.AreEqual(1, db.TeamsWithDbGeneratedGuids.Count());
 
-                db.BulkInsertAll(new BulkInsertRequest<TeamWithDbGeneratedGuid>
+                db.BulkInsertAll(new BulkInsertRequest<TeamWithDbGeneratedGuidKey>
                 {
                     Entities = new[] { team1 }.ToList()
                 });
 
-                Assert.AreEqual(1, db.TeamWithDbGeneratedGuids.Count());
+                Assert.AreEqual(1, db.TeamsWithDbGeneratedGuids.Count());
 
             }
         }

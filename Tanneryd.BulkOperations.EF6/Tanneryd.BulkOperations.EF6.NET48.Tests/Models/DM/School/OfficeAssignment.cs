@@ -20,8 +20,8 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.School
 {
     public class OfficeAssignment
     {
-        // Specifying InstructorID as a primary 
-        public Int32 InstructorID { get; set; }
+        // Specifying InstructorId as a primary 
+        public Int32 InstructorId { get; set; }
 
         public string Location { get; set; }
 

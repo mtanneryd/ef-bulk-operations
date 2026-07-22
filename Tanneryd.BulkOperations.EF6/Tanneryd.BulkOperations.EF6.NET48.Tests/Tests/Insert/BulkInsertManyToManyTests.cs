@@ -164,8 +164,8 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
                     .Include(i => i.OfficeAssignment)
                     .Single();
 
-                instructor.InstructorID = 0;
-                instructor.OfficeAssignment.InstructorID = 0;
+                instructor.InstructorId = 0;
+                instructor.OfficeAssignment.InstructorId = 0;
 
                 var request = new BulkInsertRequest<Instructor>
                 {

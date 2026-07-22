@@ -21,7 +21,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Report
     public class Period
     {
         // Primary key
-        public int PeriodID { get; set; }
+        public int PeriodId { get; set; }
         public string Name { get; set; }
 
         public virtual ICollection<SummaryReportFROMTableASExtent> SummaryReports { get; set; }

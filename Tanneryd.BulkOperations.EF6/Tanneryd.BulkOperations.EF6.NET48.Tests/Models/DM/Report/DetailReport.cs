@@ -21,7 +21,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Report
     public class DetailReportWithFROM
     {
         // Primary key 
-        public int ReportID { get; set; }
+        public int ReportId { get; set; }
 
         public string Title { get; set; }
 
@@ -41,11 +41,11 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Report
         public decimal Amount { get; set; }
 
         // Foreign key 
-        public int PeriodID { get; set; }
+        public int PeriodId { get; set; }
         public virtual Period Period { get; set; }
 
         // Foreign key 
-        public int SummaryReportID { get; set; }
+        public int SummaryReportId { get; set; }
         public virtual SummaryReportFROMTableASExtent SummaryReport { get; set; }
     }
 }

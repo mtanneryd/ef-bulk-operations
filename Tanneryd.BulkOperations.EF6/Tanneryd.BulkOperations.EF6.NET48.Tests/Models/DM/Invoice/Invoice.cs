@@ -38,11 +38,11 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Invoice
     {
         public Journal()
         {
-            Invoices= new HashSet<InvoiceItem>();
+            InvoiceItems = new HashSet<InvoiceItem>();
         }
 
         public Guid Id { get; set; }
-        public ICollection<InvoiceItem> Invoices { get; set; }
+        public ICollection<InvoiceItem> InvoiceItems { get; set; }
     }
 
     public class BatchInvoice
@@ -66,7 +66,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Invoice
 
     public class InvoiceItem
     {
-        public int Id { get; set; }
+        public int PrimaryKey { get; set; }
         public Guid JournalId { get; set; }
         public Journal Journal { get; set; }
         public Guid InvoiceId { get; set; }

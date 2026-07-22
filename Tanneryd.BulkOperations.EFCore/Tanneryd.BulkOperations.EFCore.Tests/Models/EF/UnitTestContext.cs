@@ -7,6 +7,9 @@ using System;
 using System.Data.SqlTypes;
 using Tanneryd.BulkOperations.TestModels;
 
+using Tanneryd.BulkOperations.EFCore.Tests.Models.DM.Teams.UsingDbGeneratedGuidKeys;
+using Tanneryd.BulkOperations.EFCore.Tests.Models.DM.Teams.UsingUserGeneratedGuidKeys;
+
 namespace Tanneryd.BulkOperations.EFCore.Tests
 {
     public class UnitTestContext : DbContext
@@ -23,8 +26,8 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public DbSet<BatchInvoice> BatchInvoices { get; set; } // BatchInvoice
         public DbSet<BatchInvoiceItem> BatchInvoiceItems { get; set; } // BatchInvoiceItem
         public DbSet<Blog> Blogs { get; set; } // Blog
-        public DbSet<CoachWithDbGeneratedGuid> CoachWithDbGeneratedGuids { get; set; } // CoachWithDbGeneratedGuid
-        public DbSet<CoachWithUserGeneratedGuid> CoachWithUserGeneratedGuids { get; set; } // CoachWithUserGeneratedGuid
+        public DbSet<CoachWithDbGeneratedGuidKey> CoachesWithDbGeneratedGuids { get; set; } // CoachWithDbGeneratedGuidKey
+        public DbSet<CoachWithUserGeneratedGuidKey> CoachesWithUserGeneratedGuids { get; set; } // CoachWithUserGeneratedGuidKey
         public DbSet<Company> Companies { get; set; } // Company
         public DbSet<Composite> Composites { get; set; } // Composite
         public DbSet<Coordinate> Coordinates { get; set; } // Coordinate
@@ -46,16 +49,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
         public DbSet<Parity> Parities { get; set; } // Parity
         public DbSet<Contact> Contacts { get; set; } // Contact
         public DbSet<Person> People { get; set; } // Person
-        public DbSet<PlayerWithDbGeneratedGuid> PlayerWithDbGeneratedGuids { get; set; } // PlayerWithDbGeneratedGuid
-        public DbSet<PlayerWithUserGeneratedGuid> PlayerWithUserGeneratedGuids { get; set; } // PlayerWithUserGeneratedGuid
+        public DbSet<PlayerWithDbGeneratedGuidKey> PlayersWithDbGeneratedGuids { get; set; } // PlayerWithDbGeneratedGuid
+        public DbSet<PlayerWithUserGeneratedGuidKey> PlayersWithUserGeneratedGuids { get; set; } // PlayerWithUserGeneratedGuid
         public DbSet<Point> Points { get; set; } // Point
         public DbSet<Post> Posts { get; set; } // Post
         public DbSet<Price> Prices { get; set; } // Price
         public DbSet<Prime> Primes { get; set; } // Prime
         public DbSet<ReservedSqlKeyword> ReservedSqlKeywords { get; set; } // ReservedSqlKeyword
         public DbSet<SummaryReportFromTableAsExtent> SummaryReportFromTableAsExtents { get; set; } // SummaryReportFROMTableASExtent
-        public DbSet<TeamWithDbGeneratedGuid> TeamWithDbGeneratedGuids { get; set; } // TeamWithDbGeneratedGuid
-        public DbSet<TeamWithUserGeneratedGuid> TeamWithUserGeneratedGuids { get; set; } // TeamWithUserGeneratedGuid
+        public DbSet<TeamWithDbGeneratedGuidKey> TeamsWithDbGeneratedGuids { get; set; } // TeamWithDbGeneratedGuidKey
+        public DbSet<TeamWithUserGeneratedGuidKey> TeamsWithUserGeneratedGuids { get; set; } // TeamWithUserGeneratedGuidKey
         public DbSet<Visitor> Visitors { get; set; } // Visitor
         public DbSet<ConcurrencyItem> ConcurrencyItems { get; set; }
 
@@ -75,8 +78,8 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
             modelBuilder.ApplyConfiguration(new BatchInvoiceConfiguration());
             modelBuilder.ApplyConfiguration(new BatchInvoiceItemConfiguration());
             modelBuilder.ApplyConfiguration(new BlogConfiguration());
-            modelBuilder.ApplyConfiguration(new CoachWithDbGeneratedGuidConfiguration());
-            modelBuilder.ApplyConfiguration(new CoachWithUserGeneratedGuidConfiguration());
+            modelBuilder.ApplyConfiguration(new CoachWithDbGeneratedGuidKeyConfiguration());
+            modelBuilder.ApplyConfiguration(new CoachWithUserGeneratedGuidKeyConfiguration());
             modelBuilder.ApplyConfiguration(new CompanyConfiguration());
             modelBuilder.ApplyConfiguration(new CompositeConfiguration());
             modelBuilder.ApplyConfiguration(new CoordinateConfiguration());
@@ -98,16 +101,16 @@ namespace Tanneryd.BulkOperations.EFCore.Tests
             modelBuilder.ApplyConfiguration(new ParityConfiguration());
             modelBuilder.ApplyConfiguration(new ContactConfiguration());
             modelBuilder.ApplyConfiguration(new PersonConfiguration());
-            modelBuilder.ApplyConfiguration(new PlayerWithDbGeneratedGuidConfiguration());
-            modelBuilder.ApplyConfiguration(new PlayerWithUserGeneratedGuidConfiguration());
+            modelBuilder.ApplyConfiguration(new PlayerWithDbGeneratedGuidKeyConfiguration());
+            modelBuilder.ApplyConfiguration(new PlayerWithUserGeneratedGuidKeyConfiguration());
             modelBuilder.ApplyConfiguration(new PointConfiguration());
             modelBuilder.ApplyConfiguration(new PostConfiguration());
             modelBuilder.ApplyConfiguration(new PriceConfiguration());
             modelBuilder.ApplyConfiguration(new PrimeConfiguration());
             modelBuilder.ApplyConfiguration(new ReservedSqlKeywordConfiguration());
             modelBuilder.ApplyConfiguration(new SummaryReportFromTableAsExtentConfiguration());
-            modelBuilder.ApplyConfiguration(new TeamWithDbGeneratedGuidConfiguration());
-            modelBuilder.ApplyConfiguration(new TeamWithUserGeneratedGuidConfiguration());
+            modelBuilder.ApplyConfiguration(new TeamWithDbGeneratedGuidKeyConfiguration());
+            modelBuilder.ApplyConfiguration(new TeamWithUserGeneratedGuidKeyConfiguration());
             modelBuilder.ApplyConfiguration(new VisitorConfiguration());
             modelBuilder.ApplyConfiguration(new ConcurrencyItemConfiguration());
         }

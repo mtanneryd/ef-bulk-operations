@@ -20,6 +20,6 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Companies
         public long Id { get; set; }
         public string Name { get; set; }
         public long EmployerId { get; set; }
-        public Company Employer { get; set; }
+        public Company Company { get; set; }
     }
 }

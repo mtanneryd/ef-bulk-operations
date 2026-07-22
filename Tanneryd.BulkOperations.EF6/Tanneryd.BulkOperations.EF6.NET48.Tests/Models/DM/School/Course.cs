@@ -25,13 +25,13 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.School
             this.Instructors = new HashSet<Instructor>();
         }
         // Primary key 
-        public int CourseID { get; set; }
+        public int CourseId { get; set; }
 
         public string Title { get; set; }
         public int Credits { get; set; }
 
         // Foreign key 
-        public int DepartmentID { get; set; }
+        public int DepartmentId { get; set; }
         public Department Department { get; set; }
 
         public ICollection<Instructor> Instructors { get; private set; }

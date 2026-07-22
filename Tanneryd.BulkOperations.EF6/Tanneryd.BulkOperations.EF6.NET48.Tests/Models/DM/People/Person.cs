@@ -23,7 +23,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.People
     {
         public Person()
         {
-            Children = new HashSet<Person>();
+            People = new HashSet<Person>();
         }
 
         public long Id { get; set; }
@@ -40,6 +40,6 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.People
         // default value.
         public int? EmployeeNumber { get; set; }
 
-        public ICollection<Person> Children { get; set; }
+        public ICollection<Person> People { get; set; }
     }
 }

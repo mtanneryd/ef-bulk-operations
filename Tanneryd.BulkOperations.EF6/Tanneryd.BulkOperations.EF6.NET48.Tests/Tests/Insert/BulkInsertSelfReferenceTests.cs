@@ -53,19 +53,19 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
             Exception ex = null;
             try
             {
-                var employer = new Company
+                var company = new Company
                 {
                     Name = "World Inc",
                 };
                 var john = new Employee
                 {
                     Name = "John",
-                    Employer = employer
+                    Company = company
                 };
                 var adam = new Employee
                 {
                     Name = "Adam",
-                    Employer = employer
+                    Company = company
                 };
                 using var db = new UnitTestContext();
                 var request = new BulkInsertRequest<Employee>
@@ -101,7 +101,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
                 Name = "Global Corporation Inc",
             };
             corporateGroup.ParentCompany = corporateGroup;
-            var employer = new Company
+            var company = new Company
             {
                 Name = "Subsidiary Corporation Inc",
                 ParentCompany = corporateGroup
@@ -110,12 +110,12 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
             var john = new Employee
             {
                 Name = "John",
-                Employer = employer
+                Company = company
             };
             var adam = new Employee
             {
                 Name = "Adam",
-                Employer = employer
+                Company = company
             };
             using var db = new UnitTestContext();
             var request = new BulkInsertRequest<Employee>
@@ -127,18 +127,18 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
             db.BulkInsertAll(request);
 
             var actual = db.Employees
-                .Include(e => e.Employer.ParentCompany)
+                .Include(e => e.Company.ParentCompany)
                 .OrderBy(e => e.Name).ToArray();
             Assert.AreEqual("Adam", actual[0].Name);
-            Assert.AreEqual("Subsidiary Corporation Inc", actual[0].Employer.Name);
-            Assert.AreSame(actual[0].Employer, actual[1].Employer);
+            Assert.AreEqual("Subsidiary Corporation Inc", actual[0].Company.Name);
+            Assert.AreSame(actual[0].Company, actual[1].Company);
 
             Assert.AreEqual("John", actual[1].Name);
-            Assert.AreEqual("Subsidiary Corporation Inc", actual[1].Employer.Name);
+            Assert.AreEqual("Subsidiary Corporation Inc", actual[1].Company.Name);
 
-            Assert.AreEqual("Global Corporation Inc", actual[0].Employer.ParentCompany.Name);
-            Assert.AreEqual("Global Corporation Inc", actual[1].Employer.ParentCompany.Name);
-            Assert.AreSame(actual[0].Employer.ParentCompany, actual[1].Employer.ParentCompany);
+            Assert.AreEqual("Global Corporation Inc", actual[0].Company.ParentCompany.Name);
+            Assert.AreEqual("Global Corporation Inc", actual[1].Company.ParentCompany.Name);
+            Assert.AreSame(actual[0].Company.ParentCompany, actual[1].Company.ParentCompany);
         }
 
         [TestMethod]
@@ -148,17 +148,17 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
             {
                 Name = "John",
             };
-            var employer = new Company
+            var company = new Company
             {
                 Name = "World Inc",
             };
-            employer.ParentCompany = employer;
-            employer.Employees.Add(employee);
+            company.ParentCompany = company;
+            company.Employees.Add(employee);
 
             using var db = new UnitTestContext();
             var request = new BulkInsertRequest<Company>
             {
-                Entities = [employer],
+                Entities = [company],
                 EnableRecursiveInsert = EnableRecursiveInsert.Yes,
                 AllowNotNullSelfReferences = AllowNotNullSelfReferences.Yes
             };
@@ -178,12 +178,12 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
             {
                 Name = "John",
             };
-            var employer = new Company
+            var company = new Company
             {
                 Name = "World Inc",
             };
-            employer.ParentCompany = employer;
-            employee.Employer = employer;
+            company.ParentCompany = company;
+            employee.Company = company;
 
             using var db = new UnitTestContext();
             var request = new BulkInsertRequest<Employee>
@@ -243,7 +243,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
                 LastName = "Andersson",
                 BirthDate = new DateTime(1980, 1, 1),
             };
-            mother.Children.Add(child);
+            mother.People.Add(child);
 
             using var db = new UnitTestContext();
             var request = new BulkInsertRequest<Person>

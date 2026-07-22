@@ -23,7 +23,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Companies
         public Company()
         {
             Employees = new HashSet<Employee>();
-            Subsidiaries = new HashSet<Company>();
+            Companies = new HashSet<Company>();
         }
         public long Id { get; set; }
         public string Name { get; set; }
@@ -31,6 +31,6 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Companies
         public Company ParentCompany { get; set; }
 
         public ICollection<Employee> Employees { get; set; }
-        public ICollection<Company> Subsidiaries { get; set; }
+        public ICollection<Company> Companies { get; set; }
     }
 }

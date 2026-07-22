@@ -132,7 +132,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
                 .Property(p => p.Name)
                 .IsRequired();
             modelBuilder.Entity<Blog>()
-                .HasMany(b => b.BlogPosts)
+                .HasMany(b => b.Posts)
                 .WithRequired(p => p.Blog)
                 .HasForeignKey(p => p.BlogId);
 
@@ -146,7 +146,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
                 .Property(p => p.Text)
                 .IsRequired();
             modelBuilder.Entity<Post>()
-                .HasMany(p => p.PostKeywords)
+                .HasMany(p => p.Keywords)
                 .WithRequired(k => k.Post)
                 .HasForeignKey(k => k.PostId);
 
@@ -194,10 +194,10 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
                 .IsRequired();
             modelBuilder.Entity<Company>()
                 .HasMany(p => p.Employees)
-                .WithRequired(p => p.Employer)
+                .WithRequired(p => p.Company)
                 .HasForeignKey(p => p.EmployerId);
             modelBuilder.Entity<Company>()
-                .HasMany(p => p.Subsidiaries)
+                .HasMany(p => p.Companies)
                 .WithRequired(p => p.ParentCompany)
                 .HasForeignKey(p => p.ParentCompanyId);
 
@@ -224,12 +224,12 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
 
             modelBuilder.Entity<InvoiceItem>()
                 .ToTable("InvoiceItem")
-                .HasKey(p => p.Id);
+                .HasKey(p => p.PrimaryKey);
             modelBuilder.Entity<InvoiceItem>()
-                .Property(p => p.Id)
+                .Property(p => p.PrimaryKey)
                 .HasColumnName("PrimaryKey");
             modelBuilder.Entity<InvoiceItem>()
-                .Property(p => p.Id)
+                .Property(p => p.PrimaryKey)
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
 
             modelBuilder.Entity<Invoice>()
@@ -268,7 +268,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
                 .Property(p => p.Id)
                 .HasColumnName("PrimaryKey");
             modelBuilder.Entity<Journal>()
-                .HasMany(p => p.Invoices)
+                .HasMany(p => p.InvoiceItems)
                 .WithRequired(k => k.Journal)
                 .HasForeignKey(k => k.JournalId);
 
@@ -451,7 +451,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
                 .IsRequired();
 
             modelBuilder.Entity<Person>()
-                .HasMany(p => p.Children)
+                .HasMany(p => p.People)
                 .WithOptional(p => p.Mother)
                 .HasForeignKey(p => p.MotherId);
 
@@ -504,13 +504,16 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
 
             modelBuilder.Entity<Period>()
                 .ToTable("Period", "Some.Complex_Schema Name")
-                .HasKey(p => p.PeriodID);
+                .HasKey(p => p.PeriodId);
+            modelBuilder.Entity<Period>()
+                .Property(e => e.PeriodId)
+                .HasColumnName("PeriodID");
             modelBuilder.Entity<Period>()
                 .Property(e => e.Name);
             modelBuilder.Entity<Period>()
                 .HasMany(e => e.SummaryReports)
                 .WithRequired(e => e.Period)
-                .HasForeignKey(e => e.PeriodID);
+                .HasForeignKey(e => e.PeriodId);
 
             #endregion
 
@@ -518,7 +521,13 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
 
             modelBuilder.Entity<SummaryReportFROMTableASExtent>()
                 .ToTable("SummaryReportFROMTableASExtent")
-                .HasKey(p => p.ReportID);
+                .HasKey(p => p.ReportId);
+            modelBuilder.Entity<SummaryReportFROMTableASExtent>()
+                .Property(e => e.ReportId)
+                .HasColumnName("ReportID");
+            modelBuilder.Entity<SummaryReportFROMTableASExtent>()
+                .Property(e => e.PeriodId)
+                .HasColumnName("PeriodID");
             modelBuilder.Entity<SummaryReportFROMTableASExtent>()
                 .Property(e => e.Title);
             modelBuilder.Entity<SummaryReportFROMTableASExtent>()
@@ -526,7 +535,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
             modelBuilder.Entity<SummaryReportFROMTableASExtent>()
                 .HasRequired(t => t.Period)
                 .WithMany(t => t.SummaryReports)
-                .HasForeignKey(e => e.PeriodID);
+                .HasForeignKey(e => e.PeriodId);
 
             #endregion
 
@@ -534,7 +543,16 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
 
             modelBuilder.Entity<DetailReportWithFROM>()
                 .ToTable("SELECT WORSE FROM NAMES AS Extent1", "In # Some.Complex_Schema @Name")
-                .HasKey(p => p.ReportID);
+                .HasKey(p => p.ReportId);
+            modelBuilder.Entity<DetailReportWithFROM>()
+                .Property(e => e.ReportId)
+                .HasColumnName("ReportID");
+            modelBuilder.Entity<DetailReportWithFROM>()
+                .Property(e => e.PeriodId)
+                .HasColumnName("PeriodID");
+            modelBuilder.Entity<DetailReportWithFROM>()
+                .Property(e => e.SummaryReportId)
+                .HasColumnName("SummaryReportID");
             modelBuilder.Entity<DetailReportWithFROM>()
                 .Property(e => e.Title);
             modelBuilder.Entity<DetailReportWithFROM>()
@@ -548,11 +566,11 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
             modelBuilder.Entity<DetailReportWithFROM>()
                 .HasRequired(t => t.Period)
                 .WithMany(t => t.DetailReports)
-                .HasForeignKey(e => e.PeriodID);
+                .HasForeignKey(e => e.PeriodId);
             modelBuilder.Entity<DetailReportWithFROM>()
                 .HasRequired(t => t.SummaryReport)
                 .WithMany()
-                .HasForeignKey(e => e.SummaryReportID)
+                .HasForeignKey(e => e.SummaryReportId)
                 .WillCascadeOnDelete(false);
 
             #endregion
@@ -565,7 +583,10 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
 
             modelBuilder.Entity<Department>()
                 .ToTable("Department")
-                .HasKey(p => p.DepartmentID);
+                .HasKey(p => p.DepartmentId);
+            modelBuilder.Entity<Department>()
+                .Property(e => e.DepartmentId)
+                .HasColumnName("DepartmentID");
             modelBuilder.Entity<Department>()
                 .Property(e => e.Name);
             modelBuilder.Entity<Department>()
@@ -576,7 +597,7 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
             modelBuilder.Entity<Department>()
                 .HasMany(e => e.Courses)
                 .WithRequired(e => e.Department)
-                .HasForeignKey(e => e.DepartmentID);
+                .HasForeignKey(e => e.DepartmentId);
 
             #endregion
 
@@ -584,7 +605,13 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
 
             modelBuilder.Entity<Course>()
                 .ToTable("Course")
-                .HasKey(p => p.CourseID);
+                .HasKey(p => p.CourseId);
+            modelBuilder.Entity<Course>()
+                .Property(e => e.CourseId)
+                .HasColumnName("CourseID");
+            modelBuilder.Entity<Course>()
+                .Property(e => e.DepartmentId)
+                .HasColumnName("DepartmentID");
             modelBuilder.Entity<Course>()
                 .Property(e => e.Title);
             modelBuilder.Entity<Course>()
@@ -605,7 +632,10 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
 
             modelBuilder.Entity<Instructor>()
                 .ToTable("Instructor")
-                .HasKey(p => p.InstructorID);
+                .HasKey(p => p.InstructorId);
+            modelBuilder.Entity<Instructor>()
+                .Property(e => e.InstructorId)
+                .HasColumnName("InstructorID");
             modelBuilder.Entity<Instructor>()
                 .Property(e => e.FirstName);
             modelBuilder.Entity<Instructor>()
@@ -625,7 +655,10 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF
 
             modelBuilder.Entity<OfficeAssignment>()
                 .ToTable("OfficeAssignment")
-                .HasKey(p => p.InstructorID);
+                .HasKey(p => p.InstructorId);
+            modelBuilder.Entity<OfficeAssignment>()
+                .Property(e => e.InstructorId)
+                .HasColumnName("InstructorID");
             modelBuilder.Entity<OfficeAssignment>()
                 .Property(e => e.Location);
             modelBuilder.Entity<OfficeAssignment>()

@@ -154,15 +154,15 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Update
                 var firstPost = new Post
                 {
                     Text = "My first blogpost.",
-                    PostKeywords = new List<Keyword>() { new Keyword { Text = "first" } }
+                    Keywords = new List<Keyword>() { new Keyword { Text = "first" } }
                 };
                 var secondPost = new Post
                 {
                     Text = "My second blogpost.",
-                    PostKeywords = new List<Keyword>() { new Keyword { Text = "second" } }
+                    Keywords = new List<Keyword>() { new Keyword { Text = "second" } }
                 };
-                blog.BlogPosts.Add(firstPost);
-                blog.BlogPosts.Add(secondPost);
+                blog.Posts.Add(firstPost);
+                blog.Posts.Add(secondPost);
                 var req = new BulkInsertRequest<Blog>
                 {
                     Entities = new[] { blog }.ToList(),
