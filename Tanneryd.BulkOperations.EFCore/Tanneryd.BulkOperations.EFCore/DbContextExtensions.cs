@@ -45,8 +45,8 @@ namespace Tanneryd.BulkOperations.EFCore
         };
 
         private static readonly object _mutex = new object();
-        private static readonly Dictionary<Type, MappingsExtractor> _mappingExtractorsByContextType =
-            new Dictionary<Type, MappingsExtractor>();
+        private static readonly Dictionary<IModel, MappingsExtractor> _mappingExtractorsByModel =
+            new Dictionary<IModel, MappingsExtractor>();
 
         #region Public API
 

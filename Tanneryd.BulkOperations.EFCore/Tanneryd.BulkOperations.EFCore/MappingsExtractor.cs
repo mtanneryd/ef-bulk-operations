@@ -34,8 +34,8 @@ namespace Tanneryd.BulkOperations.EFCore
         /// <summary>
         /// Unwraps proxy / unmapped subclass CLR types to the most-derived
         /// type present in the mappings cache. Does not touch <see cref="_ctx"/>
-        /// because extractors are cached by context CLR type and that instance
-        /// may already be disposed.
+        /// because extractors are cached by <see cref="IModel"/> and that context
+        /// instance may already be disposed.
         /// </summary>
         private Type ResolveMappedClrType(Type type)
         {

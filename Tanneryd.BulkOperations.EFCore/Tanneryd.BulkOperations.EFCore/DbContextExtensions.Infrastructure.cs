@@ -5,6 +5,7 @@
 
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -20,18 +21,20 @@ namespace Tanneryd.BulkOperations.EFCore
     public static partial class DbContextExtensions
     {
         /// <summary>
-        /// Returns a MappingsExtractor for the DbContext CLR type. Extractors are
-        /// cached statically; the lock guards concurrent first-use initialization.
+        /// Returns a MappingsExtractor for the context's <see cref="IModel"/>.
+        /// Cached by model identity (not context CLR type) so the same DbContext
+        /// class with different models does not reuse stale mappings. The lock
+        /// guards concurrent first-use initialization.
         /// </summary>
         private static MappingsExtractor GetMappingExtractor(DbContext ctx)
         {
-            var contextType = ctx.GetType();
+            var model = ctx.Model;
             lock (_mutex)
             {
-                if (!_mappingExtractorsByContextType.TryGetValue(contextType, out var extractor))
+                if (!_mappingExtractorsByModel.TryGetValue(model, out var extractor))
                 {
                     extractor = new MappingsExtractor(ctx);
-                    _mappingExtractorsByContextType[contextType] = extractor;
+                    _mappingExtractorsByModel[model] = extractor;
                 }
 
                 return extractor;
