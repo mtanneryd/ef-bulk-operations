@@ -50,9 +50,6 @@ namespace Tanneryd.BulkOperations.Common.Sql
         public Task WriteToServerAsync(IDataReader reader, CancellationToken cancellationToken = default) =>
             _bulkCopy.WriteToServerAsync(reader, cancellationToken);
 
-        public void WriteToServer(IDataReader reader) =>
-            _bulkCopy.WriteToServer(reader);
-
         public void Dispose()
         {
             if (_disposed)

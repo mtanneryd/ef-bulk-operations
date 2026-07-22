@@ -32,6 +32,15 @@ using IColumnMapping = Microsoft.EntityFrameworkCore.Metadata.IColumnMapping;
 
 namespace Tanneryd.BulkOperations.EFCore
 {
+    /// <summary>
+    /// SQL Server bulk operation extension methods for EF Core <see cref="DbContext"/>.
+    /// </summary>
+    /// <remarks>
+    /// Prefer the <c>*Async</c> APIs from async call sites. Synchronous methods are
+    /// intentional thin wrappers that block with
+    /// <c>ConfigureAwait(false).GetAwaiter().GetResult()</c>; avoid nesting further
+    /// sync-over-async inside those paths.
+    /// </remarks>
     public static partial class DbContextExtensions
     {
         private static readonly HashSet<Type> IntegerTypes = new HashSet<Type>

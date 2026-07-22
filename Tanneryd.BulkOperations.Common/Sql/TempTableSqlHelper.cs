@@ -7,16 +7,10 @@ namespace Tanneryd.BulkOperations.Common.Sql
 {
     /// <summary>
     /// Shared SQL helpers for session-scoped temp tables and IDENTITY_INSERT.
-    /// Sync methods block with GetAwaiter().GetResult() for the legacy sync
-    /// surface; prefer the Async variants from async call paths.
+    /// Async-only so bulk paths do not nest sync-over-async on these helpers.
     /// </summary>
     internal static class TempTableSqlHelper
     {
-        public static void Drop(SqlConnection connection, SqlTransaction transaction, string tempTableName)
-        {
-            DropAsync(connection, transaction, tempTableName).GetAwaiter().GetResult();
-        }
-
         public static async Task DropAsync(
             SqlConnection connection,
             SqlTransaction transaction,
@@ -32,11 +26,6 @@ namespace Tanneryd.BulkOperations.Common.Sql
         /// Required when bulk-copying explicit identity values into a table
         /// (or temp table) that inherits identity metadata from the source.
         /// </summary>
-        public static void EnableIdentityInsert(string tableName, SqlConnection connection, SqlTransaction transaction)
-        {
-            EnableIdentityInsertAsync(tableName, connection, transaction).GetAwaiter().GetResult();
-        }
-
         public static async Task EnableIdentityInsertAsync(
             string tableName,
             SqlConnection connection,
@@ -46,11 +35,6 @@ namespace Tanneryd.BulkOperations.Common.Sql
             var query = $@"SET IDENTITY_INSERT {tableName} ON";
             await ExecuteNonQueryAsync(query, connection, transaction, cancellationToken).ConfigureAwait(false);
             IdentityInsertTracker.NotifyEnabled();
-        }
-
-        public static void DisableIdentityInsert(string tableName, SqlConnection connection, SqlTransaction transaction)
-        {
-            DisableIdentityInsertAsync(tableName, connection, transaction).GetAwaiter().GetResult();
         }
 
         public static async Task DisableIdentityInsertAsync(

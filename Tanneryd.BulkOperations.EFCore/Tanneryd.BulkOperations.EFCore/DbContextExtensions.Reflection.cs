@@ -111,6 +111,14 @@ namespace Tanneryd.BulkOperations.EFCore
             return GetSqlConnectionAsync(ctx).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
+        /// <summary>
+        /// Returns the underlying Microsoft.Data.SqlClient connection for the context.
+        /// </summary>
+        /// <remarks>
+        /// Prefer this async overload from async call sites. The sync
+        /// <see cref="GetSqlConnection"/> method blocks with
+        /// ConfigureAwait(false).GetAwaiter().GetResult().
+        /// </remarks>
         public static async Task<SqlConnection> GetSqlConnectionAsync(
             this DbContext ctx,
             CancellationToken cancellationToken = default)

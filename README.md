@@ -308,8 +308,9 @@ await ctx.UpdateStatisticsAsync<Number>(TimeSpan.FromMinutes(5), cancellationTok
 ### Async notes
 
 - Async methods await SQL Server I/O (`OpenAsync`, `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, `WriteToServerAsync`) and accept an optional `CancellationToken`.
-- Sync APIs remain supported and delegate to the async implementations.
-- From ASP.NET Framework sync pages/actions, sync APIs are fine (deadlock-safe with this library). From already-async code, prefer `*Async`.
+- Sync APIs remain supported as thin wrappers that block with `ConfigureAwait(false).GetAwaiter().GetResult()`.
+- From ASP.NET Framework sync pages/actions, sync APIs are fine (deadlock-safe with this library). From already-async code, prefer `*Async` so you do not block a thread that holds a sync context or request resources.
+- Internal helpers used on bulk hot paths are async-only; they do not nest additional sync-over-async under the public sync wrappers.
 
 ---
 
