@@ -81,9 +81,11 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
         /// a concurrency exception after the temp table exists (empty
         /// UpdatedPropertyNames is rejected before FillTempTable, so it cannot
         /// exercise this path).
+        /// Owned concurrency transaction: dispose first, then drop with the
+        /// caller transaction only (null here)—never the disposed owned txn.
         /// </summary>
         [TestMethod]
-        public void BulkUpdate_ShouldDropTempTable_WhenUpdateFails()
+        public void BulkUpdate_WithOwnedConcurrencyTransaction_ShouldDropTempTable_OnConcurrencyFailure()
         {
             using (var db1 = new UnitTestContext())
             using (var db2 = new UnitTestContext())
@@ -101,7 +103,8 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
 
                 stale.Name = "Bulk overwrite";
 
-                using (var scope = TempTableTracker.BeginScope())
+                using (var txScope = SqlTransactionTracker.BeginScope())
+                using (var tempScope = TempTableTracker.BeginScope())
                 {
                     Assert.ThrowsExactly<DbUpdateConcurrencyException>(() =>
                         db1.BulkUpdateAll(new BulkUpdateRequest
@@ -111,11 +114,57 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
                             UpdatedPropertyNames = new[] { nameof(ConcurrencyItem.Name) },
                         }));
 
-                    Assert.IsTrue(scope.Created > 0, "Expected a temp table to be created before the UPDATE failed.");
+                    Assert.IsTrue(txScope.Created > 0, "Expected an owned concurrency transaction.");
                     Assert.AreEqual(
-                        scope.Created,
-                        scope.Dropped,
-                        $"Expected temp table drop in finally after failure. Created={scope.Created}, Dropped={scope.Dropped}.");
+                        txScope.Created,
+                        txScope.Disposed,
+                        $"Owned transaction must be disposed before/with cleanup. Created={txScope.Created}, Disposed={txScope.Disposed}.");
+                    Assert.IsTrue(tempScope.Created > 0, "Expected a temp table to be created before the UPDATE failed.");
+                    Assert.AreEqual(
+                        tempScope.Created,
+                        tempScope.Dropped,
+                        $"Temp must be dropped after owned transaction dispose (caller txn only). Created={tempScope.Created}, Dropped={tempScope.Dropped}.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Success path with an owned concurrency transaction: staging temp is
+        /// created inside that txn; after Commit+Dispose, drop must still succeed
+        /// using only request.Transaction (null)—not the disposed owned txn.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_WithOwnedConcurrencyTransaction_ShouldDropTempTable_OnSuccess()
+        {
+            using (var db = new UnitTestContext())
+            {
+                var item = new ConcurrencyItem { Name = "Original" };
+                db.ConcurrencyItems.Add(item);
+                db.SaveChanges();
+
+                var current = db.ConcurrencyItems.Single(x => x.Id == item.Id);
+                current.Name = "Updated via bulk";
+
+                using (var txScope = SqlTransactionTracker.BeginScope())
+                using (var tempScope = TempTableTracker.BeginScope())
+                {
+                    db.BulkUpdateAll(new BulkUpdateRequest
+                    {
+                        Entities = new object[] { current },
+                        KeyPropertyNames = new[] { nameof(ConcurrencyItem.Id) },
+                        UpdatedPropertyNames = new[] { nameof(ConcurrencyItem.Name) },
+                    });
+
+                    Assert.IsTrue(txScope.Created > 0, "Expected an owned concurrency transaction.");
+                    Assert.AreEqual(
+                        txScope.Created,
+                        txScope.Disposed,
+                        $"Owned transaction must be disposed before/with cleanup. Created={txScope.Created}, Disposed={txScope.Disposed}.");
+                    Assert.IsTrue(tempScope.Created > 0, "Expected a staging temp table for BulkUpdate.");
+                    Assert.AreEqual(
+                        tempScope.Created,
+                        tempScope.Dropped,
+                        $"Temp must be dropped after owned transaction dispose (caller txn only). Created={tempScope.Created}, Dropped={tempScope.Dropped}.");
                 }
             }
         }

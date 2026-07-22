@@ -34,7 +34,8 @@ namespace Tanneryd.BulkOperations.EF6
             var rowsAffected = 0;
 
             var entities = request.Entities;
-            var transaction = request.Transaction;
+            var callerTransaction = request.Transaction;
+            var transaction = callerTransaction;
 
             Type t = request.Entities[0].GetType();
             var mappings = MappingExtractor.GetMappings(ctx, t);
@@ -188,13 +189,16 @@ namespace Tanneryd.BulkOperations.EF6
                 }
                 finally
                 {
+                    // Dispose owned concurrency txn first. Drop with the caller
+                    // transaction only (null when we owned it)—never a disposed
+                    // SqlTransaction.
                     if (ownedTransaction != null)
                     {
                         ownedTransaction.Dispose();
                         SqlTransactionTracker.NotifyDisposed();
                     }
                     if (tempTableName != null)
-                        await DropTempTableAsync(conn, request.Transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
+                        await DropTempTableAsync(conn, callerTransaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
                 }
             }
 
