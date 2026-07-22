@@ -978,6 +978,14 @@ namespace Tanneryd.BulkOperations.EFCore
                     var complexPropertyNames = mappings.ComplexPropertyNames;
                     if (complexPropertyNames.Any(n => n == property.Name))
                     {
+                        if (val == null)
+                        {
+                            throw new ArgumentException(
+                                $"Complex property '{property.Name}' on type '{t.Name}' is null. " +
+                                "Bulk insert requires complex properties to be non-null so nested columns can be flattened.",
+                                property.Name);
+                        }
+
                         Flatten(flatEntity, val, null);
                     }
                     else
@@ -997,6 +1005,14 @@ namespace Tanneryd.BulkOperations.EFCore
                     }
                     else
                     {
+                        if (val == null)
+                        {
+                            throw new ArgumentException(
+                                $"Complex property '{property.Name}' is null. " +
+                                "Bulk insert requires nested complex properties to be non-null so columns can be flattened.",
+                                property.Name);
+                        }
+
                         Flatten(flatEntity, val, null);
                     }
                 }
