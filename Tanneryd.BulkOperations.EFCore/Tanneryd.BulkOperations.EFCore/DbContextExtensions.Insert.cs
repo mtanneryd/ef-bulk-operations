@@ -490,7 +490,7 @@ namespace Tanneryd.BulkOperations.EFCore
             }
 
             // Ignore all properties that we have no mappings for.
-            var properties = GetProperties(entities[0])
+            var properties = GetProperties(entities)
                 .Where(p => columnMappings.ContainsKey(p.Name))
                 .ToArray();
 
@@ -1126,7 +1126,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     identityInsertEnabled = true;
                 }
 
-                var allProperties = GetProperties(entities[0]);
+                var allProperties = GetProperties(entities);
                 //
                 // Select the primary key clr properties.
                 // For normal entities EntityProperty.Name matches the CLR property.

@@ -30,21 +30,50 @@ namespace Tanneryd.BulkOperations.EF6
             return bulkProperties.Cast<BulkPropertyInfo>().ToArray();
         }
 
+        /// <summary>
+        /// Builds the bulk-copy property list for a batch. For <see cref="ExpandoObject"/>
+        /// rows, unions keys across all entities and takes each property's CLR type from
+        /// the first non-null value so a null on entities[0] does not drop the column.
+        /// </summary>
+        private static BulkPropertyInfo[] GetProperties(IList entities)
+        {
+            if (entities == null || entities.Count == 0)
+                return Array.Empty<BulkPropertyInfo>();
+
+            if (!(entities[0] is ExpandoObject))
+                return GetProperties(entities[0]);
+
+            var typeByName = new Dictionary<string, Type>(StringComparer.Ordinal);
+            foreach (var entity in entities)
+            {
+                var dict = (IDictionary<string, object>)(ExpandoObject)entity;
+                foreach (var kvp in dict)
+                {
+                    if (kvp.Value == null || typeByName.ContainsKey(kvp.Key))
+                        continue;
+                    typeByName[kvp.Key] = kvp.Value.GetType();
+                }
+            }
+
+            return typeByName
+                .Select(kvp => (BulkPropertyInfo)new ExpandoBulkPropertyInfo
+                {
+                    Name = kvp.Key,
+                    Type = kvp.Value
+                })
+                .ToArray();
+        }
+
         private static BulkPropertyInfo[] GetProperties(object o)
         {
             if (o is ExpandoObject)
             {
+                // Prefer GetProperties(IList) for batches. Single-row path still
+                // skips nulls (no type to infer); callers that need null columns
+                // must supply a row with a non-null sample or use the IList overload.
                 var props = new List<ExpandoBulkPropertyInfo>();
                 var dict = (IDictionary<string, object>)o;
 
-                // Since we cannot get the type for expando properties
-                // with null values we skip them. Doing so is safe since
-                // we are not really concerned with storing null values
-                // in table columns. They tend to store themselves just,
-                // fine. If we have a null value for a non-null column
-                // we have a problem but then the problem is that we have
-                // a null value in our expando object, not that we skip
-                // it here.
                 foreach (var kvp in dict.Where(kvp => kvp.Value != null))
                 {
                     props.Add(new ExpandoBulkPropertyInfo
@@ -123,7 +152,9 @@ namespace Tanneryd.BulkOperations.EF6
         private static dynamic GetProperty(string propertyName, ExpandoObject instance)
         {
             var dict = (IDictionary<string, object>)instance;
-            return dict[propertyName];
+            if (!dict.TryGetValue(propertyName, out object value) || value == null)
+                return DBNull.Value;
+            return value;
         }
 
         private static dynamic GetProperty(PropertyInfo property, object instance, object def = null)
