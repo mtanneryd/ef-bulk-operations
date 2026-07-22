@@ -38,7 +38,7 @@ namespace Tanneryd.BulkOperations.EF6
             var objectContext = ((IObjectContextAdapter)ctx).ObjectContext;
             var workspace = objectContext.MetadataWorkspace;
             var containerName = objectContext.DefaultContainerName;
-            t = ObjectContext.GetObjectType(t);
+            t = ResolveMappedClrType(ctx, t);
             var entityName = t.Name;
 
             // If we are dealing with table inheritance we need the base type name as well.
@@ -318,8 +318,47 @@ namespace Tanneryd.BulkOperations.EF6
             }
         }
 
+        /// <summary>
+        /// Unwraps EF dynamic proxies and unmapped subclasses to the most-derived
+        /// CLR type that participates in the EF model (EntitySet / TPH mapping).
+        /// Required so <see cref="DbContext.Set(Type)"/> and FK name matching work
+        /// for proxy-like runtime types.
+        /// </summary>
+        private static Type ResolveMappedClrType(DbContext ctx, Type type)
+        {
+            type = ObjectContext.GetObjectType(type);
+
+            var objectContext = ((IObjectContextAdapter)ctx).ObjectContext;
+            var workspace = objectContext.MetadataWorkspace;
+            var containerName = objectContext.DefaultContainerName;
+            var storageMapping =
+                (EntityContainerMapping)workspace.GetItem<GlobalItem>(containerName, DataSpace.CSSpace);
+
+            var mappedTypeNames = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var entitySetMap in storageMapping.EntitySetMappings)
+            {
+                mappedTypeNames.Add(entitySetMap.EntitySet.ElementType.Name);
+                foreach (var typeMapping in entitySetMap.EntityTypeMappings)
+                {
+                    if (typeMapping.EntityType != null)
+                        mappedTypeNames.Add(typeMapping.EntityType.Name);
+                    foreach (var isOfType in typeMapping.IsOfEntityTypes)
+                        mappedTypeNames.Add(isOfType.Name);
+                }
+            }
+
+            for (var current = type; current != null && current != typeof(object); current = current.BaseType)
+            {
+                if (mappedTypeNames.Contains(current.Name))
+                    return current;
+            }
+
+            return type;
+        }
+
         public TableName GetTableName(DbContext ctx, Type t)
         {
+            t = ResolveMappedClrType(ctx, t);
             var dbSet = ctx.Set(t);
             var sql = dbSet.ToString();
             return ParseTableName(sql);
@@ -357,7 +396,7 @@ namespace Tanneryd.BulkOperations.EF6
             var objectContext = ((IObjectContextAdapter)ctx).ObjectContext;
             var workspace = objectContext.MetadataWorkspace;
             var containerName = objectContext.DefaultContainerName;
-            t = ObjectContext.GetObjectType(t);
+            t = ResolveMappedClrType(ctx, t);
             var entityName = t.Name;
             var baseEntityName = t.BaseType?.Name;
 

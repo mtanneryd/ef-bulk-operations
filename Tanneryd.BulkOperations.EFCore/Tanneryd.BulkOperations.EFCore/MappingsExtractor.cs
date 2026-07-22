@@ -22,13 +22,30 @@ namespace Tanneryd.BulkOperations.EFCore
 
         public bool HasMappings(Type type)
         {
-            return _mappingsByType.ContainsKey(type);
+            return _mappingsByType.ContainsKey(ResolveMappedClrType(type));
         }
 
 
         public Mappings GetMappings(Type type)
         {
-            return _mappingsByType[type];
+            return _mappingsByType[ResolveMappedClrType(type)];
+        }
+
+        /// <summary>
+        /// Unwraps proxy / unmapped subclass CLR types to the most-derived
+        /// type present in the mappings cache. Does not touch <see cref="_ctx"/>
+        /// because extractors are cached by context CLR type and that instance
+        /// may already be disposed.
+        /// </summary>
+        private Type ResolveMappedClrType(Type type)
+        {
+            for (var current = type; current != null && current != typeof(object); current = current.BaseType)
+            {
+                if (_mappingsByType.ContainsKey(current))
+                    return current;
+            }
+
+            return type;
         }
 
         private void LoadMappings()
@@ -290,11 +307,30 @@ namespace Tanneryd.BulkOperations.EFCore
 
         public TableName GetTableName(DbContext ctx, Type t)
         {
-            var entityType = ctx.Model.GetEntityTypes().Single(et => et.ClrType == t);
+            // Prefer the mappings cache (safe with a disposed extractor context),
+            // then fall back to walking the live ctx model (covers database views
+            // which are intentionally omitted from the cache).
+            for (var current = t; current != null && current != typeof(object); current = current.BaseType)
+            {
+                if (_mappingsByType.TryGetValue(current, out var mappings))
+                    return mappings.TableName;
+
+                var entityType = ctx.Model.FindEntityType(current);
+                if (entityType != null)
+                {
+                    return new TableName
+                    {
+                        Name = entityType.GetTableName(),
+                        Schema = entityType.GetSchema()
+                    };
+                }
+            }
+
+            var fallback = ctx.Model.GetEntityTypes().Single(et => et.ClrType == t);
             return new TableName
             {
-                Name = entityType.GetTableName(),
-                Schema = entityType.GetSchema()
+                Name = fallback.GetTableName(),
+                Schema = fallback.GetSchema()
             };
         }
     }
