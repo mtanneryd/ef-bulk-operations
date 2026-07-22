@@ -332,7 +332,9 @@ namespace Tanneryd.BulkOperations.EF6
                         tempTableName,
                         mappings.Discriminator,
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
-                        IncludeRowNumber.Yes);
+                        IncludeRowNumber.Yes,
+                        request.CommandTimeout,
+                        request.UseTableLock);
                     if (containsIdentityKey)
                     {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
