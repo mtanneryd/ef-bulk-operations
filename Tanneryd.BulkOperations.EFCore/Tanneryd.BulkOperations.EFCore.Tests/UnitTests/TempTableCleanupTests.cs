@@ -15,16 +15,20 @@
 */
 
 using System;
-using Microsoft.Data.SqlClient;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.Common.Sql;
 using Tanneryd.BulkOperations.EFCore.Model;
+using Tanneryd.BulkOperations.TestModels;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
 {
     /// <summary>
-    /// Regression: session temp tables must be dropped even when bulk ops fail
-    /// (and on identity-insert paths that previously only dropped on some happy paths).
+    /// Ensures session-scoped staging temp tables are always dropped.
+    /// Bulk insert/update create #temp tables for identity-key retrieval or
+    /// UPDATE staging; leaks leave orphaned objects on the connection and can
+    /// exhaust tempdb under load. Covers happy path and post-fill failure.
     /// </summary>
     [TestClass]
     public class TempTableCleanupTests : BulkOperationTestBase
@@ -42,6 +46,10 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
             CleanupUnitTestContext();
         }
 
+        /// <summary>
+        /// Happy path: BulkInsert with identity-key retrieval creates a staging
+        /// temp table (MERGE OUTPUT / key round-trip) and must drop it before return.
+        /// </summary>
         [TestMethod]
         public void BulkInsert_ShouldDropTempTable_AfterIdentityKeyRetrieval()
         {
@@ -64,41 +72,41 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
                 $"Expected every temp table to be dropped. Created={scope.Created}, Dropped={scope.Dropped}.");
         }
 
+        /// <summary>
+        /// Failure path: the BulkUpdate staging temp table must still be dropped
+        /// when the operation fails after FillTempTable. A stale rowversion forces
+        /// a concurrency exception after the temp table exists (empty
+        /// UpdatedPropertyNames is rejected before FillTempTable, so it cannot
+        /// exercise this path).
+        /// </summary>
         [TestMethod]
-        public void BulkUpdate_ShouldDropTempTable_WhenUpdateSqlFails()
+        public void BulkUpdate_ShouldDropTempTable_WhenUpdateFails()
         {
-            using var db = Factory.CreateDbContext();
-            var price = new Price
-            {
-                Date = new DateTime(2019, 1, 1),
-                Name = "TempCleanupUpdate",
-                Value = 10,
-            };
-            db.Prices.Add(price);
-            db.SaveChanges();
+            using var db1 = Factory.CreateDbContext();
+            using var db2 = Factory.CreateDbContext();
+
+            var item = new ConcurrencyItem { Name = "Original" };
+            db1.ConcurrencyItems.Add(item);
+            db1.SaveChanges();
+
+            var stale = db1.ConcurrencyItems.Single(x => x.Id == item.Id);
+
+            var other = db2.ConcurrencyItems.Single(x => x.Id == item.Id);
+            other.Name = "Changed by other writer";
+            db2.Entry(other).Property(x => x.Name).IsModified = true;
+            db2.SaveChanges();
+
+            stale.Name = "Bulk overwrite";
 
             using var scope = TempTableTracker.BeginScope();
 
-            // UpdatedPropertyNames is only the key → zero SET columns → invalid UPDATE SQL
-            // after the temp table has already been created/filled.
-            try
-            {
-                db.BulkUpdateAll(new BulkUpdateRequest
+            Assert.ThrowsExactly<DbUpdateConcurrencyException>(() =>
+                db1.BulkUpdateAll(new BulkUpdateRequest
                 {
-                    Entities = new[] { price },
-                    KeyPropertyNames = new[] { nameof(Price.Id) },
-                    UpdatedPropertyNames = new[] { nameof(Price.Id) },
-                });
-                Assert.Fail("Expected BulkUpdateAll to throw for an empty SET list.");
-            }
-            catch (SqlException)
-            {
-                // Expected: UPDATE … SET  FROM … is invalid.
-            }
-            catch (ArgumentException)
-            {
-                // Acceptable if validation is added later; temp must still be balanced.
-            }
+                    Entities = new[] { stale },
+                    KeyPropertyNames = new[] { nameof(ConcurrencyItem.Id) },
+                    UpdatedPropertyNames = new[] { nameof(ConcurrencyItem.Name) },
+                }));
 
             Assert.IsTrue(scope.Created > 0, "Expected a temp table to be created before the UPDATE failed.");
             Assert.AreEqual(

@@ -16,13 +16,6 @@ namespace Tanneryd.BulkOperations.EFCore
 {
     public static partial class DbContextExtensions
     {
-        private static void DoBulkUpdateAll(
-            this DbContext ctx,
-            BulkUpdateRequest request,
-            BulkOperationResponse response)
-        {
-            DoBulkUpdateAllAsync(ctx, request, response).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
 
         /// <summary>
         /// Stages entities in a temp table, UPDATEs the target on key match, and

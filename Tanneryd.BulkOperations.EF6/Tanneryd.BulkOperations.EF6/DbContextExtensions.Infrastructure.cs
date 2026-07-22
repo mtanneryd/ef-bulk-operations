@@ -24,7 +24,18 @@ namespace Tanneryd.BulkOperations.EF6
             if (ctx == null)
                 throw new ArgumentNullException(nameof(ctx));
 
-            var connection = ResolveSqlConnection(ctx);
+            // Inspect without opening — same idea as EF Core ValidateDbContext.
+            var connection = ctx.Database.Connection;
+            if (connection is System.Data.Entity.Core.EntityClient.EntityConnection entityConnection)
+                connection = entityConnection.StoreConnection;
+
+            if (connection is not SqlConnection &&
+                connection is not System.Data.SqlClient.SqlConnection)
+            {
+                throw new NotSupportedException(
+                    $"Bulk operations require a SQL Server connection. Actual connection type: {connection?.GetType().FullName ?? "null"}.");
+            }
+
             if (string.IsNullOrWhiteSpace(connection.ConnectionString))
                 throw new InvalidOperationException("The database connection string is not set.");
         }
@@ -116,22 +127,6 @@ namespace Tanneryd.BulkOperations.EF6
         /// target (including identity/discriminator metadata) by selecting zero
         /// rows via SELECT … INTO … WHERE 1=0. The name is a GUID to avoid collisions.
         /// </summary>
-        private static string CreateTempTable(
-            SqlServerConnection connection,
-            SqlTransaction transaction,
-            TableName tableName,
-            Discriminator discriminator,
-            string[] columnNames,
-            IncludeRowNumber includeRowNumber = IncludeRowNumber.No)
-        {
-            return CreateTempTableAsync(
-                connection,
-                transaction,
-                tableName,
-                discriminator,
-                columnNames,
-                includeRowNumber).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
 
         private static async Task<string> CreateTempTableAsync(
             SqlServerConnection connection,
@@ -172,14 +167,6 @@ namespace Tanneryd.BulkOperations.EF6
             TempTableTracker.NotifyCreated();
 
             return tempTableName;
-        }
-
-        private static void DropTempTable(
-            SqlServerConnection connection,
-            SqlTransaction transaction,
-            string tempTableName)
-        {
-            DropTempTableAsync(connection, transaction, tempTableName).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         private static Task DropTempTableAsync(

@@ -138,22 +138,6 @@ namespace Tanneryd.BulkOperations.EFCore
         /// target by selecting zero rows via SELECT … INTO … WHERE 1=0.
         /// The name is a GUID to avoid collisions.
         /// </summary>
-        private static string CreateTempTable(
-            SqlConnection connection,
-            SqlTransaction transaction,
-            TableName tableName,
-            string[] columnNames,
-            TableColumn[] extraColumnNames,
-            IncludeRowNumber includeRowNumber = IncludeRowNumber.No)
-        {
-            return CreateTempTableAsync(
-                connection,
-                transaction,
-                tableName,
-                columnNames,
-                extraColumnNames,
-                includeRowNumber).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
 
         private static async Task<string> CreateTempTableAsync(
             SqlConnection connection,
@@ -197,14 +181,6 @@ namespace Tanneryd.BulkOperations.EFCore
             TempTableTracker.NotifyCreated();
 
             return tempTableName;
-        }
-
-        private static void DropTempTable(
-            SqlConnection connection,
-            SqlTransaction transaction,
-            string tempTableName)
-        {
-            DropTempTableAsync(connection, transaction, tempTableName).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         private static Task DropTempTableAsync(

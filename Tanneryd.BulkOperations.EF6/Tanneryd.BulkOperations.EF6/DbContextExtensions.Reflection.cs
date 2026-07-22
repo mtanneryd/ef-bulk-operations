@@ -76,11 +76,6 @@ namespace Tanneryd.BulkOperations.EF6
                 expandoDict.Add(propertyName, propertyValue);
         }
 
-        private static SqlServerConnection ResolveSqlConnection(DbContext ctx)
-        {
-            return ResolveSqlConnectionAsync(ctx).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-
         private static Task<SqlServerConnection> ResolveSqlConnectionAsync(
             DbContext ctx,
             CancellationToken cancellationToken = default)

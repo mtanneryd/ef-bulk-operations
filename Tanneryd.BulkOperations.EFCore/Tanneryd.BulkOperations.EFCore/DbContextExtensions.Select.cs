@@ -18,10 +18,6 @@ namespace Tanneryd.BulkOperations.EFCore
 {
     public static partial class DbContextExtensions
     {
-        private static IList<T1> DoBulkSelectNotExisting<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request)
-        {
-            return DoBulkSelectNotExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
 
         private static async Task<IList<T1>> DoBulkSelectNotExistingAsync<T1, T2>(
             DbContext ctx,
@@ -148,11 +144,6 @@ namespace Tanneryd.BulkOperations.EFCore
             }
 
             return new List<T1>();
-        }
-
-        private static void DoBulkDeleteNotExisting<T1, T2>(DbContext ctx, BulkDeleteRequest<T1> request)
-        {
-            DoBulkDeleteNotExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         private static async Task DoBulkDeleteNotExistingAsync<T1, T2>(
@@ -285,10 +276,6 @@ namespace Tanneryd.BulkOperations.EFCore
         /// <param name="ctx"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        private static IList<T2> DoBulkSelect<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request) where T2 : new()
-        {
-            return DoBulkSelectAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
 
         private static async Task<IList<T2>> DoBulkSelectAsync<T1, T2>(
             DbContext ctx,
@@ -414,7 +401,6 @@ namespace Tanneryd.BulkOperations.EFCore
             return new List<T2>();
         }
 
-
         private static SelectMapping FindJoinTableMappingsForSelectExisting(
             KeyPropertyMapping[] keyPropertyMappings, 
             Mappings mappings,
@@ -475,10 +461,6 @@ namespace Tanneryd.BulkOperations.EFCore
         /// <param name="ctx"></param>
         /// <param name="request"></param>
         /// <returns></returns>
-        private static IList<T1> DoBulkSelectExisting<T1, T2>(DbContext ctx, BulkSelectRequest<T1> request)
-        {
-            return DoBulkSelectExistingAsync<T1, T2>(ctx, request).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
 
         private static async Task<IList<T1>> DoBulkSelectExistingAsync<T1, T2>(
             DbContext ctx,

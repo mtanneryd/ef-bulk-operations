@@ -24,30 +24,6 @@ namespace Tanneryd.BulkOperations.EFCore
 {
     public static partial class DbContextExtensions
     {
-        private static void DoBulkInsertAll(
-            this DbContext ctx,
-            IList<dynamic> entities,
-            SqlTransaction sqlTransaction,
-            EnableRecursiveInsert enableRecursiveInsert,
-            AllowNotNullSelfReferences allowNotNullSelfReferences,
-            TimeSpan commandTimeout,
-            Dictionary<object, object> savedEntities,
-            Dictionary<Type, Mappings> mappingsByType,
-            BulkInsertResponse response,
-            bool useTableLock = false)
-        {
-            DoBulkInsertAllAsync(
-                ctx,
-                entities,
-                sqlTransaction,
-                enableRecursiveInsert,
-                allowNotNullSelfReferences,
-                commandTimeout,
-                savedEntities,
-                mappingsByType,
-                response,
-                useTableLock).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
 
         private static async Task DoBulkInsertAllAsync(
             this DbContext ctx,
@@ -231,7 +207,6 @@ namespace Tanneryd.BulkOperations.EFCore
                             }
 
                             if (navProperties.Count == 0) continue;
-
 
                             if (fkMapping.ForeignKeyRelations.Any())
                             {
@@ -447,31 +422,6 @@ namespace Tanneryd.BulkOperations.EFCore
                 .Where(m => primaryKeyMembers.Contains(m.TableColumn.Column.Name))
                 .ToArray();
             return pkColumnMappings;
-        }
-
-        private static void DoBulkCopy(
-            this DbContext ctx,
-            IList entities,
-            Type t,
-            Mappings mappings,
-            SqlTransaction transaction,
-            AllowNotNullSelfReferences allowNotNullSelfReferences,
-            EnableRecursiveInsert enableRecursiveInsert,
-            TimeSpan commandTimeout,
-            BulkInsertResponse response,
-            bool useTableLock = false)
-        {
-            DoBulkCopyAsync(
-                ctx,
-                entities,
-                t,
-                mappings,
-                transaction,
-                allowNotNullSelfReferences,
-                enableRecursiveInsert,
-                commandTimeout,
-                response,
-                useTableLock).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         private static async Task DoBulkCopyAsync(
@@ -766,45 +716,6 @@ namespace Tanneryd.BulkOperations.EFCore
                    pkColumnMappings[0].IsStoreGenerated;
         }
 
-        private static int SelectIntoUsingOutputClause(
-            SqlConnection conn,
-            SqlTransaction transaction,
-            TableName tableName,
-            Type pkColumnType,
-            AllowNotNullSelfReferences allowNotNullSelfReferences,
-            BulkInsertResponse response,
-            TableColumnMapping[] nonPrimaryKeyColumnMappings,
-            IColumnMapping pkColumn,
-            string tempTableName,
-            Stopwatch s,
-            BulkInsertStatistics stats,
-            ArrayList newEntities,
-            IProperty pkProperty,
-            bool hasComplexProperties,
-            Discriminator discriminator,
-            Type t,
-            TimeSpan commandTimeout)
-        {
-            return SelectIntoUsingOutputClauseAsync(
-                conn,
-                transaction,
-                tableName,
-                pkColumnType,
-                allowNotNullSelfReferences,
-                response,
-                nonPrimaryKeyColumnMappings,
-                pkColumn,
-                tempTableName,
-                s,
-                stats,
-                newEntities,
-                pkProperty,
-                hasComplexProperties,
-                discriminator,
-                t,
-                commandTimeout).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-
         /// <summary>
         /// Inserts from the temp table using MERGE ON 1=0 … OUTPUT so SQL Server
         /// returns inserted identity values ordered by our temp-table rowno.
@@ -1064,18 +975,6 @@ namespace Tanneryd.BulkOperations.EFCore
             }
         }
 
-
-        private static string[] GetClusteredIndexColumns(
-            DbContext ctx,
-            string schema,
-            string tableName,
-            SqlTransaction sqlTransaction,
-            Mappings mappings)
-        {
-            return GetClusteredIndexColumnsAsync(ctx, schema, tableName, sqlTransaction, mappings)
-                .ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-
         /// <summary>
         /// Reads clustered-index column order so rows can be sorted before bulk
         /// load to reduce page splits. Schema/table identifiers come from EF mappings.
@@ -1149,25 +1048,6 @@ namespace Tanneryd.BulkOperations.EFCore
         /// <param name="nonKeyColumnMappings"></param>
         /// <param name="sqlTransaction"></param>
         /// <returns></returns>
-        private static string FillTempTable(
-            SqlConnection conn,
-            IList entities,
-            TableName tableName,
-            Dictionary<string, TableColumnMapping> columnMappings,
-            TableColumnMapping[] keyColumnMappings,
-            TableColumnMapping[] nonKeyColumnMappings,
-            SqlTransaction sqlTransaction)
-        {
-            return FillTempTableAsync(
-                conn,
-                entities,
-                tableName,
-                columnMappings,
-                keyColumnMappings,
-                nonKeyColumnMappings,
-                sqlTransaction,
-                TimeSpan.FromMinutes(10)).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
 
         private static async Task<string> FillTempTableAsync(
             SqlConnection conn,
@@ -1320,11 +1200,6 @@ namespace Tanneryd.BulkOperations.EFCore
             return false;
         }
 
-        private static void EnableIdentityInsert(string tableName, SqlConnection conn, SqlTransaction sqlTransaction)
-        {
-            EnableIdentityInsertAsync(tableName, conn, sqlTransaction).ConfigureAwait(false).GetAwaiter().GetResult();
-        }
-
         private static Task EnableIdentityInsertAsync(
             string tableName,
             SqlConnection conn,
@@ -1332,11 +1207,6 @@ namespace Tanneryd.BulkOperations.EFCore
             CancellationToken cancellationToken = default)
         {
             return TempTableSqlHelper.EnableIdentityInsertAsync(tableName, conn, sqlTransaction, cancellationToken);
-        }
-
-        private static void DisableIdentityInsert(string tableName, SqlConnection conn, SqlTransaction sqlTransaction)
-        {
-            DisableIdentityInsertAsync(tableName, conn, sqlTransaction).ConfigureAwait(false).GetAwaiter().GetResult();
         }
 
         private static Task DisableIdentityInsertAsync(
