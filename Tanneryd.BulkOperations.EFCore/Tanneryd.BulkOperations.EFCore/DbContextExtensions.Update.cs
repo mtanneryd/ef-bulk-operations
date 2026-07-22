@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Tanneryd.BulkOperations.Common.Sql;
 using Tanneryd.BulkOperations.EFCore.Model;
 
 namespace Tanneryd.BulkOperations.EFCore
@@ -102,6 +103,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 if (concurrencyTokenMappings.Length > 0 && transaction == null)
                 {
                     ownedTransaction = conn.BeginTransaction();
+                    SqlTransactionTracker.NotifyCreated();
                     transaction = ownedTransaction;
                 }
 
@@ -172,24 +174,25 @@ namespace Tanneryd.BulkOperations.EFCore
                     if (concurrencyTokenMappings.Length > 0 && rowsAffected != entities.Count)
                     {
                         ownedTransaction?.Rollback();
-                        ownedTransaction = null;
                         throw new DbUpdateConcurrencyException(
                             $"BulkUpdate expected to affect {entities.Count} row(s) but affected {rowsAffected}. " +
                             "One or more entities may have been modified or deleted (optimistic concurrency).");
                     }
 
                     ownedTransaction?.Commit();
-                    ownedTransaction = null;
                 }
                 catch
                 {
                     try { ownedTransaction?.Rollback(); } catch { /* ignore */ }
-                    ownedTransaction = null;
                     throw;
                 }
                 finally
                 {
-                    ownedTransaction?.Dispose();
+                    if (ownedTransaction != null)
+                    {
+                        ownedTransaction.Dispose();
+                        SqlTransactionTracker.NotifyDisposed();
+                    }
                     if (tempTableName != null)
                         await DropTempTableAsync(conn, request.Transaction, tempTableName, CancellationToken.None).ConfigureAwait(false);
                 }
