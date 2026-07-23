@@ -109,22 +109,27 @@ namespace Tanneryd.BulkOperations.EF6
                             {
                                 PropertyInfo toPropertyInfo = t.GetProperty(foreignKeyRelation.ToProperty);
                                 var navPropertyKeyType = toPropertyInfo.PropertyType;
-                                var isGuid = IsGuid(navPropertyKeyType);
-                                var isDateTime = IsDateTime(navPropertyKeyType);
                                 var navPropertyKey = GetProperty(t, foreignKeyRelation.ToProperty, entity);
 
-                                // we do nothing unless the one-to-one
-                                // nav property in previously unknown
-                                if (navPropertyKey == null ||                                    
-                                    (isGuid && navPropertyKey == default(Guid)) ||
-                                    (isDateTime && navPropertyKey == default(DateTime)) ||
-                                    navPropertyKey == 0)
+                                // Only act when the FK on this entity is still unset.
+                                if (IsUnsetKeyValue(navPropertyKey, navPropertyKeyType))
                                 {
+                                    var fromPropertyInfo = navPropertyType.GetProperty(foreignKeyRelation.FromProperty);
                                     var currentValue = GetProperty(navPropertyType, foreignKeyRelation.FromProperty,
                                         navProperty);
-                                    if ((isGuid && navPropertyKey != default(Guid)) ||
-                                        (isDateTime && navPropertyKey != default(DateTime)) ||
-                                        (!(isGuid || isDateTime) && currentValue > 0))
+
+                                    // Numeric FKs can copy a non-zero parent PK (parent already persisted).
+                                    // Guid/DateTime/string keys are often client-assigned on brand-new
+                                    // navigation instances, so always recurse instead of treating a
+                                    // non-default value as "already in the database".
+                                    var canCopyFromExistingNavKey =
+                                        !IsGuid(navPropertyKeyType) &&
+                                        !IsDateTime(navPropertyKeyType) &&
+                                        navPropertyKeyType != typeof(string) &&
+                                        fromPropertyInfo != null &&
+                                        IsKeyValueSet(currentValue, fromPropertyInfo.PropertyType);
+
+                                    if (canCopyFromExistingNavKey)
                                     {
                                         SetProperty(foreignKeyRelation.ToProperty, entity, currentValue);
                                     }
@@ -931,6 +936,7 @@ namespace Tanneryd.BulkOperations.EF6
         private static ArrayList SelectNewEntities(IList entities, EdmProperty pkProperty, Type t)
         {
             var newEntities = new ArrayList();
+            var pkClrType = pkProperty.PrimitiveType?.ClrEquivalentType ?? typeof(object);
 
             if (entities[0] is ExpandoObject)
             {
@@ -938,9 +944,7 @@ namespace Tanneryd.BulkOperations.EF6
                 {
                     var e = (ExpandoObject)entity;
                     var pk = GetProperty(pkProperty.Name, e);
-                    var isGuid = IsGuidProperty(pkProperty);
-                    if ((!isGuid && pk == 0) ||
-                        isGuid && pk == Guid.Empty)
+                    if (IsUnsetKeyValue(pk, pkClrType))
                         newEntities.Add(entity);
                 }
             }
@@ -949,9 +953,7 @@ namespace Tanneryd.BulkOperations.EF6
                 foreach (var entity in entities)
                 {
                     var pk = GetProperty(t, pkProperty.Name, entity);
-                    var isGuid = IsGuidProperty(pkProperty);
-                    if ((!isGuid && pk == 0) ||
-                        isGuid && pk == Guid.Empty)
+                    if (IsUnsetKeyValue(pk, pkClrType))
                         newEntities.Add(entity);
                 }
             }

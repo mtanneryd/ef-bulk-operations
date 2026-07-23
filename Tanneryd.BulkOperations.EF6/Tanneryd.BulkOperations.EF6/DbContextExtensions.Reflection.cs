@@ -191,6 +191,51 @@ namespace Tanneryd.BulkOperations.EF6
         }
 
         /// <summary>
+        /// True when a key/FK value is considered unset (null, empty Guid,
+        /// default DateTime, empty string, or numeric zero). Avoids dynamic
+        /// comparisons like <c>value == 0</c> that throw for Guid/string.
+        /// </summary>
+        private static bool IsUnsetKeyValue(object value, Type clrType)
+        {
+            if (value == null || value == DBNull.Value)
+                return true;
+
+            clrType = Nullable.GetUnderlyingType(clrType) ?? clrType;
+
+            if (clrType == typeof(Guid))
+                return value is Guid g && g == Guid.Empty;
+            if (clrType == typeof(DateTime))
+                return value is DateTime dt && dt == default;
+            if (clrType == typeof(string))
+                return string.IsNullOrEmpty(value as string);
+            if (clrType == typeof(bool))
+                return false;
+
+            switch (value)
+            {
+                case byte b: return b == 0;
+                case sbyte sb: return sb == 0;
+                case short s: return s == 0;
+                case ushort us: return us == 0;
+                case int i: return i == 0;
+                case uint ui: return ui == 0;
+                case long l: return l == 0;
+                case ulong ul: return ul == 0;
+                case float f: return f == 0;
+                case double d: return d == 0;
+                case decimal m: return m == 0;
+            }
+
+            if (clrType.IsValueType)
+                return Equals(value, Activator.CreateInstance(clrType));
+
+            return false;
+        }
+
+        private static bool IsKeyValueSet(object value, Type clrType) =>
+            !IsUnsetKeyValue(value, clrType);
+
+        /// <summary>
         /// Use reflection to set a property value by its property 
         /// name to an object instance.
         /// </summary>
