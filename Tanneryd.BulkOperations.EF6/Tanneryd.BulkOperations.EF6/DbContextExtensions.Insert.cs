@@ -935,6 +935,8 @@ namespace Tanneryd.BulkOperations.EF6
         /// We can use our BulkSelectNotExisting to do this but it requires
         /// some extra magic since we must invoke the generic method with
         /// run-time types. It gets a little messy but it works.
+        /// Unset detection uses <see cref="IsUnsetKeyValue"/> (same as the
+        /// recursive FK path) so string/Guid PKs do not hit dynamic == 0.
         /// </summary>
         /// <param name="entities"></param>
         /// <param name="pkProperty"></param>
