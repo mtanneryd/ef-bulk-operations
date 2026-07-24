@@ -614,7 +614,13 @@ namespace Tanneryd.BulkOperations.EFCore
                             var item = items[rowNo];
                             foreach (var cpm in request.ColumnPropertyMappings)
                             {
-                                SetProperty(cpm.ItemPropertyName, item, sqlDataReader[cpm.EntityPropertyName]);    
+                                if (!columnMappings.TryGetValue(cpm.EntityPropertyName, out var mapping))
+                                {
+                                    throw new ArgumentException(
+                                        "ColumnPropertyMappings contain property name(s) that are not mapped on the target entity: " +
+                                        cpm.EntityPropertyName + ".");
+                                }
+                                SetProperty(cpm.ItemPropertyName, item, sqlDataReader[mapping.TableColumn.Column.Name]);
                             }
                             
                             existingEntities.Add(items[rowNo]);

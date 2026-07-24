@@ -20,6 +20,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
+using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Invoice;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Numbers;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Prices;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Teams.UsingDbGeneratedGuidKeys;
@@ -411,6 +412,56 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Select
                 {
                     Assert.AreSame(numbers[i], existingNumbers[i]);
                 }
+            }
+        }
+
+        /// <summary>
+        /// ColumnPropertyMappings must read SELECT [t1].* values by store column
+        /// name. Invoice.Id maps to column PrimaryKey; indexing the reader by the
+        /// CLR property name fails.
+        /// </summary>
+        [TestMethod]
+        public void BulkSelectExisting_ShouldHydrateColumnPropertyMappings_WhenPropertyNameDiffersFromColumnName()
+        {
+            using (var db = new UnitTestContext())
+            {
+                var id = Guid.NewGuid();
+                db.Invoices.Add(new Invoice
+                {
+                    Id = id,
+                    Net = 100m,
+                    Gross = 125m,
+                });
+                db.SaveChanges();
+
+                var probe = new Invoice
+                {
+                    Id = Guid.Empty,
+                    Net = 100m,
+                    Gross = 125m,
+                };
+
+                var existing = db.BulkSelectExisting<Invoice, Invoice>(new BulkSelectRequest<Invoice>
+                {
+                    Items = new[] { probe },
+                    KeyPropertyMappings = KeyPropertyMapping.IdentityMappings(new[]
+                    {
+                        nameof(Invoice.Net),
+                        nameof(Invoice.Gross),
+                    }),
+                    ColumnPropertyMappings = new[]
+                    {
+                        new KeyPropertyMapping
+                        {
+                            EntityPropertyName = nameof(Invoice.Id),
+                            ItemPropertyName = nameof(Invoice.Id),
+                        },
+                    },
+                });
+
+                Assert.AreEqual(1, existing.Count);
+                Assert.AreSame(probe, existing[0]);
+                Assert.AreEqual(id, probe.Id);
             }
         }
     }
