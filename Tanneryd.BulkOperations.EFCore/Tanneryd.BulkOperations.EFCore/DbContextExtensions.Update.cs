@@ -33,10 +33,41 @@ namespace Tanneryd.BulkOperations.EFCore
             var rowsAffected = 0;
 
             var entities = request.Entities;
+            if (entities == null || entities.Count == 0) return;
+
+            // Column sets differ per TPH concrete type. Split mixed batches so
+            // each group uses the correct mappings (same pattern as BulkInsert).
+            var typeGroups = entities
+                .Cast<object>()
+                .GroupBy(e => e.GetType())
+                .ToList();
+            if (typeGroups.Count > 1)
+            {
+                foreach (var typeGroup in typeGroups)
+                {
+                    await DoBulkUpdateAllAsync(
+                        ctx,
+                        new BulkUpdateRequest
+                        {
+                            Entities = typeGroup.ToList(),
+                            UpdatedPropertyNames = request.UpdatedPropertyNames,
+                            KeyPropertyNames = request.KeyPropertyNames,
+                            Transaction = request.Transaction,
+                            InsertIfNew = request.InsertIfNew,
+                            UseTableLock = request.UseTableLock,
+                            CommandTimeout = request.CommandTimeout,
+                        },
+                        response,
+                        cancellationToken).ConfigureAwait(false);
+                }
+
+                return;
+            }
+
             var callerTransaction = request.Transaction;
             var transaction = callerTransaction;
 
-            Type t = request.Entities[0].GetType();
+            Type t = entities[0].GetType();
             var mappings = GetMappingExtractor(ctx).GetMappings(t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;
