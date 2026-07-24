@@ -1081,9 +1081,34 @@ namespace Tanneryd.BulkOperations.EF6
                     .ToArray();
             }
 
-            // Property names might not be identical to column 
-            // names and we need the property names.
-            return clusteredColumns.Select(c => mappings.ColumnMappingByColumnName[c].EntityProperty.Name).ToArray();
+            // Property names might not be identical to column names; CI columns
+            // that are concurrency tokens (or otherwise excluded from regular
+            // mappings) must not KeyNotFound — resolve or skip them.
+            return ResolveClusteredIndexPropertyNames(clusteredColumns, mappings);
+        }
+
+        private static string[] ResolveClusteredIndexPropertyNames(string[] clusteredColumns, Mappings mappings)
+        {
+            var propertyNames = new List<string>(clusteredColumns.Length);
+            foreach (var columnName in clusteredColumns)
+            {
+                if (mappings.ColumnMappingByColumnName.TryGetValue(columnName, out var mapping))
+                {
+                    propertyNames.Add(mapping.EntityProperty.Name);
+                    continue;
+                }
+
+                var concurrency = mappings.ConcurrencyTokenMappings?
+                    .FirstOrDefault(m =>
+                        string.Equals(m.TableColumn.Name, columnName, StringComparison.OrdinalIgnoreCase));
+                if (concurrency != null)
+                {
+                    propertyNames.Add(concurrency.EntityProperty.Name);
+                    continue;
+                }
+            }
+
+            return propertyNames.ToArray();
         }
 
         private static IList<T> Sort<T>(IList<T> entities, string[] sortColumns)
