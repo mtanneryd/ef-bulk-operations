@@ -16,10 +16,12 @@
 
 using System;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Entity;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Prices;
+using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Teams.UsingUserGeneratedGuidKeys;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF;
 
 namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
@@ -41,6 +43,15 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
         /// </summary>
         [NotMapped]
         private sealed class PriceProxy : Price
+        {
+        }
+
+        /// <summary>
+        /// Stand-in proxy for recursive many-to-many insert. Join-side selection
+        /// must compare the mapped entity type name, not the proxy runtime name.
+        /// </summary>
+        [NotMapped]
+        private sealed class CoachProxy : CoachWithUserGeneratedGuidKey
         {
         }
 
@@ -124,6 +135,56 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
             {
                 var fromDb = verify.Prices.Single(p => p.Name == "Inserted-via-proxy");
                 Assert.AreEqual(9m, fromDb.Value);
+            }
+        }
+
+        /// <summary>
+        /// Recursive M2M insert picks Source vs Target join columns by comparing
+        /// the association end declaring type name to entity.GetType().Name. A proxy
+        /// subclass name does not match, so CoachId/TeamId are swapped and the
+        /// join insert fails FK checks (or links the wrong ids).
+        /// </summary>
+        [TestMethod]
+        public void BulkInsert_RecursiveManyToMany_ShouldWriteJoinRows_WhenEntityIsProxySubclass()
+        {
+            var coachId = Guid.NewGuid();
+            var teamId = Guid.NewGuid();
+
+            using (var db = new UnitTestContext())
+            {
+                var coach = new CoachProxy
+                {
+                    Id = coachId,
+                    Firstname = "Proxy",
+                    Lastname = "Coach",
+                };
+                coach.Teams.Add(new TeamWithUserGeneratedGuidKey
+                {
+                    Id = teamId,
+                    Name = "Proxy Team",
+                });
+
+                db.BulkInsertAll(new BulkInsertRequest<CoachProxy>
+                {
+                    Entities = new[] { coach },
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                });
+            }
+
+            using (var verify = new UnitTestContext())
+            {
+                var coach = verify.CoachesWithUserGeneratedGuids
+                    .Include(c => c.Teams)
+                    .Single(c => c.Id == coachId);
+                Assert.AreEqual(1, coach.Teams.Count);
+                Assert.AreEqual(teamId, coach.Teams.Single().Id);
+                Assert.AreEqual(
+                    1,
+                    verify.Database.SqlQuery<int>(
+                        "SELECT COUNT(*) AS [Value] FROM [dbo].[CoachTeamsWithUserGeneratedGuid] WHERE [CoachId] = @p0 AND [TeamId] = @p1",
+                        coachId,
+                        teamId).Single(),
+                    "Join row must use coach.Id in CoachId and team.Id in TeamId.");
             }
         }
     }

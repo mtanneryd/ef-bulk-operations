@@ -311,7 +311,7 @@ namespace Tanneryd.BulkOperations.EFCore
                         {
                             var entity = joinTableNavPropertiesForEntity.Key;
                             if (GetAssociationEndClrTypeName(fkMapping.AssociationMapping.Source) ==
-                                entity.GetType().Name)
+                                GetMappingExtractor(ctx).ResolveMappedClrType(entity.GetType()).Name)
                             {
                                 foreach (var navProperty in joinTableNavPropertiesForEntity.Value)
                                 {
@@ -1266,8 +1266,8 @@ namespace Tanneryd.BulkOperations.EFCore
 
         /// <summary>
         /// EF Core <see cref="IProperty.DeclaringType"/>.Name is often the full entity
-        /// type name; compare using CLR type Name to match <c>entity.GetType().Name</c>
-        /// (same short-name convention EF6 EdmProperty.DeclaringType.Name uses).
+        /// type name; compare using CLR type Name against the mapped (unwrapped) entity
+        /// type name so proxy subclasses match association ends.
         /// </summary>
         private static string GetAssociationEndClrTypeName(TableColumnMapping end)
         {

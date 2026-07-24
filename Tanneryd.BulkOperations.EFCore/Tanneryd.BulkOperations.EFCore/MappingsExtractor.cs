@@ -37,7 +37,7 @@ namespace Tanneryd.BulkOperations.EFCore
         /// because extractors are cached by <see cref="IModel"/> and that context
         /// instance may already be disposed.
         /// </summary>
-        private Type ResolveMappedClrType(Type type)
+        public Type ResolveMappedClrType(Type type)
         {
             for (var current = type; current != null && current != typeof(object); current = current.BaseType)
             {

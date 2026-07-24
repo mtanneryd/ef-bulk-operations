@@ -313,7 +313,7 @@ namespace Tanneryd.BulkOperations.EF6
                         {
                             var entity = joinTableNavPropertiesForEntity.Key;
                             if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.Name ==
-                                entity.GetType().Name)
+                                MappingExtractor.ResolveMappedClrType(ctx, entity.GetType()).Name)
                             {
                                 foreach (var navProperty in joinTableNavPropertiesForEntity.Value)
                                 {

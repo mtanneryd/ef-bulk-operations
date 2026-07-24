@@ -324,7 +324,7 @@ namespace Tanneryd.BulkOperations.EF6
         /// Required so <see cref="DbContext.Set(Type)"/> and FK name matching work
         /// for proxy-like runtime types.
         /// </summary>
-        private static Type ResolveMappedClrType(DbContext ctx, Type type)
+        public Type ResolveMappedClrType(DbContext ctx, Type type)
         {
             type = ObjectContext.GetObjectType(type);
 
