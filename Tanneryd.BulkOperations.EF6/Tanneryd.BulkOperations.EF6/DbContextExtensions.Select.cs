@@ -54,6 +54,8 @@ namespace Tanneryd.BulkOperations.EF6
 
                 // Include rowno even when unused: on some hosts WriteToServer
                 // does nothing if the temp table has no rowno column.
+                // Key-only staging: omit Discriminator (EF Core parity); materializers
+                // emit keys + rowno only.
                 string tempTableName = null;
                 var identityInsertEnabled = false;
                 try
@@ -62,7 +64,7 @@ namespace Tanneryd.BulkOperations.EF6
                         conn,
                         request.Transaction,
                         tableName,
-                        mappings.Discriminator,
+                        null,
                         keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
                         IncludeRowNumber.Yes,
                         cancellationToken).ConfigureAwait(false);
@@ -78,7 +80,7 @@ namespace Tanneryd.BulkOperations.EF6
                         conn,
                         request.Transaction,
                         tempTableName,
-                        mappings.Discriminator,
+                        null,
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes,
                         request.CommandTimeout,
@@ -179,6 +181,8 @@ namespace Tanneryd.BulkOperations.EF6
 
                 // Include rowno even when unused: on some hosts WriteToServer
                 // does nothing if the temp table has no rowno column.
+                // Key-only staging: omit Discriminator (EF Core parity); materializers
+                // emit keys + rowno only.
                 string tempTableName = null;
                 var identityInsertEnabled = false;
                 try
@@ -187,7 +191,7 @@ namespace Tanneryd.BulkOperations.EF6
                         conn,
                         request.Transaction,
                         tableName,
-                        mappings.Discriminator,
+                        null,
                         keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
                         IncludeRowNumber.Yes,
                         cancellationToken).ConfigureAwait(false);
@@ -204,7 +208,7 @@ namespace Tanneryd.BulkOperations.EF6
                         conn,
                         request.Transaction,
                         tempTableName,
-                        mappings.Discriminator,
+                        null,
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes,
                         request.CommandTimeout,
@@ -305,6 +309,8 @@ namespace Tanneryd.BulkOperations.EF6
 
                 // Include rowno even when unused: on some hosts WriteToServer
                 // does nothing if the temp table has no rowno column.
+                // Key-only staging: omit Discriminator (EF Core parity); materializers
+                // emit keys + rowno only.
                 string tempTableName = null;
                 var identityInsertEnabled = false;
                 try
@@ -313,7 +319,7 @@ namespace Tanneryd.BulkOperations.EF6
                         conn,
                         request.Transaction,
                         tableName,
-                        mappings.Discriminator,
+                        null,
                         keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
                         IncludeRowNumber.Yes,
                         cancellationToken).ConfigureAwait(false);
@@ -330,7 +336,7 @@ namespace Tanneryd.BulkOperations.EF6
                         conn,
                         request.Transaction,
                         tempTableName,
-                        mappings.Discriminator,
+                        null,
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes,
                         request.CommandTimeout,
@@ -433,6 +439,8 @@ namespace Tanneryd.BulkOperations.EF6
 
                 // Include rowno even when unused: on some hosts WriteToServer
                 // does nothing if the temp table has no rowno column.
+                // Key-only staging: omit Discriminator (EF Core parity); materializers
+                // emit keys + rowno only.
                 string tempTableName = null;
                 var identityInsertEnabled = false;
                 try
@@ -441,7 +449,7 @@ namespace Tanneryd.BulkOperations.EF6
                         conn,
                         request.Transaction,
                         tableName,
-                        mappings.Discriminator,
+                        null,
                         keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
                         IncludeRowNumber.Yes,
                         cancellationToken).ConfigureAwait(false);
@@ -457,7 +465,7 @@ namespace Tanneryd.BulkOperations.EF6
                         conn,
                         request.Transaction,
                         tempTableName,
-                        mappings.Discriminator,
+                        null,
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes,
                         request.CommandTimeout,
