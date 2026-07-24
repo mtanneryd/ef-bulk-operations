@@ -368,8 +368,8 @@ namespace Tanneryd.BulkOperations.EFCore
                     }))
                         await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
-                    var conditionStatements =
-                        keyMappings.Values.Select(c => $"t0.[{c.TableColumn.Column.Name}] = t1.[{c.TableColumn.Column.Name}]");
+                    var conditionStatements = keyMappings.Values.Select(c =>
+                        $"([t0].[{c.TableColumn.Column.Name}] = [t1].[{c.TableColumn.Column.Name}] OR ([t0].[{c.TableColumn.Column.Name}] IS NULL AND [t1].[{c.TableColumn.Column.Name}] IS NULL))");
                     var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                     var query = $@"SELECT [t0].*
                                    FROM {tableName.Fullname} AS [t0]

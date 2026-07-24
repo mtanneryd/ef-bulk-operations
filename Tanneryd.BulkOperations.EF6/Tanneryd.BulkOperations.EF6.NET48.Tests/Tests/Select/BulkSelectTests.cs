@@ -20,6 +20,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6.Model;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Numbers;
+using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.DM.Prices;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF;
 
 namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Select
@@ -131,6 +132,61 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Select
                     Assert.AreEqual(expectedNumbers[i].UpdatedBy, existingNumbers[i].UpdatedBy);
                     Assert.AreEqual(expectedNumbers[i].Value, existingNumbers[i].Value);
                 }
+            }
+        }
+
+        /// <summary>
+        /// BulkSelect joins with plain equality. Nullable key columns that are
+        /// null in both the probe and the table never match (NULL = NULL is
+        /// unknown). Sibling select paths use OR (IS NULL AND IS NULL).
+        /// </summary>
+        [TestMethod]
+        public void BulkSelectShouldMatchWhenNullableKeyColumnIsNull()
+        {
+            using (var db = new UnitTestContext())
+            {
+                db.Prices.Add(new Price { Date = new DateTime(2019, 1, 1), Name = "ERICB", Value = 80 });
+                db.Prices.Add(new Price { Date = new DateTime(2019, 1, 2), Name = "ERICB", Value = null });
+                db.Prices.Add(new Price { Date = new DateTime(2019, 1, 3), Name = "ERICB", Value = 82 });
+                db.SaveChanges();
+
+                var keys = new[]
+                {
+                    new Price { Date = new DateTime(2019, 1, 1), Name = "ERICB", Value = 80 },
+                    new Price { Date = new DateTime(2019, 1, 2), Name = "ERICB", Value = null },
+                    new Price { Date = new DateTime(2019, 1, 3), Name = "ERICB", Value = 82 },
+                };
+
+                var selected = db.BulkSelect<Price, Price>(
+                    new BulkSelectRequest<Price>(new[] { "Date", "Name", "Value" }, keys)).ToArray();
+
+                Assert.AreEqual(3, selected.Length);
+                Assert.AreEqual(80m, selected[0].Value);
+                Assert.IsNull(selected[1].Value);
+                Assert.AreEqual(82m, selected[2].Value);
+            }
+        }
+
+        /// <summary>
+        /// Null probe values must not match non-null column defaults (e.g. 0).
+        /// </summary>
+        [TestMethod]
+        public void BulkSelectShouldNotMatchZeroWhenNullableKeyIsNull()
+        {
+            using (var db = new UnitTestContext())
+            {
+                db.Prices.Add(new Price { Date = new DateTime(2019, 1, 4), Name = "ERICB", Value = 0 });
+                db.SaveChanges();
+
+                var keys = new[]
+                {
+                    new Price { Date = new DateTime(2019, 1, 4), Name = "ERICB", Value = null },
+                };
+
+                var selected = db.BulkSelect<Price, Price>(
+                    new BulkSelectRequest<Price>(new[] { "Date", "Name", "Value" }, keys)).ToArray();
+
+                Assert.AreEqual(0, selected.Length);
             }
         }
 
