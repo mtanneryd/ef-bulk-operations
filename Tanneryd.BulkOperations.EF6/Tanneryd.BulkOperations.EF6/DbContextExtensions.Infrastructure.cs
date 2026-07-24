@@ -136,8 +136,10 @@ namespace Tanneryd.BulkOperations.EF6
             string[] columnNames,
             IncludeRowNumber includeRowNumber = IncludeRowNumber.No,
             CancellationToken cancellationToken = default,
-            ISet<string> castToVarBinary8Columns = null)
+            ISet<string> castToVarBinary8Columns = null,
+            TableColumn[] extraColumnNames = null)
         {
+            extraColumnNames = extraColumnNames ?? Array.Empty<TableColumn>();
             var selectClause = string.Join(",", columnNames.Select(p =>
                 castToVarBinary8Columns != null && castToVarBinary8Columns.Contains(p)
                     ? $"CAST([{p}] AS varbinary(8)) AS [{p}]"
@@ -145,12 +147,24 @@ namespace Tanneryd.BulkOperations.EF6
 
             if (discriminator != null)
             {
-                selectClause = $"[{discriminator.Column.Name}]," + selectClause;
+                selectClause = string.IsNullOrEmpty(selectClause)
+                    ? $"[{discriminator.Column.Name}]"
+                    : $"[{discriminator.Column.Name}]," + selectClause;
             }
 
             if (includeRowNumber == IncludeRowNumber.Yes)
             {
-                selectClause = "cast(1 as int) as rowno," + selectClause;
+                selectClause = string.IsNullOrEmpty(selectClause)
+                    ? "cast(1 as int) as rowno"
+                    : "cast(1 as int) as rowno," + selectClause;
+            }
+
+            foreach (var extraColumnName in extraColumnNames)
+            {
+                var extra = extraColumnName.UseQuotes
+                    ? $"cast('{extraColumnName.DefaultValue}' as {extraColumnName.SqlType}) as [{extraColumnName.Name}]"
+                    : $"cast({extraColumnName.DefaultValue} as {extraColumnName.SqlType}) as [{extraColumnName.Name}]";
+                selectClause = string.IsNullOrEmpty(selectClause) ? extra : selectClause + "," + extra;
             }
 
             var guid = Guid.NewGuid().ToString("N");
@@ -194,11 +208,13 @@ namespace Tanneryd.BulkOperations.EF6
             SqlBulkCopyOptions options = SqlBulkCopyOptions.Default,
             IncludeRowNumber includeRowNumber = IncludeRowNumber.No,
             TimeSpan? bulkCopyTimeout = null,
-            bool useTableLock = false)
+            bool useTableLock = false,
+            TableColumn[] extraColumnNames = null)
         {
             if (useTableLock)
                 options |= SqlBulkCopyOptions.TableLock;
 
+            extraColumnNames = extraColumnNames ?? Array.Empty<TableColumn>();
             var bulkCopy = connection.CreateBulkCopy(options, transaction, tableName);
             bulkCopy.EnableStreaming = true;
             // BatchSize left at ADO.NET default (0). Avoid the previous hard-coded 1_000_000.
@@ -231,6 +247,12 @@ namespace Tanneryd.BulkOperations.EF6
                 Type discriminatorType = Type.GetType(discriminator.Column.PrimitiveType.ClrEquivalentType.FullName);
                 table.Columns.Add(new DataColumn(discriminator.Column.Name, discriminatorType));
                 bulkCopy.AddColumnMapping(discriminator.Column.Name, discriminator.Column.Name);
+            }
+
+            foreach (var extraColumnName in extraColumnNames)
+            {
+                table.Columns.Add(new DataColumn(extraColumnName.Name, extraColumnName.Type));
+                bulkCopy.AddColumnMapping(extraColumnName.Name, extraColumnName.Name);
             }
 
             if (includeRowNumber == IncludeRowNumber.Yes)

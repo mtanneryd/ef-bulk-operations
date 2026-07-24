@@ -159,15 +159,17 @@ namespace Tanneryd.BulkOperations.EFCore
 
             if (includeRowNumber == IncludeRowNumber.Yes)
             {
-                selectClause = "cast(1 as int) as rowno," + selectClause;
+                selectClause = string.IsNullOrEmpty(selectClause)
+                    ? "cast(1 as int) as rowno"
+                    : "cast(1 as int) as rowno," + selectClause;
             }
 
             foreach (var extraColumnName in extraColumnNames)
             {
-                if (extraColumnName.UseQuotes)
-                    selectClause = selectClause + $",cast('{extraColumnName.DefaultValue}' as {extraColumnName.SqlType}) as {extraColumnName.Name}";
-                else
-                    selectClause = selectClause + $",cast({extraColumnName.DefaultValue} as {extraColumnName.SqlType}) as {extraColumnName.Name}";
+                var extra = extraColumnName.UseQuotes
+                    ? $"cast('{extraColumnName.DefaultValue}' as {extraColumnName.SqlType}) as [{extraColumnName.Name}]"
+                    : $"cast({extraColumnName.DefaultValue} as {extraColumnName.SqlType}) as [{extraColumnName.Name}]";
+                selectClause = string.IsNullOrEmpty(selectClause) ? extra : selectClause + "," + extra;
             }
 
             var guid = Guid.NewGuid().ToString("N");

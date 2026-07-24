@@ -464,5 +464,98 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Select
                 Assert.AreEqual(id, probe.Id);
             }
         }
+
+        /// <summary>
+        /// Nav-dot keys (e.g. Parity.Id) join the related table using FK/select
+        /// names resolved to store columns. Parity.Id stores as column Key.
+        /// </summary>
+        [TestMethod]
+        public void BulkSelectExisting_ShouldMatchViaNavDotKey_WhenPropertyNameDiffersFromColumnName()
+        {
+            using (var db = new UnitTestContext())
+            {
+                var now = DateTime.Now;
+                var numbers = GenerateNumbers(1, 5, now).ToArray();
+                db.BulkInsertAll(new BulkInsertRequest<Number>
+                {
+                    Entities = numbers,
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                });
+
+                var seeded = numbers[0];
+                var probe = new Number
+                {
+                    Value = seeded.Value,
+                    ParityId = seeded.ParityId,
+                    UpdatedAt = now,
+                    UpdatedBy = "probe",
+                };
+
+                var existing = db.BulkSelectExisting<Number, Number>(new BulkSelectRequest<Number>
+                {
+                    Items = new[] { probe },
+                    KeyPropertyMappings = new[]
+                    {
+                        new KeyPropertyMapping
+                        {
+                            EntityPropertyName = nameof(Number.Value),
+                            ItemPropertyName = nameof(Number.Value),
+                        },
+                        new KeyPropertyMapping
+                        {
+                            EntityPropertyName = "Parity.Id",
+                            ItemPropertyName = nameof(Number.ParityId),
+                        },
+                    },
+                });
+
+                Assert.AreEqual(1, existing.Count);
+                Assert.AreSame(probe, existing[0]);
+            }
+        }
+
+        /// <summary>
+        /// A nav-dot key alone must still produce valid SQL and resolve store
+        /// column names for the related-table join. Parity.Id maps to column Key.
+        /// </summary>
+        [TestMethod]
+        public void BulkSelectExisting_ShouldMatchWhenOnlyNavDotKeyIsProvided()
+        {
+            using (var db = new UnitTestContext())
+            {
+                var now = DateTime.Now;
+                var numbers = GenerateNumbers(1, 1, now).ToArray();
+                db.BulkInsertAll(new BulkInsertRequest<Number>
+                {
+                    Entities = numbers,
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                });
+
+                var seeded = numbers[0];
+                var probe = new Number
+                {
+                    Value = -1,
+                    ParityId = seeded.ParityId,
+                    UpdatedAt = now,
+                    UpdatedBy = "probe",
+                };
+
+                var existing = db.BulkSelectExisting<Number, Number>(new BulkSelectRequest<Number>
+                {
+                    Items = new[] { probe },
+                    KeyPropertyMappings = new[]
+                    {
+                        new KeyPropertyMapping
+                        {
+                            EntityPropertyName = "Parity.Id",
+                            ItemPropertyName = nameof(Number.ParityId),
+                        },
+                    },
+                });
+
+                Assert.AreEqual(1, existing.Count);
+                Assert.AreSame(probe, existing[0]);
+            }
+        }
     }
 }

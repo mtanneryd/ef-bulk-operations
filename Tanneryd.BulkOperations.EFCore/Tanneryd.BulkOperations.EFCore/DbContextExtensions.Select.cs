@@ -421,14 +421,9 @@ namespace Tanneryd.BulkOperations.EFCore
             DbContext ctx,
             Type dbTableEntityType)
         {
-            // We allow for one of the request.KeyPropertyMappings to represent
-            // a property in a foreign key nav property of the actual table we
-            // are selecting existing entities from. These have an entity property
-            // name like <nav prop name>.<name>. So, if we are looking for
-            // employees belonging to a company where the employee fk to the
-            // company has the nav property Employer and the name of the company
-            // in the company table has the property Name the EntityPropertyName
-            // would have to have the value "Employer.Name" for this hack to work.
+            // One KeyPropertyMapping may target a property on a many-to-one
+            // navigation, using EntityPropertyName "<nav>.<property>" (e.g.
+            // "Parity.Id" or "Company.Name").
             if (keyPropertyMappings.Any(m=>m.EntityPropertyName.Contains(".")))
             {
                 var keyPropertyMapping = (
@@ -452,15 +447,28 @@ namespace Tanneryd.BulkOperations.EFCore
                 var fromProperty = fkMapping.ForeignKeyRelations[0].FromProperty;
                 var toProperty = fkMapping.ForeignKeyRelations[0].ToProperty;
 
+                if (!navigationPropertyTableMappings.ColumnMappingByPropertyName.TryGetValue(fromProperty, out var fromMapping))
+                {
+                    throw new ArgumentException(
+                        "Nav-dot SelectExisting could not resolve principal key property '" + fromProperty +
+                        "' on related type '" + navigationPropertyType.Name + "'.");
+                }
+                if (!mappings.ColumnMappingByPropertyName.TryGetValue(toProperty, out var toMapping))
+                {
+                    throw new ArgumentException(
+                        "Nav-dot SelectExisting could not resolve foreign key property '" + toProperty +
+                        "' on type '" + dbTableEntityType.Name + "'.");
+                }
+
                 return new SelectMapping
                 {
                     ItemPropertyName = keyPropertyMapping.ItemPropertyName,
-                    SelectPropertyName = selectPropertyTableColumnMapping.EntityProperty.Name,
+                    SelectPropertyName = selectPropertyTableColumnMapping.TableColumn.Column.Name,
                     SelectPropertyType = selectPropertyTableColumnMapping.EntityProperty.ClrType,
                     SelectPropertySqlType = selectPropertyTableColumnMapping.TableColumn.Column.StoreType,
                     TableName = navigationPropertyTableName,
-                    FkFromPropertyName = fromProperty,
-                    FkToPropertyName = toProperty
+                    FkFromPropertyName = fromMapping.TableColumn.Column.Name,
+                    FkToPropertyName = toMapping.TableColumn.Column.Name
                 };
             }
 
@@ -519,7 +527,8 @@ namespace Tanneryd.BulkOperations.EFCore
                         Name = selectMapping.ItemPropertyName,
                         Type = selectMapping.SelectPropertyType,
                         SqlType = selectMapping.SelectPropertySqlType,
-                        UseQuotes = true
+                        UseQuotes = (Nullable.GetUnderlyingType(selectMapping.SelectPropertyType) ??
+                                     selectMapping.SelectPropertyType) == typeof(string)
                     };
                     extraColumnNames.Add(extraColumn);
                 }
@@ -583,18 +592,24 @@ namespace Tanneryd.BulkOperations.EFCore
                     var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                     // We could improve performance here by replacing "[t1].*" below with the actual
                     // columns as specified in request.ColumnPropertyMappings.
-                    var query = $@"SELECT DISTINCT [t0].[rowno], [t1].*
+                    string query;
+                    if (keyMappings.Any())
+                    {
+                        query = $@"SELECT DISTINCT [t0].[rowno], [t1].*
                                    FROM {tempTableName} AS [t0]
                                    INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
+                    }
+                    else
+                    {
+                        // Nav-dot key only: no resolvable table-key ON clause.
+                        // CROSS JOIN + related-table filter still matches existing rows.
+                        query = $@"SELECT DISTINCT [t0].[rowno], [t1].*
+                                   FROM {tempTableName} AS [t0]
+                                   CROSS JOIN {tableName.Fullname} AS [t1]";
+                    }
                     
                     if (selectMapping != null)
                     {
-                        // Figure out the db table name of the table we want to join with.
-                        //var joinTableMember = typeof(T2).GetProperty(selectMapping.ForeignKeyMapping.NavigationPropertyName);
-                        //var joinTableType = joinTableMember.PropertyType;
-                        //var joinTableName = GetMappingExtractor(ctx).GetTableName(ctx, joinTableType);
-                        //var fromProperty = selectMapping.ForeignKeyMapping.ForeignKeyRelations[0].FromProperty;
-                        //var toProperty = selectMapping.ForeignKeyMapping.ForeignKeyRelations[0].ToProperty;
                         var fkJoinStatement = $"INNER JOIN {selectMapping.TableName.Fullname} AS [t2] ON [t2].[{selectMapping.FkFromPropertyName}] = [t1].[{selectMapping.FkToPropertyName}]";
                         var fkWhereStatement = $"WHERE [t2].[{selectMapping.SelectPropertyName}] = [t0].[{selectMapping.ItemPropertyName}]";
                         query = $@"{query}

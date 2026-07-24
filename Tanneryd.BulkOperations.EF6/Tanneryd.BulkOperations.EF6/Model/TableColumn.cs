@@ -1,0 +1,42 @@
+/*
+ * Copyright ©  2017-2026 Tånneryd IT AB
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+using System;
+
+namespace Tanneryd.BulkOperations.EF6.Model
+{
+    /// <summary>
+    /// Staging-only column description for temp tables (e.g. nav-dot SelectExisting
+    /// probe values that are not mapped columns on the target entity table).
+    /// </summary>
+    public class TableColumn
+    {
+        public Type Type { get; set; }
+        public string SqlType { get; set; }
+        public bool UseQuotes { get; set; }
+        public string Name { get; set; }
+
+        public string DefaultValue
+        {
+            get
+            {
+                if (SqlType != null && SqlType.IndexOf("varchar", StringComparison.OrdinalIgnoreCase) >= 0)
+                    return "<empty>";
+                return "0";
+            }
+        }
+    }
+}

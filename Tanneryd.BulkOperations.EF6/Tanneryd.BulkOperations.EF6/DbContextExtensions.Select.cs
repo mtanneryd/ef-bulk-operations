@@ -417,6 +417,68 @@ namespace Tanneryd.BulkOperations.EF6
             return new List<T2>();
         }
 
+        private static SelectMapping FindJoinTableMappingsForSelectExisting(
+            KeyPropertyMapping[] keyPropertyMappings,
+            Mappings mappings,
+            DbContext ctx,
+            Type dbTableEntityType)
+        {
+            // One KeyPropertyMapping may target a property on a many-to-one
+            // navigation, using EntityPropertyName "<nav>.<property>" (e.g.
+            // "Parity.Id" or "Company.Name").
+            if (keyPropertyMappings.Any(m => m.EntityPropertyName.Contains(".")))
+            {
+                var keyPropertyMapping = (
+                        from m in keyPropertyMappings
+                        where m.EntityPropertyName.Contains(".")
+                        select m)
+                    .Single();
+
+                var navPropertyName = keyPropertyMapping.EntityPropertyName.Split('.')[0];
+                var selectPropertyName = keyPropertyMapping.EntityPropertyName.Split('.')[1];
+                var fkMapping = (
+                    from m in mappings.ToForeignKeyMappings
+                    where m.NavigationPropertyName == navPropertyName
+                    select m).Single();
+
+                var navigationProperty = dbTableEntityType.GetProperty(fkMapping.NavigationPropertyName);
+                var navigationPropertyType = navigationProperty.PropertyType;
+                var navigationPropertyTableMappings = MappingExtractor.GetMappings(ctx, navigationPropertyType);
+                var selectPropertyTableColumnMapping =
+                    navigationPropertyTableMappings.ColumnMappingByPropertyName[selectPropertyName];
+                var navigationPropertyTableName = MappingExtractor.GetTableName(ctx, navigationPropertyType);
+                var fromProperty = fkMapping.ForeignKeyRelations[0].FromProperty;
+                var toProperty = fkMapping.ForeignKeyRelations[0].ToProperty;
+
+                if (!navigationPropertyTableMappings.ColumnMappingByPropertyName.TryGetValue(fromProperty, out var fromMapping))
+                {
+                    throw new ArgumentException(
+                        "Nav-dot SelectExisting could not resolve principal key property '" + fromProperty +
+                        "' on related type '" + navigationPropertyType.Name + "'.");
+                }
+                if (!mappings.ColumnMappingByPropertyName.TryGetValue(toProperty, out var toMapping))
+                {
+                    throw new ArgumentException(
+                        "Nav-dot SelectExisting could not resolve foreign key property '" + toProperty +
+                        "' on type '" + dbTableEntityType.Name + "'.");
+                }
+
+                var selectClrType = selectPropertyTableColumnMapping.EntityProperty.PrimitiveType.ClrEquivalentType;
+                return new SelectMapping
+                {
+                    ItemPropertyName = keyPropertyMapping.ItemPropertyName,
+                    SelectPropertyName = selectPropertyTableColumnMapping.TableColumn.Name,
+                    SelectPropertyType = selectClrType,
+                    SelectPropertySqlType = selectPropertyTableColumnMapping.TableColumn.TypeName,
+                    TableName = navigationPropertyTableName,
+                    FkFromPropertyName = fromMapping.TableColumn.Name,
+                    FkToPropertyName = toMapping.TableColumn.Name
+                };
+            }
+
+            return null;
+        }
+
         private static async Task<IList<T1>> DoBulkSelectExistingAsync<T1, T2>(
             DbContext ctx,
             BulkSelectRequest<T1> request,
@@ -443,7 +505,10 @@ namespace Tanneryd.BulkOperations.EF6
                 .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.EntityProperty.Name))
                 .ToDictionary(m => m.EntityProperty.Name, m => m);
 
-            if (keyMappings.Any())
+            var selectMapping = FindJoinTableMappingsForSelectExisting(
+                request.KeyPropertyMappings, mappings, ctx, typeof(T2));
+
+            if (keyMappings.Any() || selectMapping != null)
             {
                 var containsIdentityKey = keyMappings.Any(m =>
                     m.Value.TableColumn.IsStoreGeneratedIdentity &&
@@ -453,6 +518,21 @@ namespace Tanneryd.BulkOperations.EF6
                 // does nothing if the temp table has no rowno column.
                 // Key-only staging: omit Discriminator (EF Core parity); materializers
                 // emit keys + rowno only.
+                var columnNames = keyMappings.Select(m => m.Value.TableColumn.Name).ToArray();
+                var extraColumnNames = new List<TableColumn>();
+                if (selectMapping != null)
+                {
+                    var selectClrType = Nullable.GetUnderlyingType(selectMapping.SelectPropertyType) ??
+                                        selectMapping.SelectPropertyType;
+                    extraColumnNames.Add(new TableColumn
+                    {
+                        Name = selectMapping.ItemPropertyName,
+                        Type = selectMapping.SelectPropertyType,
+                        SqlType = selectMapping.SelectPropertySqlType,
+                        UseQuotes = selectClrType == typeof(string)
+                    });
+                }
+
                 string tempTableName = null;
                 var identityInsertEnabled = false;
                 try
@@ -462,9 +542,10 @@ namespace Tanneryd.BulkOperations.EF6
                         request.Transaction,
                         tableName,
                         null,
-                        keyMappings.Select(m => m.Value.TableColumn.Name).ToArray(),
+                        columnNames,
                         IncludeRowNumber.Yes,
-                        cancellationToken).ConfigureAwait(false);
+                        cancellationToken,
+                        extraColumnNames: extraColumnNames.ToArray()).ConfigureAwait(false);
 
                     var keyProperties = GetProperties(t)
                         .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
@@ -481,7 +562,8 @@ namespace Tanneryd.BulkOperations.EF6
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes,
                         request.CommandTimeout,
-                        request.UseTableLock);
+                        request.UseTableLock,
+                        extraColumnNames.ToArray());
                     if (containsIdentityKey)
                     {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
@@ -494,6 +576,8 @@ namespace Tanneryd.BulkOperations.EF6
                         var columnValues = new List<object>();
                         columnValues.AddRange(keyProperties.Select(p =>
                             (object)GetProperty(type, itemPropertyByEntityProperty[p.Name], entity, DBNull.Value)));
+                        columnValues.AddRange(extraColumnNames.Select(p =>
+                            (object)GetProperty(type, p.Name, entity, DBNull.Value)));
                         columnValues.Add(rowIndex);
                         return columnValues.ToArray();
                     }))
@@ -507,10 +591,33 @@ namespace Tanneryd.BulkOperations.EF6
                     });
 
                     var conditionStatementsSql = string.Join(" AND ", conditionStatements);
-                    var query = $@"SELECT DISTINCT [t0].[rowno], [t1].*
+                    string query;
+                    if (keyMappings.Any())
+                    {
+                        query = $@"SELECT DISTINCT [t0].[rowno], [t1].*
                                    FROM {tempTableName} AS [t0]
                                    INNER JOIN {tableName.Fullname} AS [t1] ON {conditionStatementsSql}";
+                    }
+                    else
+                    {
+                        // Nav-dot key only: no resolvable table-key ON clause.
+                        query = $@"SELECT DISTINCT [t0].[rowno], [t1].*
+                                   FROM {tempTableName} AS [t0]
+                                   CROSS JOIN {tableName.Fullname} AS [t1]";
+                    }
 
+                    if (selectMapping != null)
+                    {
+                        var fkJoinStatement =
+                            $"INNER JOIN {selectMapping.TableName.Fullname} AS [t2] ON [t2].[{selectMapping.FkFromPropertyName}] = [t1].[{selectMapping.FkToPropertyName}]";
+                        var fkWhereStatement =
+                            $"WHERE [t2].[{selectMapping.SelectPropertyName}] = [t0].[{selectMapping.ItemPropertyName}]";
+                        query = $@"{query}
+                                   {fkJoinStatement}
+                                   {fkWhereStatement}";
+                    }
+
+                    query += "\nORDER BY [t0].[rowno]";
                     using var cmd = CreateSqlCommand(query, conn, request.Transaction, request.CommandTimeout);
 
                     var existingEntities = new List<T1>();
