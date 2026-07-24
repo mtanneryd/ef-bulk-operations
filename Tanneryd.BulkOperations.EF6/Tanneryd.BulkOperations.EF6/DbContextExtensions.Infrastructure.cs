@@ -268,7 +268,9 @@ namespace Tanneryd.BulkOperations.EF6
         /// back to WITH NOCHECK so constraints are enabled again, then rethrows the
         /// WITH CHECK failure so callers still observe FK/CHECK violations (e.g.
         /// missing self-references). Always uses CancellationToken.None so a
-        /// cancelled caller cannot skip re-enable.
+        /// cancelled caller cannot skip re-enable. Catches both
+        /// Microsoft.Data.SqlClient and System.Data.SqlClient SqlException so the
+        /// legacy provider still runs the NOCHECK fallback.
         /// </summary>
         private static async Task ReenableCheckConstraintsAsync(
             DbContext ctx,
@@ -283,7 +285,7 @@ namespace Tanneryd.BulkOperations.EF6
                 using var cmd = CreateSqlCommand(withCheck, connection, transaction, TimeSpan.FromSeconds(30));
                 await cmd.ExecuteNonQueryAsync(CancellationToken.None).ConfigureAwait(false);
             }
-            catch (SqlException)
+            catch (Exception ex) when (ex is SqlException || ex is System.Data.SqlClient.SqlException)
             {
                 // Data may be inconsistent after cancel or a bad self-ref graph.
                 // Still turn constraints back on, then surface the validation error.
