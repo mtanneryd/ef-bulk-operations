@@ -27,8 +27,6 @@ namespace Tanneryd.BulkOperations.EF6.Model
     /// The property ForeignKeyRelations holds mapping data used for (1)
     /// and the property AssociationMapping holds data used for (2).
     /// 
-    /// We do not support Many-To-Many relationships with compound keys.
-    /// 
     /// </summary>
     public class ForeignKeyMapping
     {

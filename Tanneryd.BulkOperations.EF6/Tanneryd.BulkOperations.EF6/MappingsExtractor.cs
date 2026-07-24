@@ -175,18 +175,22 @@ namespace Tanneryd.BulkOperations.EF6
                         associationSetMaps.Any(m => m.AssociationSet.Name == relType.Name))
                     {
                         var map = associationSetMaps.Single(m => m.AssociationSet.Name == relType.Name);
-                        var sourceMapping =
-                            new TableColumnMapping
+                        // Map every PropertyMapping on each end so composite
+                        // principal keys produce a full join-table column set.
+                        var sourceMappings = map.SourceEndMapping.PropertyMappings
+                            .Select(pm => new TableColumnMapping
                             {
-                                TableColumn = map.SourceEndMapping.PropertyMappings[0].Column,
-                                EntityProperty = map.SourceEndMapping.PropertyMappings[0].Property,
-                            };
-                        var targetMapping =
-                            new TableColumnMapping
+                                TableColumn = pm.Column,
+                                EntityProperty = pm.Property,
+                            })
+                            .ToArray();
+                        var targetMappings = map.TargetEndMapping.PropertyMappings
+                            .Select(pm => new TableColumnMapping
                             {
-                                TableColumn = map.TargetEndMapping.PropertyMappings[0].Column,
-                                EntityProperty = map.TargetEndMapping.PropertyMappings[0].Property,
-                            };
+                                TableColumn = pm.Column,
+                                EntityProperty = pm.Property,
+                            })
+                            .ToArray();
 
                         fkMapping.FromType = (map.SourceEndMapping.AssociationEnd.TypeUsage.EdmType as RefType)
                             ?.ElementType.Name;
@@ -202,8 +206,8 @@ namespace Tanneryd.BulkOperations.EF6
                                 Name = name,
                                 Schema = schema,
                             },
-                            Source = sourceMapping,
-                            Target = targetMapping
+                            Sources = sourceMappings,
+                            Targets = targetMappings
                         };
                     }
                     //
@@ -270,8 +274,8 @@ namespace Tanneryd.BulkOperations.EF6
                 .Select(m => m.AssociationMapping);
             foreach (var associationMapping in associationMappings)
             {
-                associationMapping.Source.IsForeignKey = true;
-                associationMapping.Target.IsForeignKey = true;
+                foreach (var end in associationMapping.Sources.Concat(associationMapping.Targets))
+                    end.IsForeignKey = true;
             }
 
             associationMappings = mappings.FromForeignKeyMappings
@@ -279,8 +283,8 @@ namespace Tanneryd.BulkOperations.EF6
                 .Select(m => m.AssociationMapping);
             foreach (var associationMapping in associationMappings)
             {
-                associationMapping.Source.IsForeignKey = true;
-                associationMapping.Target.IsForeignKey = true;
+                foreach (var end in associationMapping.Sources.Concat(associationMapping.Targets))
+                    end.IsForeignKey = true;
             }
 
             return mappings;

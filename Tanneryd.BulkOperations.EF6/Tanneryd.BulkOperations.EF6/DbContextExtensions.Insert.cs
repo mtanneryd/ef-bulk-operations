@@ -314,18 +314,22 @@ namespace Tanneryd.BulkOperations.EF6
                         foreach (var joinTableNavPropertiesForEntity in joinTableNavPropertiesByEntity)
                         {
                             var entity = joinTableNavPropertiesForEntity.Key;
-                            if (fkMapping.AssociationMapping.Source.EntityProperty.DeclaringType.Name ==
+                            if (fkMapping.AssociationMapping.Sources[0].EntityProperty.DeclaringType.Name ==
                                 MappingExtractor.ResolveMappedClrType(ctx, entity.GetType()).Name)
                             {
                                 foreach (var navProperty in joinTableNavPropertiesForEntity.Value)
                                 {
                                     dynamic np = new ExpandoObject();
-                                    AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name,
-                                        GetProperty(t, fkMapping.AssociationMapping.Source.EntityProperty.Name,
-                                            entity));
-                                    AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name,
-                                        GetProperty(navPropertyType,
-                                            fkMapping.AssociationMapping.Target.EntityProperty.Name, navProperty));
+                                    foreach (var source in fkMapping.AssociationMapping.Sources)
+                                    {
+                                        AddProperty(np, source.TableColumn.Name,
+                                            GetProperty(t, source.EntityProperty.Name, entity));
+                                    }
+                                    foreach (var target in fkMapping.AssociationMapping.Targets)
+                                    {
+                                        AddProperty(np, target.TableColumn.Name,
+                                            GetProperty(navPropertyType, target.EntityProperty.Name, navProperty));
+                                    }
                                     navPropertyEntities.Add(np);
                                 }
                             }
@@ -334,12 +338,16 @@ namespace Tanneryd.BulkOperations.EF6
                                 foreach (var navProperty in joinTableNavPropertiesForEntity.Value)
                                 {
                                     dynamic np = new ExpandoObject();
-                                    AddProperty(np, fkMapping.AssociationMapping.Source.TableColumn.Name,
-                                        GetProperty(navPropertyType,
-                                            fkMapping.AssociationMapping.Source.EntityProperty.Name, navProperty));
-                                    AddProperty(np, fkMapping.AssociationMapping.Target.TableColumn.Name,
-                                        GetProperty(t, fkMapping.AssociationMapping.Target.EntityProperty.Name,
-                                            entity));
+                                    foreach (var source in fkMapping.AssociationMapping.Sources)
+                                    {
+                                        AddProperty(np, source.TableColumn.Name,
+                                            GetProperty(navPropertyType, source.EntityProperty.Name, navProperty));
+                                    }
+                                    foreach (var target in fkMapping.AssociationMapping.Targets)
+                                    {
+                                        AddProperty(np, target.TableColumn.Name,
+                                            GetProperty(t, target.EntityProperty.Name, entity));
+                                    }
                                     navPropertyEntities.Add(np);
                                 }
                             }
@@ -376,20 +384,17 @@ namespace Tanneryd.BulkOperations.EF6
                                 TableName = fkMapping.AssociationMapping.TableName,
                                 ColumnMappingByPropertyName = new Dictionary<string, TableColumnMapping>()
                             };
-                            expandoMappings.ColumnMappingByPropertyName.Add(
-                                fkMapping.AssociationMapping.Source.TableColumn.Name,
-                                new TableColumnMapping
-                                {
-                                    EntityProperty = fkMapping.AssociationMapping.Source.TableColumn,
-                                    TableColumn = fkMapping.AssociationMapping.Source.TableColumn
-                                });
-                            expandoMappings.ColumnMappingByPropertyName.Add(
-                                fkMapping.AssociationMapping.Target.TableColumn.Name,
-                                new TableColumnMapping
-                                {
-                                    EntityProperty = fkMapping.AssociationMapping.Target.TableColumn,
-                                    TableColumn = fkMapping.AssociationMapping.Target.TableColumn
-                                });
+                            foreach (var end in fkMapping.AssociationMapping.Sources
+                                         .Concat(fkMapping.AssociationMapping.Targets))
+                            {
+                                expandoMappings.ColumnMappingByPropertyName.Add(
+                                    end.TableColumn.Name,
+                                    new TableColumnMapping
+                                    {
+                                        EntityProperty = end.TableColumn,
+                                        TableColumn = end.TableColumn
+                                    });
+                            }
                             await DoBulkCopyAsync(
                                 ctx,
                                 navPropertyEntities.ToArray(),

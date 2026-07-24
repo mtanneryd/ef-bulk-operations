@@ -16,10 +16,19 @@
 
 namespace Tanneryd.BulkOperations.EFCore.Model
 {
+    /// <summary>
+    /// Join-table mapping for a many-to-many association.
+    /// Each end may have one or more columns when the related entity uses a
+    /// composite primary key (<see cref="Sources"/> / <see cref="Targets"/>).
+    /// </summary>
     public class AssociationMapping
     {
         public TableName TableName { get; set; }
-        public TableColumnMapping Source { get; set; }
-        public TableColumnMapping Target { get; set; }
+
+        /// <summary>Join columns for the association source end (principal key → join FK).</summary>
+        public TableColumnMapping[] Sources { get; set; }
+
+        /// <summary>Join columns for the association target end (principal key → join FK).</summary>
+        public TableColumnMapping[] Targets { get; set; }
     }
 }

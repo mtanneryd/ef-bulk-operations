@@ -190,8 +190,8 @@ namespace Tanneryd.BulkOperations.EFCore
                          .Where(m => m.AssociationMapping != null)
                          .Select(m => m.AssociationMapping))
             {
-                associationMapping.Source.IsForeignKey = true;
-                associationMapping.Target.IsForeignKey = true;
+                foreach (var end in associationMapping.Sources.Concat(associationMapping.Targets))
+                    end.IsForeignKey = true;
             }
 
             return mappings;
@@ -199,7 +199,7 @@ namespace Tanneryd.BulkOperations.EFCore
 
         /// <summary>
         /// Build join-table Source/Target mappings for a skip navigation.
-        /// Only single-column association ends are supported (same as EF6).
+        /// Supports multi-column association ends when an entity uses a composite PK.
         /// </summary>
         private static AssociationMapping CreateAssociationMapping(ISkipNavigation skipNavigation)
         {
@@ -209,20 +209,14 @@ namespace Tanneryd.BulkOperations.EFCore
 
             var thisFk = skipNavigation.ForeignKey;
             var otherFk = inverse.ForeignKey;
-            if (thisFk.Properties.Count != 1 || otherFk.Properties.Count != 1)
-                return null;
-            if (thisFk.PrincipalKey.Properties.Count != 1 || otherFk.PrincipalKey.Properties.Count != 1)
+            if (thisFk.Properties.Count != thisFk.PrincipalKey.Properties.Count ||
+                otherFk.Properties.Count != otherFk.PrincipalKey.Properties.Count)
                 return null;
 
             var joinEntityType = skipNavigation.JoinEntityType;
-            var thisJoinProperty = thisFk.Properties[0];
-            var otherJoinProperty = otherFk.Properties[0];
-            var thisPrincipalProperty = thisFk.PrincipalKey.Properties[0];
-            var otherPrincipalProperty = otherFk.PrincipalKey.Properties[0];
-
-            var thisColumn = thisJoinProperty.GetTableColumnMappings().FirstOrDefault();
-            var otherColumn = otherJoinProperty.GetTableColumnMappings().FirstOrDefault();
-            if (thisColumn == null || otherColumn == null)
+            var sources = CreateAssociationEndMappings(thisFk);
+            var targets = CreateAssociationEndMappings(otherFk);
+            if (sources == null || targets == null)
                 return null;
 
             return new AssociationMapping
@@ -232,23 +226,34 @@ namespace Tanneryd.BulkOperations.EFCore
                     Name = joinEntityType.GetTableName(),
                     Schema = joinEntityType.GetSchema(),
                 },
-                // Source = declaring entity end; Target = other end.
-                // Both join columns form the composite PK of the join table.
-                Source = new TableColumnMapping
-                {
-                    EntityProperty = thisPrincipalProperty,
-                    TableColumn = thisColumn,
-                    IsPrimaryKey = true,
-                    IsForeignKey = true,
-                },
-                Target = new TableColumnMapping
-                {
-                    EntityProperty = otherPrincipalProperty,
-                    TableColumn = otherColumn,
-                    IsPrimaryKey = true,
-                    IsForeignKey = true,
-                },
+                // Sources = declaring entity end; Targets = other end.
+                // Together they form the composite PK of the join table.
+                Sources = sources,
+                Targets = targets,
             };
+        }
+
+        private static TableColumnMapping[] CreateAssociationEndMappings(IForeignKey foreignKey)
+        {
+            var mappings = new TableColumnMapping[foreignKey.Properties.Count];
+            for (var i = 0; i < foreignKey.Properties.Count; i++)
+            {
+                var joinProperty = foreignKey.Properties[i];
+                var principalProperty = foreignKey.PrincipalKey.Properties[i];
+                var column = joinProperty.GetTableColumnMappings().FirstOrDefault();
+                if (column == null)
+                    return null;
+
+                mappings[i] = new TableColumnMapping
+                {
+                    EntityProperty = principalProperty,
+                    TableColumn = column,
+                    IsPrimaryKey = true,
+                    IsForeignKey = true,
+                };
+            }
+
+            return mappings;
         }
 
         private static TableColumnMapping CreateTableColumnMapping(IProperty property, bool isIncludedFromComplexType)

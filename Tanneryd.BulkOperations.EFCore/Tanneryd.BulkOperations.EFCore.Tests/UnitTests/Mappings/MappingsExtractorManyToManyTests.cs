@@ -63,8 +63,10 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Mappings
                 "Post.Visitors must have AssociationMapping so join rows can be bulk-copied.");
             Assert.AreEqual("VisitorPosts", postVisitors.AssociationMapping.TableName.Name);
             Assert.AreEqual("dbo", postVisitors.AssociationMapping.TableName.Schema);
-            Assert.IsNotNull(postVisitors.AssociationMapping.Source);
-            Assert.IsNotNull(postVisitors.AssociationMapping.Target);
+            Assert.IsNotNull(postVisitors.AssociationMapping.Sources);
+            Assert.IsNotNull(postVisitors.AssociationMapping.Targets);
+            Assert.AreEqual(1, postVisitors.AssociationMapping.Sources.Length);
+            Assert.AreEqual(1, postVisitors.AssociationMapping.Targets.Length);
 
             var visitorPosts = visitorMappings.FromForeignKeyMappings
                 .Concat(visitorMappings.ToForeignKeyMappings)
