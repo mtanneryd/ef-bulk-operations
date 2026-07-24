@@ -225,6 +225,8 @@ namespace Tanneryd.BulkOperations.EFCore
         /// <summary>
         /// Runtime-typed wrapper used by the insert path when the entity CLR type is
         /// only known dynamically (must await, not block via the sync API).
+        /// Forwards the insert request's CommandTimeout and UseTableLock so the
+        /// select-not-existing staging copy does not fall back to BulkSelectRequest defaults.
         /// </summary>
         private static async Task<IList> BulkSelectNotExistingByTypeAsync(
             DbContext ctx,
@@ -232,11 +234,17 @@ namespace Tanneryd.BulkOperations.EFCore
             IList entities,
             TableColumnMapping[] pkColumnMappings,
             SqlTransaction sqlTransaction,
+            TimeSpan commandTimeout,
+            bool useTableLock,
             CancellationToken cancellationToken = default)
         {
             var requestType = typeof(BulkSelectRequest<>).MakeGenericType(t);
             var keyPropertyNames = pkColumnMappings.Select(m => m.EntityProperty.Name).ToArray();
             var request = Activator.CreateInstance(requestType, keyPropertyNames, entities.ToArray(t), sqlTransaction);
+            requestType.GetProperty(nameof(BulkSelectRequest<object>.CommandTimeout))
+                .SetValue(request, commandTimeout);
+            requestType.GetProperty(nameof(BulkSelectRequest<object>.UseTableLock))
+                .SetValue(request, useTableLock);
 
             var method = typeof(DbContextExtensions)
                 .GetMethods(BindingFlags.Public | BindingFlags.Static)

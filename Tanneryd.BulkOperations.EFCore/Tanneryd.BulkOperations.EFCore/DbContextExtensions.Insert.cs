@@ -294,6 +294,8 @@ namespace Tanneryd.BulkOperations.EFCore
                             joinTableNavProperties,
                             pkColumnMappings,
                             sqlTransaction,
+                            commandTimeout,
+                            useTableLock,
                             cancellationToken).ConfigureAwait(false);
                         await DoBulkInsertAllAsync(ctx,
                             notExistingNavProperties.ToArray(navPropertyType),
@@ -710,7 +712,7 @@ namespace Tanneryd.BulkOperations.EFCore
 
                 // Make sure that we only insert entities not already in the database.
                 var notExistingEntities = await BulkSelectNotExistingByTypeAsync(
-                    ctx, t, entities, pkColumnMappings, transaction, cancellationToken).ConfigureAwait(false);
+                    ctx, t, entities, pkColumnMappings, transaction, commandTimeout, useTableLock, cancellationToken).ConfigureAwait(false);
                 rowsAffected += notExistingEntities.Count;
 
                 var s = new Stopwatch();
