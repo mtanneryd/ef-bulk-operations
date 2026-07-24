@@ -169,12 +169,20 @@ namespace Tanneryd.BulkOperations.EF6
                     };
 
                     //
-                    // Many-To-Many
+                    // Many-To-Many: both ends Many and a join-table AssociationSetMapping.
+                    // Independent associations (MapKey) also appear in AssociationSetMappings
+                    // with Constraint == null — do not treat those as M2M.
                     //
-                    if (associationSetMaps.Any() &&
-                        associationSetMaps.Any(m => m.AssociationSet.Name == relType.Name))
+                    var associationSetMap = associationSetMaps.FirstOrDefault(m =>
+                        m.AssociationSet.Name == relType.Name ||
+                        m.AssociationSet.ElementType.Name == relType.Name);
+                    var isManyToMany = relType.AssociationEndMembers.Count == 2 &&
+                        relType.AssociationEndMembers.All(e =>
+                            e.RelationshipMultiplicity == RelationshipMultiplicity.Many);
+
+                    if (associationSetMap != null && isManyToMany)
                     {
-                        var map = associationSetMaps.Single(m => m.AssociationSet.Name == relType.Name);
+                        var map = associationSetMap;
                         // Map every PropertyMapping on each end so composite
                         // principal keys produce a full join-table column set.
                         var sourceMappings = map.SourceEndMapping.PropertyMappings
@@ -211,9 +219,9 @@ namespace Tanneryd.BulkOperations.EF6
                         };
                     }
                     //
-                    // One-To-One or One-to-Many
+                    // One-To-One or One-to-Many (FK association with ReferentialConstraint)
                     //
-                    else
+                    else if (relType.Constraint != null)
                     {
                         fkMapping.FromType = relType.Constraint.FromProperties.First().DeclaringType.Name;
                         fkMapping.ToType = relType.Constraint.ToProperties.First().DeclaringType.Name;
@@ -229,6 +237,12 @@ namespace Tanneryd.BulkOperations.EF6
                         }
 
                         fkMapping.ForeignKeyRelations = foreignKeyRelations.ToArray();
+                    }
+                    else
+                    {
+                        // Independent association (MapKey / no CLR FK) or unmatched
+                        // association metadata — cannot wire FKs for recursive insert.
+                        continue;
                     }
 
                     foreignKeyMappings.Add(fkMapping);
