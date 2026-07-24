@@ -92,5 +92,37 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests
             var request = new BulkSelectRequest<Person>(Array.Empty<string>(), new[] { new Person() });
             Assert.ThrowsExactly<ArgumentException>(() => db.BulkSelectExisting<Person, Person>(request));
         }
+
+        /// <summary>
+        /// Unresolved key property names must fail loudly. Silently ignoring them
+        /// previously made BulkDeleteNotExisting a no-op (no delete, no error).
+        /// </summary>
+        [TestMethod]
+        public void BulkDeleteNotExistingShouldRejectUnresolvedKeyPropertyNames()
+        {
+            using var db = Factory.CreateDbContext();
+            var request = new BulkDeleteRequest<Person>(
+                new[] { new SqlCondition("MotherId", 1L) },
+                new[] { "FirstNam" },
+                new[] { new Person { FirstName = "Kept", LastName = "Child" } });
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkDeleteNotExisting<Person, Person>(request));
+            StringAssert.Contains(ex.Message, "FirstNam");
+        }
+
+        [TestMethod]
+        public void BulkDeleteNotExistingShouldRejectWhenAnyKeyPropertyNameIsUnresolved()
+        {
+            using var db = Factory.CreateDbContext();
+            var request = new BulkDeleteRequest<Person>(
+                new[] { new SqlCondition("MotherId", 1L) },
+                new[] { "FirstName", "NotAMappedProperty" },
+                new[] { new Person { FirstName = "Kept", LastName = "Child" } });
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkDeleteNotExisting<Person, Person>(request));
+            StringAssert.Contains(ex.Message, "NotAMappedProperty");
+        }
     }
 }

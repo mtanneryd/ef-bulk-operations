@@ -173,6 +173,18 @@ namespace Tanneryd.BulkOperations.EF6
                 .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.EntityProperty.Name))
                 .ToDictionary(m => m.EntityProperty.Name, m => m);
 
+            var unresolvedKeyProperties = request.KeyPropertyMappings
+                .Select(kpm => kpm.EntityPropertyName)
+                .Where(name => !keyMappings.ContainsKey(name))
+                .Distinct()
+                .ToArray();
+            if (unresolvedKeyProperties.Length > 0)
+            {
+                throw new ArgumentException(
+                    "KeyPropertyMappings contain property name(s) that are not mapped on the target entity: " +
+                    string.Join(", ", unresolvedKeyProperties) + ".");
+            }
+
             if (keyMappings.Any())
             {
                 var containsIdentityKey = keyMappings.Any(m =>
