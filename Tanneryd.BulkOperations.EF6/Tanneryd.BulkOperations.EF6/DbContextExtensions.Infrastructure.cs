@@ -161,9 +161,14 @@ namespace Tanneryd.BulkOperations.EF6
 
             foreach (var extraColumnName in extraColumnNames)
             {
-                var extra = extraColumnName.UseQuotes
-                    ? $"cast('{extraColumnName.DefaultValue}' as {extraColumnName.SqlType}) as [{extraColumnName.Name}]"
-                    : $"cast({extraColumnName.DefaultValue} as {extraColumnName.SqlType}) as [{extraColumnName.Name}]";
+                // CAST(NULL AS T) types the column for SELECT INTO … WHERE 1=0.
+                // Avoid typed zero literals: CAST(0 AS uniqueidentifier) is invalid.
+                if (string.IsNullOrEmpty(extraColumnName.SqlType))
+                {
+                    throw new ArgumentException(
+                        "Extra temp-table column '" + extraColumnName.Name + "' is missing SqlType.");
+                }
+                var extra = $"cast(null as {extraColumnName.SqlType}) as [{extraColumnName.Name}]";
                 selectClause = string.IsNullOrEmpty(selectClause) ? extra : selectClause + "," + extra;
             }
 

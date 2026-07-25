@@ -557,5 +557,66 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Select
                 Assert.AreSame(probe, existing[0]);
             }
         }
+
+        /// <summary>
+        /// Nav-dot-only SelectExisting stages the related key as an extra temp
+        /// column. Guid/uniqueidentifier extras must not use CAST(0 AS …), which
+        /// is invalid SQL and fails temp-table creation.
+        /// </summary>
+        [TestMethod]
+        public void BulkSelectExisting_ShouldMatchWhenOnlyGuidNavDotKeyIsProvided()
+        {
+            using (var db = new UnitTestContext())
+            {
+                var teamId = Guid.NewGuid();
+                var team = new TeamWithUserGeneratedGuidKey
+                {
+                    Id = teamId,
+                    Name = "Guid-nav team",
+                };
+                var player = new PlayerWithUserGeneratedGuidKey
+                {
+                    Id = Guid.NewGuid(),
+                    Firstname = "Ada",
+                    Lastname = "Lovelace",
+                    TeamId = teamId,
+                    Team = team,
+                };
+
+                db.BulkInsertAll(new BulkInsertRequest<TeamWithUserGeneratedGuidKey>
+                {
+                    Entities = new[] { team },
+                });
+                db.BulkInsertAll(new BulkInsertRequest<PlayerWithUserGeneratedGuidKey>
+                {
+                    Entities = new[] { player },
+                });
+
+                var probe = new PlayerWithUserGeneratedGuidKey
+                {
+                    Id = Guid.NewGuid(),
+                    Firstname = "probe",
+                    Lastname = "probe",
+                    TeamId = teamId,
+                };
+
+                var existing = db.BulkSelectExisting<PlayerWithUserGeneratedGuidKey, PlayerWithUserGeneratedGuidKey>(
+                    new BulkSelectRequest<PlayerWithUserGeneratedGuidKey>
+                    {
+                        Items = new[] { probe },
+                        KeyPropertyMappings = new[]
+                        {
+                            new KeyPropertyMapping
+                            {
+                                EntityPropertyName = "Team.Id",
+                                ItemPropertyName = nameof(PlayerWithUserGeneratedGuidKey.TeamId),
+                            },
+                        },
+                    });
+
+                Assert.AreEqual(1, existing.Count);
+                Assert.AreSame(probe, existing[0]);
+            }
+        }
     }
 }
