@@ -1088,7 +1088,10 @@ namespace Tanneryd.BulkOperations.EFCore
             {
                 if (mappings.ColumnMappingByColumnName.TryGetValue(columnName, out var mapping))
                 {
-                    propertyNames.Add(mapping.EntityProperty.Name);
+                    // Complex-type columns expose leaf CLR names (e.g. City) that are
+                    // not properties on the root entity — Sort cannot OrderBy them.
+                    if (!mapping.IsIncludedFromComplexType)
+                        propertyNames.Add(mapping.EntityProperty.Name);
                     continue;
                 }
 
@@ -1107,19 +1110,25 @@ namespace Tanneryd.BulkOperations.EFCore
 
         private static IList<T> Sort<T>(IList<T> entities, string[] sortColumns)
         {
-            if (sortColumns.Any())
-            {
-                var t = entities[0].GetType();
-                var sortedEntities = entities.OrderBy(u => t.GetProperty(sortColumns[0]).GetValue(u));
-                foreach (var col in sortColumns.Skip(1))
-                {
-                    sortedEntities = sortedEntities.ThenBy(u => t.GetProperty(col).GetValue(u));
-                }
+            if (entities == null || entities.Count == 0 || sortColumns == null || sortColumns.Length == 0)
+                return entities;
 
-                return sortedEntities.ToList();
+            var t = entities[0].GetType();
+            var properties = sortColumns
+                .Select(name => t.GetProperty(name))
+                .Where(p => p != null)
+                .ToArray();
+            if (properties.Length == 0)
+                return entities;
+
+            var sortedEntities = entities.OrderBy(u => properties[0].GetValue(u));
+            for (var i = 1; i < properties.Length; i++)
+            {
+                var property = properties[i];
+                sortedEntities = sortedEntities.ThenBy(u => property.GetValue(u));
             }
 
-            return entities;
+            return sortedEntities.ToList();
         }
 
         /// <summary>

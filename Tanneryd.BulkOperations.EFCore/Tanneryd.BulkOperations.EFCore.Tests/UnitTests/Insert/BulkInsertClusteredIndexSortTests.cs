@@ -52,7 +52,15 @@ DECLARE @pk sysname =
      WHERE kc.parent_object_id = OBJECT_ID(N'dbo.SortProbe') AND kc.type = N'PK');
 EXEC(N'ALTER TABLE [dbo].[SortProbe] DROP CONSTRAINT [' + @pk + N']');
 ALTER TABLE [dbo].[SortProbe] ADD CONSTRAINT [PK_SortProbe] PRIMARY KEY NONCLUSTERED ([Id]);
-CREATE CLUSTERED INDEX [CX_SortProbe] ON [dbo].[SortProbe] ([Id], [RowVersion]);");
+CREATE CLUSTERED INDEX [CX_SortProbe] ON [dbo].[SortProbe] ([Id], [RowVersion]);
+
+DECLARE @pk2 sysname =
+    (SELECT kc.name
+     FROM sys.key_constraints kc
+     WHERE kc.parent_object_id = OBJECT_ID(N'dbo.ComplexSortProbe') AND kc.type = N'PK');
+EXEC(N'ALTER TABLE [dbo].[ComplexSortProbe] DROP CONSTRAINT [' + @pk2 + N']');
+ALTER TABLE [dbo].[ComplexSortProbe] ADD CONSTRAINT [PK_ComplexSortProbe] PRIMARY KEY NONCLUSTERED ([Id]);
+CREATE CLUSTERED INDEX [CX_ComplexSortProbe] ON [dbo].[ComplexSortProbe] ([City]);");
         }
 
         [TestCleanup]
@@ -81,6 +89,43 @@ CREATE CLUSTERED INDEX [CX_SortProbe] ON [dbo].[SortProbe] ([Id], [RowVersion]);
             CollectionAssert.AreEquivalent(
                 new[] { "alpha", "bravo" },
                 db.SortProbes.Select(p => p.Name).ToArray());
+        }
+
+        /// <summary>
+        /// Clustered-index columns mapped from complex types expose leaf property
+        /// names (e.g. City) that are not on the root CLR type. Sorting must skip
+        /// them instead of NullReferenceException from GetProperty(...).GetValue.
+        /// </summary>
+        [TestMethod]
+        public void BulkInsert_WithSortUsingClusteredIndex_ShouldSucceed_WhenClusteredIndexIncludesComplexTypeColumn()
+        {
+            using var db = CreateContext();
+
+            db.BulkInsertAll(new BulkInsertRequest<ComplexSortProbe>
+            {
+                Entities = new[]
+                {
+                    new ComplexSortProbe
+                    {
+                        Name = "bravo",
+                        Location = new SortLocation { City = "Zurich" },
+                    },
+                    new ComplexSortProbe
+                    {
+                        Name = "alpha",
+                        Location = new SortLocation { City = "Amsterdam" },
+                    },
+                },
+                SortUsingClusteredIndex = true,
+            });
+
+            Assert.AreEqual(2, db.ComplexSortProbes.Count());
+            CollectionAssert.AreEquivalent(
+                new[] { "alpha", "bravo" },
+                db.ComplexSortProbes.Select(p => p.Name).ToArray());
+            CollectionAssert.AreEquivalent(
+                new[] { "Amsterdam", "Zurich" },
+                db.ComplexSortProbes.Select(p => p.Location.City).ToArray());
         }
     }
 }

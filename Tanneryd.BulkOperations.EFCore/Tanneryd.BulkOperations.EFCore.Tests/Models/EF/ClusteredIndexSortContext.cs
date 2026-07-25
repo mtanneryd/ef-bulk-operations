@@ -29,6 +29,22 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Models.EF.ClusteredIndexSort
         public byte[] RowVersion { get; set; }
     }
 
+    /// <summary>
+    /// Complex type whose City column can appear in a clustered index. Sort
+    /// resolves EntityProperty.Name ("City"), which is not a root CLR property.
+    /// </summary>
+    public class SortLocation
+    {
+        public string City { get; set; }
+    }
+
+    public class ComplexSortProbe
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public SortLocation Location { get; set; }
+    }
+
     public class ClusteredIndexSortContext : DbContext
     {
         public const string ConnectionString =
@@ -40,6 +56,7 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Models.EF.ClusteredIndexSort
         }
 
         public DbSet<SortProbe> SortProbes { get; set; }
+        public DbSet<ComplexSortProbe> ComplexSortProbes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -50,6 +67,19 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.Models.EF.ClusteredIndexSort
                 e.Property(x => x.Id).UseIdentityColumn();
                 e.Property(x => x.Name).HasMaxLength(100).IsRequired();
                 e.Property(x => x.RowVersion).IsRowVersion();
+            });
+
+            modelBuilder.Entity<ComplexSortProbe>(e =>
+            {
+                e.ToTable("ComplexSortProbe");
+                e.HasKey(x => x.Id);
+                e.Property(x => x.Id).UseIdentityColumn();
+                e.Property(x => x.Name).HasMaxLength(100).IsRequired();
+                e.ComplexProperty(x => x.Location, location =>
+                {
+                    location.IsRequired();
+                    location.Property(l => l.City).HasColumnName("City").HasMaxLength(100).IsRequired();
+                });
             });
         }
     }

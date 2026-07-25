@@ -31,6 +31,22 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.ClusteredIndexSort
         public byte[] RowVersion { get; set; }
     }
 
+    /// <summary>
+    /// Complex type whose City column can appear in a clustered index. Sort
+    /// resolves EntityProperty.Name ("City"), which is not a root CLR property.
+    /// </summary>
+    public class SortLocation
+    {
+        public string City { get; set; }
+    }
+
+    public class ComplexSortProbe
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public SortLocation Location { get; set; }
+    }
+
     public class ClusteredIndexSortContext : DbContext
     {
         public const string ConnectionString =
@@ -42,10 +58,17 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.ClusteredIndexSort
         }
 
         public DbSet<SortProbe> SortProbes { get; set; }
+        public DbSet<ComplexSortProbe> ComplexSortProbes { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
             modelBuilder.Configurations.Add(new SortProbeConfiguration());
+            modelBuilder.Configurations.Add(new ComplexSortProbeConfiguration());
+            modelBuilder.ComplexType<SortLocation>()
+                .Property(p => p.City)
+                .HasColumnName("City")
+                .HasMaxLength(100)
+                .IsRequired();
             base.OnModelCreating(modelBuilder);
         }
     }
@@ -64,6 +87,17 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF.ClusteredIndexSort
                 .IsFixedLength()
                 .HasMaxLength(8)
                 .HasDatabaseGeneratedOption(DatabaseGeneratedOption.Computed);
+        }
+    }
+
+    public class ComplexSortProbeConfiguration : EntityTypeConfiguration<ComplexSortProbe>
+    {
+        public ComplexSortProbeConfiguration()
+        {
+            ToTable("ComplexSortProbe");
+            HasKey(e => e.Id);
+            Property(e => e.Id).HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identity);
+            Property(e => e.Name).HasMaxLength(100).IsRequired();
         }
     }
 }
