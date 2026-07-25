@@ -170,7 +170,8 @@ namespace Tanneryd.BulkOperations.EF6
                         request.CommandTimeout,
                         request.UseTableLock,
                         cancellationToken,
-                        concurrencyTokenMappings).ConfigureAwait(false);
+                        concurrencyTokenMappings,
+                        request.InsertIfNew ? mappings.Discriminator : null).ConfigureAwait(false);
 
                     var setStatements =
                         modifiedColumnMappings.Select(c => $"t0.[{c.TableColumn.Name}] = t1.[{c.TableColumn.Name}]");
@@ -195,16 +196,21 @@ namespace Tanneryd.BulkOperations.EF6
                     {
                         // Include client-assigned PKs; omit store-generated columns
                         // (IDENTITY, computed, rowversion) so SQL Server supplies them.
+                        // TPH discriminators are staged separately and must be in the INSERT list.
                         // Matching existing rows still uses keyCondition only (not tokens).
                         var columns = columnMappings.Values
                             .Where(m => !m.TableColumn.IsStoreGeneratedIdentity &&
                                         !m.TableColumn.IsStoreGeneratedComputed)
                             .Where(m => !concurrencyColumnNames.Contains(m.TableColumn.Name))
                             .Select(m => m.TableColumn.Name)
-                            .ToArray();
+                            .ToList();
+                        if (mappings.Discriminator != null)
+                            columns.Add(mappings.Discriminator.Column.Name);
                         var columnNames = string.Join(",", columns.Select(c => $"[{c}]"));
                         var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].[{c}]"));
-                        cmdBody = $@"INSERT INTO {tableName.Fullname}
+                        // Explicit target column list: TPH tables include sibling-type
+                        // columns that this concrete type does not stage.
+                        cmdBody = $@"INSERT INTO {tableName.Fullname} ({columnNames})
                                  SELECT {columnNames}
                                  FROM {tempTableName}
                                  EXCEPT

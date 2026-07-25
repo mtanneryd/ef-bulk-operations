@@ -1145,9 +1145,11 @@ namespace Tanneryd.BulkOperations.EFCore
             TimeSpan commandTimeout,
             bool useTableLock = false,
             CancellationToken cancellationToken = default,
-            TableColumnMapping[] concurrencyTokenMappings = null)
+            TableColumnMapping[] concurrencyTokenMappings = null,
+            Discriminator discriminator = null)
         {
             concurrencyTokenMappings = concurrencyTokenMappings ?? Array.Empty<TableColumnMapping>();
+            var discriminatorExtraColumns = GetDiscriminatorExtraColumns(discriminator);
 
             var columnNames = keyColumnMappings.Select(m => m.TableColumn.Column.Name)
                 .Concat(nonKeyColumnMappings.Select(m => m.TableColumn.Column.Name))
@@ -1166,7 +1168,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 sqlTransaction,
                 tableName,
                 columnNames,
-                new TableColumn[0],
+                discriminatorExtraColumns,
                 IncludeRowNumber.Yes,
                 cancellationToken,
                 castToVarBinary8).ConfigureAwait(false);
@@ -1232,7 +1234,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     conn,
                     sqlTransaction,
                     tempTableName,
-                    new TableColumn[0],
+                    discriminatorExtraColumns,
                     SqlBulkCopyOptions.KeepIdentity,
                     IncludeRowNumber.Yes,
                     commandTimeout,
@@ -1243,7 +1245,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 //
                 // Fill the temp table.
                 //
-                using (var reader = CreateEntitiesDataReader(table, entities, properties, type, null, IncludeRowNumber.Yes))
+                using (var reader = CreateEntitiesDataReader(table, entities, properties, type, discriminator, IncludeRowNumber.Yes))
                     await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
                 return tempTableName;

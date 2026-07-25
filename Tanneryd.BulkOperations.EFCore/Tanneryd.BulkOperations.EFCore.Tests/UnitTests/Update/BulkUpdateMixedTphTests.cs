@@ -114,5 +114,111 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Update
             Assert.AreEqual(9, updatedError.Severity);
             Assert.AreEqual(new DateTime(2026, 2, 2), updatedError.Timestamp);
         }
+
+        /// <summary>
+        /// InsertIfNew on a TPH derived type must stage and INSERT the discriminator.
+        /// Without it, SQL Server rejects the insert (NOT NULL LogType) or the row
+        /// is not visible on the typed DbSet.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_InsertIfNew_ShouldStampTphDiscriminator_ForLogWarning()
+        {
+            using var db = Factory.CreateDbContext();
+
+            db.BulkInsertAll(new BulkInsertRequest<LogWarning>
+            {
+                Entities = new[]
+                {
+                    new LogWarning
+                    {
+                        Message = "warning-before",
+                        Recommendation = "rec-before",
+                        Timestamp = new DateTime(2026, 1, 1),
+                    },
+                },
+                EnableRecursiveInsert = EnableRecursiveInsert.NoAndIgnoreGeneratedPrimaryKeys,
+            });
+
+            var existing = db.LogWarnings.Single();
+            existing.Message = "warning-after";
+
+            db.BulkUpdateAll(new BulkUpdateRequest
+            {
+                Entities = new object[]
+                {
+                    existing,
+                    new LogWarning
+                    {
+                        Message = "warning-new",
+                        Recommendation = "rec-new",
+                        Timestamp = new DateTime(2026, 3, 1),
+                    },
+                },
+                UpdatedPropertyNames = new[] { nameof(LogWarning.Message) },
+                InsertIfNew = true,
+            });
+
+            var warnings = db.LogWarnings.AsNoTracking().OrderBy(w => w.Id).ToArray();
+            Assert.AreEqual(2, warnings.Length,
+                "InsertIfNew must insert the new LogWarning with the correct TPH discriminator.");
+            Assert.AreEqual("warning-after", warnings[0].Message);
+            Assert.AreEqual("rec-before", warnings[0].Recommendation,
+                "Partial UpdatedPropertyNames must not overwrite columns omitted from the SET list.");
+            Assert.AreEqual("warning-new", warnings[1].Message);
+            Assert.AreEqual("rec-new", warnings[1].Recommendation);
+            Assert.AreEqual(new DateTime(2026, 3, 1), warnings[1].Timestamp);
+            Assert.AreEqual(0, db.LogErrors.Count());
+        }
+
+        /// <summary>
+        /// Same InsertIfNew discriminator coverage for the sibling TPH type.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_InsertIfNew_ShouldStampTphDiscriminator_ForLogError()
+        {
+            using var db = Factory.CreateDbContext();
+
+            db.BulkInsertAll(new BulkInsertRequest<LogError>
+            {
+                Entities = new[]
+                {
+                    new LogError
+                    {
+                        Message = "error-before",
+                        Severity = 1,
+                        Timestamp = new DateTime(2026, 1, 2),
+                    },
+                },
+                EnableRecursiveInsert = EnableRecursiveInsert.NoAndIgnoreGeneratedPrimaryKeys,
+            });
+
+            var existing = db.LogErrors.Single();
+            existing.Message = "error-after";
+
+            db.BulkUpdateAll(new BulkUpdateRequest
+            {
+                Entities = new object[]
+                {
+                    existing,
+                    new LogError
+                    {
+                        Message = "error-new",
+                        Severity = 7,
+                        Timestamp = new DateTime(2026, 3, 2),
+                    },
+                },
+                UpdatedPropertyNames = new[] { nameof(LogError.Message) },
+                InsertIfNew = true,
+            });
+
+            var errors = db.LogErrors.AsNoTracking().OrderBy(e => e.Id).ToArray();
+            Assert.AreEqual(2, errors.Length,
+                "InsertIfNew must insert the new LogError with the correct TPH discriminator.");
+            Assert.AreEqual("error-after", errors[0].Message);
+            Assert.AreEqual(1, errors[0].Severity);
+            Assert.AreEqual("error-new", errors[1].Message);
+            Assert.AreEqual(7, errors[1].Severity);
+            Assert.AreEqual(0, db.LogWarnings.Count());
+        }
     }
 }

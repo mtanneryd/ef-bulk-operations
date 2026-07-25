@@ -1158,7 +1158,8 @@ namespace Tanneryd.BulkOperations.EF6
             TimeSpan commandTimeout,
             bool useTableLock = false,
             CancellationToken cancellationToken = default,
-            TableColumnMapping[] concurrencyTokenMappings = null)
+            TableColumnMapping[] concurrencyTokenMappings = null,
+            Discriminator discriminator = null)
         {
             concurrencyTokenMappings = concurrencyTokenMappings ?? Array.Empty<TableColumnMapping>();
 
@@ -1179,7 +1180,7 @@ namespace Tanneryd.BulkOperations.EF6
                 conn,
                 sqlTransaction,
                 tableName,
-                null,
+                discriminator,
                 columnNames,
                 IncludeRowNumber.Yes,
                 cancellationToken,
@@ -1240,7 +1241,7 @@ namespace Tanneryd.BulkOperations.EF6
                     conn,
                     sqlTransaction,
                     tempTableName,
-                    null,
+                    discriminator,
                     SqlBulkCopyOptions.KeepIdentity,
                     IncludeRowNumber.Yes,
                     commandTimeout,
@@ -1251,7 +1252,7 @@ namespace Tanneryd.BulkOperations.EF6
                 //
                 // Fill the temp table.
                 //
-                using (var reader = CreateEntitiesDataReader(table, entities, properties, type, null, IncludeRowNumber.Yes))
+                using (var reader = CreateEntitiesDataReader(table, entities, properties, type, discriminator, IncludeRowNumber.Yes))
                     await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
                 return tempTableName;

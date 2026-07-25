@@ -167,7 +167,8 @@ namespace Tanneryd.BulkOperations.EFCore
                         request.CommandTimeout,
                         request.UseTableLock,
                         cancellationToken,
-                        concurrencyTokenMappings).ConfigureAwait(false);
+                        concurrencyTokenMappings,
+                        request.InsertIfNew ? mappings.Discriminator : null).ConfigureAwait(false);
 
                     //
                     // Update the target table using the temp table we just created.
@@ -195,15 +196,20 @@ namespace Tanneryd.BulkOperations.EFCore
                     {
                         // Include client-assigned PKs; omit store-generated columns
                         // (IDENTITY, computed, rowversion) so SQL Server supplies them.
+                        // TPH discriminators are staged separately and must be in the INSERT list.
                         // Matching existing rows still uses keyCondition only (not tokens).
                         var columns = columnMappings.Values
                             .Where(m => !m.IsStoreGenerated)
                             .Where(m => !concurrencyColumnNames.Contains(m.TableColumn.Column.Name))
                             .Select(m => m.TableColumn.Column.Name)
-                            .ToArray();
+                            .ToList();
+                        if (mappings.Discriminator != null)
+                            columns.Add(mappings.Discriminator.Column.Name);
                         var columnNames = string.Join(",", columns.Select(c => $"[{c}]"));
                         var t0ColumnNames = string.Join(",", columns.Select(c => $"[t0].[{c}]"));
-                        cmdBody = $@"INSERT INTO {tableName.Fullname}
+                        // Explicit target column list: TPH tables include sibling-type
+                        // columns that this concrete type does not stage.
+                        cmdBody = $@"INSERT INTO {tableName.Fullname} ({columnNames})
                                  SELECT {columnNames}
                                  FROM {tempTableName}
                                  EXCEPT
