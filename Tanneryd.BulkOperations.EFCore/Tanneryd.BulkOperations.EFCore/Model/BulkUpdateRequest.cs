@@ -51,6 +51,8 @@ namespace Tanneryd.BulkOperations.EFCore.Model
 
         /// <summary>
         /// When true, entities that do not match existing rows are inserted.
+        /// Staging then includes all insertable columns (not only
+        /// <see cref="UpdatedPropertyNames"/>); the UPDATE SET list is unchanged.
         /// </summary>
         public bool InsertIfNew { get; set; }
 

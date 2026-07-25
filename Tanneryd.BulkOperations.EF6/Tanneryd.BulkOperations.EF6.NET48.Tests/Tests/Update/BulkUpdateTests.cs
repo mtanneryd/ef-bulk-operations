@@ -288,6 +288,69 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Update
             }
         }
 
+        /// <summary>
+        /// InsertIfNew with a partial UpdatedPropertyNames must still stage every
+        /// insertable column so the INSERT can supply NOT NULL fields, while the
+        /// UPDATE SET remains limited to UpdatedPropertyNames only.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_InsertIfNew_WithPartialUpdatedPropertyNames_ShouldInsertFullRowAndUpdateOnlyListedColumns()
+        {
+            var existingDate = new DateTime(2023, 5, 29);
+            var newDate = new DateTime(2023, 5, 30);
+            int existingId;
+
+            using (var db = new UnitTestContext())
+            {
+                db.Prices.Add(new Price
+                {
+                    Date = existingDate,
+                    Name = "Existing",
+                    Value = 1m,
+                });
+                db.SaveChanges();
+
+                var existing = db.Prices.Single();
+                existingId = existing.Id;
+                // Values that must not be written on match when UpdatedPropertyNames is only Value.
+                existing.Name = "SHOULD-NOT-APPLY";
+                existing.Date = new DateTime(1999, 1, 1);
+                existing.Value = 2m;
+
+                db.BulkUpdateAll(new BulkUpdateRequest
+                {
+                    Entities = new object[]
+                    {
+                        existing,
+                        new Price
+                        {
+                            Date = newDate,
+                            Name = "Brand-new",
+                            Value = 3m,
+                        },
+                    },
+                    KeyPropertyNames = new[] { nameof(Price.Id) },
+                    UpdatedPropertyNames = new[] { nameof(Price.Value) },
+                    InsertIfNew = true,
+                });
+            }
+
+            using (var verify = new UnitTestContext())
+            {
+                Assert.AreEqual(2, verify.Prices.Count());
+
+                var updated = verify.Prices.Single(p => p.Id == existingId);
+                Assert.AreEqual(2m, updated.Value);
+                Assert.AreEqual("Existing", updated.Name,
+                    "Partial UpdatedPropertyNames must not SET columns omitted from the list.");
+                Assert.AreEqual(existingDate, updated.Date);
+
+                var inserted = verify.Prices.Single(p => p.Name == "Brand-new");
+                Assert.AreEqual(newDate, inserted.Date);
+                Assert.AreEqual(3m, inserted.Value);
+            }
+        }
+
         [TestMethod]
         public void ModifiedEntityShouldBeUpdated()
         {

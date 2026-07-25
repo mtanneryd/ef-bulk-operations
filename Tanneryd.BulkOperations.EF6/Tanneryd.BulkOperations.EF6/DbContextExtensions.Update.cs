@@ -117,6 +117,21 @@ namespace Tanneryd.BulkOperations.EF6
                         "or the entity must have such columns when UpdatedPropertyNames is empty.");
                 }
 
+                // UPDATE SET uses modifiedColumnMappings only. When InsertIfNew is set,
+                // stage every insertable non-key column so the INSERT can SELECT them
+                // even if UpdatedPropertyNames is a partial update list.
+                var selectedKeyColumnNames = new HashSet<string>(
+                    selectedKeyMappings.Select(m => m.TableColumn.Name),
+                    StringComparer.OrdinalIgnoreCase);
+                var stagingColumnMappings = request.InsertIfNew
+                    ? columnMappings.Values
+                        .Where(m => !selectedKeyColumnNames.Contains(m.TableColumn.Name))
+                        .Where(m => !m.TableColumn.IsStoreGeneratedIdentity &&
+                                    !m.TableColumn.IsStoreGeneratedComputed)
+                        .Where(m => !concurrencyColumnNames.Contains(m.TableColumn.Name))
+                        .ToArray()
+                    : modifiedColumnMappings;
+
                 var conn = await ResolveSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
 
                 SqlTransaction ownedTransaction = null;
@@ -150,7 +165,7 @@ namespace Tanneryd.BulkOperations.EF6
                         tableName,
                         columnMappings,
                         selectedKeyMappings,
-                        modifiedColumnMappings,
+                        stagingColumnMappings,
                         transaction,
                         request.CommandTimeout,
                         request.UseTableLock,

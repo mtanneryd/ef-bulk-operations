@@ -126,6 +126,20 @@ namespace Tanneryd.BulkOperations.EFCore
                         "or the entity must have such columns when UpdatedPropertyNames is empty.");
                 }
 
+                // UPDATE SET uses modifiedColumnMappings only. When InsertIfNew is set,
+                // stage every insertable non-key column so the INSERT can SELECT them
+                // even if UpdatedPropertyNames is a partial update list.
+                var selectedKeyColumnNames = new HashSet<string>(
+                    selectedKeyMappings.Select(m => m.TableColumn.Column.Name),
+                    StringComparer.OrdinalIgnoreCase);
+                var stagingColumnMappings = request.InsertIfNew
+                    ? columnMappings.Values
+                        .Where(m => !selectedKeyColumnNames.Contains(m.TableColumn.Column.Name))
+                        .Where(m => !m.IsStoreGenerated)
+                        .Where(m => !concurrencyColumnNames.Contains(m.TableColumn.Column.Name))
+                        .ToArray()
+                    : modifiedColumnMappings;
+
                 //
                 // Create and populate a temp table to hold the updated values.
                 //
@@ -148,7 +162,7 @@ namespace Tanneryd.BulkOperations.EFCore
                         tableName,
                         columnMappings,
                         selectedKeyMappings,
-                        modifiedColumnMappings,
+                        stagingColumnMappings,
                         transaction,
                         request.CommandTimeout,
                         request.UseTableLock,
