@@ -128,5 +128,61 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
                 db.BulkDeleteNotExisting<Person, Person>(request));
             StringAssert.Contains(ex.Message, "NotAMappedProperty");
         }
+
+        /// <summary>
+        /// Unresolved key names must fail on BulkSelect (same as delete). Silently
+        /// filtering them previously returned empty matches with no error.
+        /// </summary>
+        [TestMethod]
+        public void BulkSelectShouldRejectUnresolvedKeyPropertyNames()
+        {
+            using var db = new UnitTestContext();
+            var request = new BulkSelectRequest<Person>(
+                new[] { "FirstNam" },
+                new[] { new Person { FirstName = "Ada" } });
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkSelect<Person, Person>(request));
+            StringAssert.Contains(ex.Message, "FirstNam");
+        }
+
+        [TestMethod]
+        public void BulkSelectNotExistingShouldRejectUnresolvedKeyPropertyNames()
+        {
+            using var db = new UnitTestContext();
+            var request = new BulkSelectRequest<Person>(
+                new[] { "FirstNam" },
+                new[] { new Person { FirstName = "Ada" } });
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkSelectNotExisting<Person, Person>(request));
+            StringAssert.Contains(ex.Message, "FirstNam");
+        }
+
+        [TestMethod]
+        public void BulkSelectExistingShouldRejectUnresolvedKeyPropertyNames()
+        {
+            using var db = new UnitTestContext();
+            var request = new BulkSelectRequest<Person>(
+                new[] { "FirstNam" },
+                new[] { new Person { FirstName = "Ada" } });
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkSelectExisting<Person, Person>(request));
+            StringAssert.Contains(ex.Message, "FirstNam");
+        }
+
+        [TestMethod]
+        public void BulkSelectShouldRejectWhenAnyKeyPropertyNameIsUnresolved()
+        {
+            using var db = new UnitTestContext();
+            var request = new BulkSelectRequest<Person>(
+                new[] { "FirstName", "NotAMappedProperty" },
+                new[] { new Person { FirstName = "Ada" } });
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkSelect<Person, Person>(request));
+            StringAssert.Contains(ex.Message, "NotAMappedProperty");
+        }
     }
 }

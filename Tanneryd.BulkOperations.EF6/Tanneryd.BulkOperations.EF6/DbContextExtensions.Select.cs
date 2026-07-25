@@ -45,6 +45,8 @@ namespace Tanneryd.BulkOperations.EF6
                 .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.EntityProperty.Name))
                 .ToDictionary(m => m.EntityProperty.Name, m => m);
 
+            ThrowIfUnresolvedKeyPropertyMappings(request.KeyPropertyMappings, keyMappings);
+
             if (keyMappings.Any())
             {
                 var containsIdentityKey = keyMappings.Any(m =>
@@ -312,6 +314,8 @@ namespace Tanneryd.BulkOperations.EF6
                 .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.EntityProperty.Name))
                 .ToDictionary(m => m.EntityProperty.Name, m => m);
 
+            ThrowIfUnresolvedKeyPropertyMappings(request.KeyPropertyMappings, keyMappings);
+
             if (keyMappings.Any())
             {
                 var containsIdentityKey = keyMappings.Any(m =>
@@ -505,6 +509,12 @@ namespace Tanneryd.BulkOperations.EF6
                 .Where(m => request.KeyPropertyMappings.Any(kpm => kpm.EntityPropertyName == m.EntityProperty.Name))
                 .ToDictionary(m => m.EntityProperty.Name, m => m);
 
+            // Nav-dot keys (e.g. "Parity.Id") resolve via FindJoinTableMappingsForSelectExisting.
+            ThrowIfUnresolvedKeyPropertyMappings(
+                request.KeyPropertyMappings,
+                keyMappings,
+                allowNavDotEntityPropertyNames: true);
+
             var selectMapping = FindJoinTableMappingsForSelectExisting(
                 request.KeyPropertyMappings, mappings, ctx, typeof(T2));
 
@@ -660,6 +670,25 @@ namespace Tanneryd.BulkOperations.EF6
             }
 
             return new List<T1>();
+        }
+
+        private static void ThrowIfUnresolvedKeyPropertyMappings(
+            KeyPropertyMapping[] keyPropertyMappings,
+            Dictionary<string, TableColumnMapping> keyMappings,
+            bool allowNavDotEntityPropertyNames = false)
+        {
+            var unresolvedKeyProperties = keyPropertyMappings
+                .Select(kpm => kpm.EntityPropertyName)
+                .Where(name => !keyMappings.ContainsKey(name))
+                .Where(name => !(allowNavDotEntityPropertyNames && name.Contains(".")))
+                .Distinct()
+                .ToArray();
+            if (unresolvedKeyProperties.Length > 0)
+            {
+                throw new ArgumentException(
+                    "KeyPropertyMappings contain property name(s) that are not mapped on the target entity: " +
+                    string.Join(", ", unresolvedKeyProperties) + ".");
+            }
         }
     }
 }
