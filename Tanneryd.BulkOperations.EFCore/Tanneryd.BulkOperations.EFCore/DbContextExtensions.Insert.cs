@@ -915,9 +915,12 @@ namespace Tanneryd.BulkOperations.EFCore
                 else
                 {
                     columnValues.AddRange(properties.Select(p => (object)GetProperty(t, p.Name, entity, DBNull.Value)));
-                    if (discriminator != null)
-                        columnValues.Add(discriminator.Value);
                 }
+
+                // Complex-type flatten uses Expando rows; the discriminator is
+                // still an extra bulk-copy column and must be appended for both.
+                if (discriminator != null)
+                    columnValues.Add(discriminator.Value);
 
                 if (includeRowNumber == IncludeRowNumber.Yes)
                     columnValues.Add(rowIndex + 1);
