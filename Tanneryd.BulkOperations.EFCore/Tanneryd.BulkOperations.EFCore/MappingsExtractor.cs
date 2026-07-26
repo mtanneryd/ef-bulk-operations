@@ -62,6 +62,9 @@ namespace Tanneryd.BulkOperations.EFCore
                 // AssociationMapping on the principal types covers those tables.
                 if (entityType.ClrType == typeof(Dictionary<string, object>))
                     continue;
+                // Owned types are rejected at bulk-op entry; do not cache incomplete maps.
+                if (entityType.IsOwned())
+                    continue;
                 if (_mappingsByType.ContainsKey(entityType.ClrType))
                     continue;
 
@@ -129,6 +132,11 @@ namespace Tanneryd.BulkOperations.EFCore
 
             foreach (var navigation in entityType.GetNavigations())
             {
+                // Ownership is not supported for bulk ops (table-sharing OwnsOne
+                // columns are omitted; OwnsMany / ToTable need a separate path).
+                if (navigation.ForeignKey.IsOwnership)
+                    continue;
+
                 if (foreignKeyMappings.All(m => m.NavigationPropertyName != navigation.Name))
                 {
                     var fkMapping = new ForeignKeyMapping

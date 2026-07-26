@@ -68,6 +68,7 @@ namespace Tanneryd.BulkOperations.EFCore
             var transaction = callerTransaction;
 
             Type t = entities[0].GetType();
+            EnsureBulkOperationsSupportEntityType(ctx, t);
             var mappings = GetMappingExtractor(ctx).GetMappings(t);
             var tableName = mappings.TableName;
             var columnMappings = mappings.ColumnMappingByPropertyName;

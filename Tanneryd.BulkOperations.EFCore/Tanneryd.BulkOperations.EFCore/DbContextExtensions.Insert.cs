@@ -67,6 +67,7 @@ namespace Tanneryd.BulkOperations.EFCore
             }
 
             Type t = entities[0].GetType();
+            EnsureBulkOperationsSupportEntityType(ctx, t);
             if (!mappingsByType.ContainsKey(t))
             {
                 mappingsByType.Add(t, GetMappingExtractor(ctx).GetMappings(t));

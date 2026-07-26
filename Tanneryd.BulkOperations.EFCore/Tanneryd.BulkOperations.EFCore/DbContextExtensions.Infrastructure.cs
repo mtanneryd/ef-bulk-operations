@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Dynamic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -107,6 +108,48 @@ namespace Tanneryd.BulkOperations.EFCore
 
             if (request.Entities == null)
                 throw new ArgumentNullException(nameof(request.Entities));
+        }
+
+        /// <summary>
+        /// Owned types are not supported: table-sharing OwnsOne columns are omitted
+        /// from owner mappings, and OwnsMany / separate-table ownership need a
+        /// dedicated insert path. Fail clearly instead of silent data loss.
+        /// </summary>
+        private static void EnsureBulkOperationsSupportEntityType(DbContext ctx, Type clrType)
+        {
+            if (clrType == null || clrType == typeof(ExpandoObject))
+                return;
+
+            IEntityType entityType = null;
+            for (var current = clrType; current != null && current != typeof(object); current = current.BaseType)
+            {
+                entityType = ctx.Model.FindEntityType(current);
+                if (entityType != null)
+                    break;
+            }
+
+            if (entityType == null)
+                return;
+
+            if (entityType.IsOwned())
+            {
+                throw new ArgumentException(
+                    $"Bulk operations do not support owned entity types. '{clrType.Name}' is configured as an owned type.");
+            }
+
+            var ownedNavNames = entityType.GetNavigations()
+                .Where(n => n.ForeignKey.IsOwnership)
+                .Select(n => n.Name)
+                .Distinct(StringComparer.Ordinal)
+                .OrderBy(n => n, StringComparer.Ordinal)
+                .ToArray();
+
+            if (ownedNavNames.Length == 0)
+                return;
+
+            throw new ArgumentException(
+                $"Bulk operations do not support owned entity types. Type '{entityType.ClrType.Name}' declares owned navigation(s): {string.Join(", ", ownedNavNames)}. " +
+                "Table-sharing OwnsOne flattening and OwnsMany/separate-table ownership are not implemented.");
         }
 
         private static string ResolveSqlConditionColumnName(string columnName, Mappings mappings)
