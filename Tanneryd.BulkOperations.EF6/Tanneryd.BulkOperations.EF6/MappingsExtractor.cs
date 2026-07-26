@@ -128,12 +128,23 @@ namespace Tanneryd.BulkOperations.EF6
                 .Where(p => p is ComplexPropertyMapping)
                 .Cast<ComplexPropertyMapping>()
                 .ToArray();
+            var complexLeafColumnNameByPath = new Dictionary<string, string>(StringComparer.Ordinal);
             if (complexPropertyMappings.Any())
             {
-                columnMappings.AddRange(GetTableColumnMappings(complexPropertyMappings, true));
+                foreach (var complexPropertyMapping in complexPropertyMappings)
+                {
+                    columnMappings.AddRange(GetTableColumnMappingsFromComplex(
+                        complexPropertyMapping,
+                        complexPropertyMapping.Property.Name,
+                        complexLeafColumnNameByPath));
+                }
             }
 
-            var columnMappingByPropertyName = columnMappings.ToDictionary(m => m.EntityProperty.Name, m => m);
+            // Complex leaves are keyed by store column name so sibling complex
+            // properties that share a leaf CLR name remain unique.
+            var columnMappingByPropertyName = columnMappings.ToDictionary(
+                m => m.IsIncludedFromComplexType ? m.TableColumn.Name : m.EntityProperty.Name,
+                m => m);
             var columnMappingByColumnName = columnMappings.ToDictionary(m => m.TableColumn.Name, m => m);
 
             // Concurrency tokens (often store-generated rowversion) are tracked separately
@@ -256,6 +267,7 @@ namespace Tanneryd.BulkOperations.EF6
                 TableName = tableName,
                 Discriminator = discriminator,
                 ComplexPropertyNames = complexPropertyMappings.Select(m => m.Property.Name).ToArray(),
+                ComplexLeafColumnNameByPath = complexLeafColumnNameByPath,
                 ColumnMappingByPropertyName = columnMappingByPropertyName,
                 ColumnMappingByColumnName = columnMappingByColumnName,
                 ConcurrencyTokenMappings = concurrencyTokenMappings,
@@ -304,35 +316,40 @@ namespace Tanneryd.BulkOperations.EF6
             return mappings;
         }
 
-        private static IEnumerable<TableColumnMapping> GetTableColumnMappings(ICollection<PropertyMapping> properties,
-            bool isIncludedFromComplexType)
+        private static IEnumerable<TableColumnMapping> GetTableColumnMappingsFromComplex(
+            ComplexPropertyMapping complexPropertyMapping,
+            string pathPrefix,
+            Dictionary<string, string> leafColumnNameByPath)
         {
-            if (!properties.Any()) yield break;
-
-            var scalarPropertyMappings =
-                properties
-                    .Where(p => p is ScalarPropertyMapping)
-                    .Cast<ScalarPropertyMapping>()
-                    .Select(p => new TableColumnMapping
+            foreach (var typeMapping in complexPropertyMapping.TypeMappings)
+            {
+                foreach (var propertyMapping in typeMapping.PropertyMappings)
+                {
+                    if (propertyMapping is ScalarPropertyMapping scalar)
                     {
-                        IsIncludedFromComplexType = isIncludedFromComplexType,
-                        EntityProperty = p.Property,
-                        TableColumn = p.Column
-                    });
-            foreach (var mapping in scalarPropertyMappings)
-            {
-                yield return mapping;
-            }
+                        if (scalar.Column.IsStoreGeneratedComputed)
+                            continue;
 
-            var complexPropertyMappings =
-                properties
-                    .Where(p => p is ComplexPropertyMapping)
-                    .Cast<ComplexPropertyMapping>()
-                    .SelectMany(m => m.TypeMappings.SelectMany(tm => tm.PropertyMappings)).ToArray();
-            ;
-            foreach (var p in GetTableColumnMappings(complexPropertyMappings, true))
-            {
-                yield return p;
+                        var mapping = new TableColumnMapping
+                        {
+                            IsIncludedFromComplexType = true,
+                            EntityProperty = scalar.Property,
+                            TableColumn = scalar.Column,
+                        };
+                        leafColumnNameByPath[pathPrefix + "." + scalar.Property.Name] = scalar.Column.Name;
+                        yield return mapping;
+                    }
+                    else if (propertyMapping is ComplexPropertyMapping nested)
+                    {
+                        foreach (var mapping in GetTableColumnMappingsFromComplex(
+                                     nested,
+                                     pathPrefix + "." + nested.Property.Name,
+                                     leafColumnNameByPath))
+                        {
+                            yield return mapping;
+                        }
+                    }
+                }
             }
         }
 

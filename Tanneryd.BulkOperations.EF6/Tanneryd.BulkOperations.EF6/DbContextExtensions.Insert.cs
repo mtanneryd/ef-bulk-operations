@@ -1026,71 +1026,85 @@ namespace Tanneryd.BulkOperations.EF6
 
         private static void Flatten(IDictionary<string, object> flatEntity, object entity, Mappings mappings)
         {
-            var navigationPropertyNames = new List<string>();
+            // Keep the original entity so generated identity columns can be
+            // written back after bulk insert. Complex leaves are flattened via
+            // path → column name so sibling complex properties with the same
+            // leaf CLR name do not collide on the Expando.
+            flatEntity.Add("#OriginalEntity", entity);
 
-            // Flatten uses a recursive pattern but the initial call needs to 
-            // save the original entity, untouched, so that we can later update
-            // generated identity columns after the bulk insert has finished.
-            // The mappings argument must NEVER be set in recursive calls.
-            if (mappings != null)
-            {
-                flatEntity.Add("#OriginalEntity", entity);
-                navigationPropertyNames.AddRange(mappings.ToForeignKeyMappings.Select(m => m.NavigationPropertyName));
-                navigationPropertyNames.AddRange(mappings.FromForeignKeyMappings.Select(m => m.NavigationPropertyName));
-            }
+            var navigationPropertyNames = new HashSet<string>(StringComparer.Ordinal);
+            navigationPropertyNames.UnionWith(mappings.ToForeignKeyMappings.Select(m => m.NavigationPropertyName));
+            navigationPropertyNames.UnionWith(mappings.FromForeignKeyMappings.Select(m => m.NavigationPropertyName));
+
+            var complexPropertyNames = new HashSet<string>(
+                mappings.ComplexPropertyNames ?? Array.Empty<string>(),
+                StringComparer.Ordinal);
 
             Type t = entity.GetType();
-            var properties = t.GetProperties();
-            var dataProperties = properties.Where(p => !navigationPropertyNames.Contains(p.Name));
-            foreach (var property in dataProperties)
+            foreach (var property in t.GetProperties())
             {
+                if (navigationPropertyNames.Contains(property.Name))
+                    continue;
+
                 var val = property.GetValue(entity);
-
-                // We should only have a mapping instance in the very first call
-                // to this method. All consecutive recursive calls should set
-                // the mappings argument to null.
-                if (mappings != null)
+                if (complexPropertyNames.Contains(property.Name))
                 {
-                    var complexPropertyNames = mappings.ComplexPropertyNames;
-                    if (complexPropertyNames.Any(n => n == property.Name))
+                    if (val == null)
                     {
-                        if (val == null)
-                        {
-                            throw new ArgumentException(
-                                $"Complex property '{property.Name}' on type '{t.Name}' is null. " +
-                                "Bulk insert requires complex properties to be non-null so nested columns can be flattened.",
-                                property.Name);
-                        }
+                        throw new ArgumentException(
+                            $"Complex property '{property.Name}' on type '{t.Name}' is null. " +
+                            "Bulk insert requires complex properties to be non-null so nested columns can be flattened.",
+                            property.Name);
+                    }
 
-                        Flatten(flatEntity, val, null);
-                    }
-                    else
-                    {
-                        flatEntity.Add(property.Name, val);
-                    }
+                    FlattenComplex(
+                        flatEntity,
+                        val,
+                        property.Name,
+                        mappings.ComplexLeafColumnNameByPath);
                 }
-                // The only way that we could get here is if we have been called 
-                // recursively and that should ONLY happen if we are traversing a
-                // hierarchy of complex types.
                 else
                 {
-                    var t0 = property.PropertyType;
-                    if (t0.IsValueType || t0.UnderlyingSystemType.Name == "String")
-                    {
-                        flatEntity.Add(property.Name, val);
-                    }
-                    else
-                    {
-                        if (val == null)
-                        {
-                            throw new ArgumentException(
-                                $"Complex property '{property.Name}' is null. " +
-                                "Bulk insert requires nested complex properties to be non-null so columns can be flattened.",
-                                property.Name);
-                        }
+                    flatEntity.Add(property.Name, val);
+                }
+            }
+        }
 
-                        Flatten(flatEntity, val, null);
+        private static void FlattenComplex(
+            IDictionary<string, object> flatEntity,
+            object complexInstance,
+            string pathPrefix,
+            Dictionary<string, string> leafColumnNameByPath)
+        {
+            foreach (var property in complexInstance.GetType().GetProperties())
+            {
+                var val = property.GetValue(complexInstance);
+                var path = pathPrefix + "." + property.Name;
+                var propertyType = property.PropertyType;
+
+                if (propertyType.IsValueType || propertyType.UnderlyingSystemType.Name == "String")
+                {
+                    if (leafColumnNameByPath == null ||
+                        !leafColumnNameByPath.TryGetValue(path, out var columnName))
+                    {
+                        throw new ArgumentException(
+                            $"No column mapping for complex leaf '{path}'.",
+                            path);
                     }
+
+                    flatEntity.Add(columnName, val);
+                }
+                else
+                {
+                    if (val == null)
+                    {
+                        throw new ArgumentException(
+                            $"Complex property '{path}' is null. " +
+                            "Bulk insert requires nested complex properties to be non-null so columns can be flattened.",
+                            path);
+                    }
+
+                    FlattenComplex(flatEntity, val, path, leafColumnNameByPath);
                 }
             }
         }

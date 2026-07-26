@@ -106,13 +106,19 @@ namespace Tanneryd.BulkOperations.EFCore
                 .ToArray();
 
             var complexPropertyNames = new List<string>();
+            var complexLeafColumnNameByPath = new Dictionary<string, string>(StringComparer.Ordinal);
             foreach (var complexProperty in entityType.GetComplexProperties())
             {
                 complexPropertyNames.Add(complexProperty.Name);
-                AddComplexTypeColumnMappings(tableColumnMappings, complexProperty);
+                AddComplexTypeColumnMappings(
+                    tableColumnMappings,
+                    complexProperty,
+                    complexProperty.Name,
+                    complexLeafColumnNameByPath);
             }
 
             mappings.ComplexPropertyNames = complexPropertyNames.ToArray();
+            mappings.ComplexLeafColumnNameByPath = complexLeafColumnNameByPath;
 
             if (discriminatorProperty != null)
             {
@@ -123,8 +129,14 @@ namespace Tanneryd.BulkOperations.EFCore
                 };
             }
 
-            mappings.ColumnMappingByPropertyName =
-                tableColumnMappings.ToDictionary(m => m.EntityProperty.Name, m => m);
+            // Complex leaves are keyed by store column name so sibling complex
+            // properties that share a leaf CLR name (e.g. Home.Street / Work.Street)
+            // remain unique. Scalar properties stay keyed by CLR property name.
+            mappings.ColumnMappingByPropertyName = tableColumnMappings.ToDictionary(
+                m => m.IsIncludedFromComplexType
+                    ? m.TableColumn.Column.Name
+                    : m.EntityProperty.Name,
+                m => m);
             mappings.ColumnMappingByColumnName =
                 tableColumnMappings.ToDictionary(m => m.TableColumn.Column.Name, m => m);
 
@@ -308,16 +320,29 @@ namespace Tanneryd.BulkOperations.EFCore
 
         private static void AddComplexTypeColumnMappings(
             List<TableColumnMapping> mappings,
-            IComplexProperty complexProperty)
+            IComplexProperty complexProperty,
+            string pathPrefix,
+            Dictionary<string, string> leafColumnNameByPath)
         {
             foreach (var property in complexProperty.ComplexType.GetProperties())
             {
                 if (!IsStoreGeneratedProperty(property) || property.IsPrimaryKey())
-                    mappings.Add(CreateTableColumnMapping(property, true));
+                {
+                    var mapping = CreateTableColumnMapping(property, true);
+                    mappings.Add(mapping);
+                    leafColumnNameByPath[pathPrefix + "." + property.Name] =
+                        mapping.TableColumn.Column.Name;
+                }
             }
 
             foreach (var nestedComplexProperty in complexProperty.ComplexType.GetComplexProperties())
-                AddComplexTypeColumnMappings(mappings, nestedComplexProperty);
+            {
+                AddComplexTypeColumnMappings(
+                    mappings,
+                    nestedComplexProperty,
+                    pathPrefix + "." + nestedComplexProperty.Name,
+                    leafColumnNameByPath);
+            }
         }
 
         public TableName GetTableName(DbContext ctx, Type t)

@@ -34,6 +34,13 @@ namespace Tanneryd.BulkOperations.EFCore.Model
         public TableName TableName { get; set; }
         public Discriminator Discriminator { get; set; }
         public string[] ComplexPropertyNames { get; set; }
+        /// <summary>
+        /// Complex leaf path (e.g. <c>Home.Street</c> or <c>Level2.Level3.Updated</c>)
+        /// → store column name. Flatten uses these as Expando keys so sibling complex
+        /// properties with the same leaf CLR name do not collide.
+        /// </summary>
+        public Dictionary<string, string> ComplexLeafColumnNameByPath { get; set; } =
+            new Dictionary<string, string>(StringComparer.Ordinal);
         public Dictionary<string, TableColumnMapping> ColumnMappingByPropertyName { get; set; }
         public Dictionary<string, TableColumnMapping> ColumnMappingByColumnName { get; set; }
         /// <summary>
