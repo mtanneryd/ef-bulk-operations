@@ -160,6 +160,38 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Update
         }
 
         /// <summary>
+        /// Null KeyPropertyNames / UpdatedPropertyNames must behave like empty arrays
+        /// (table PK / all updatable columns), not throw NullReferenceException.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdateAll_ShouldTreatNullPropertyNameArraysAsEmpty()
+        {
+            using var db = Factory.CreateDbContext();
+            var price = new Price
+            {
+                Date = new DateTime(2023, 5, 29),
+                Name = "Null-arrays",
+                Value = 1m,
+            };
+            db.Prices.Add(price);
+            db.SaveChanges();
+
+            price.Value = 9.5m;
+
+            db.BulkUpdateAll(new BulkUpdateRequest
+            {
+                Entities = new[] { price },
+                KeyPropertyNames = null,
+                UpdatedPropertyNames = null,
+            });
+
+            using var verify = Factory.CreateDbContext();
+            Assert.AreEqual(
+                9.5m,
+                verify.Prices.Single(p => p.Name == "Null-arrays").Value);
+        }
+
+        /// <summary>
         /// H2: InsertIfNew must include client-assigned Guid PKs in the INSERT
         /// column list (identity/computed PKs stay omitted for the DB to generate).
         /// </summary>

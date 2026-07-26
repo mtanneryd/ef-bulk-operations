@@ -80,6 +80,10 @@ namespace Tanneryd.BulkOperations.EF6
 
             if (request.Entities == null)
                 throw new ArgumentNullException(nameof(request.Entities));
+
+            // Public setters allow null; treat as empty (same as the ctor defaults).
+            request.UpdatedPropertyNames ??= Array.Empty<string>();
+            request.KeyPropertyNames ??= Array.Empty<string>();
         }
 
         private static void ValidateBulkInsertRequest<T>(BulkInsertRequest<T> request)

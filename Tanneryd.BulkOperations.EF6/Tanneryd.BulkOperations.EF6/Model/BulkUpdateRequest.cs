@@ -38,13 +38,13 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public IList Entities { get; set; }
 
         /// <summary>
-        /// CLR property names to update. Empty means all mapped non-key columns.
+        /// CLR property names to update. Empty or null means all mapped non-key columns.
         /// </summary>
         public string[] UpdatedPropertyNames { get; set; }
 
         /// <summary>
-        /// CLR property names used as the join/match key. Empty means the table primary key.
-        /// When the entity has concurrency tokens, this must be empty or exactly the
+        /// CLR property names used as the join/match key. Empty or null means the table primary key.
+        /// When the entity has concurrency tokens, this must be empty/null or exactly the
         /// primary key — non-unique keys can update multiple rows and false-fire
         /// <see cref="System.Data.Entity.Infrastructure.DbUpdateConcurrencyException"/>.
         /// </summary>
