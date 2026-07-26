@@ -53,9 +53,11 @@ namespace Tanneryd.BulkOperations.EFCore
             typeof(UInt64),
         };
 
-        private static readonly object _mutex = new object();
-        private static readonly Dictionary<IModel, MappingsExtractor> _mappingExtractorsByModel =
-            new Dictionary<IModel, MappingsExtractor>();
+        // Weak per-model cache: entries become collectible together with their
+        // IModel, so dynamically built models (per-tenant options, test model
+        // churn) do not leak. ConditionalWeakTable is thread-safe.
+        private static readonly System.Runtime.CompilerServices.ConditionalWeakTable<IModel, MappingsExtractor>
+            _mappingExtractorsByModel = new System.Runtime.CompilerServices.ConditionalWeakTable<IModel, MappingsExtractor>();
 
         #region Public API
 

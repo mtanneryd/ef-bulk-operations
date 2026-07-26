@@ -318,10 +318,11 @@ namespace Tanneryd.BulkOperations.EF6
 
         /// <summary>
         /// Re-enables constraints on every table, even when earlier tables fail.
-        /// Failures are collected and thrown as an <see cref="AggregateException"/>
-        /// only when <paramref name="throwOnFailure"/> is true; callers pass false
-        /// when the insert itself already failed so the original exception is not
-        /// masked by re-enable errors.
+        /// Failures only surface when <paramref name="throwOnFailure"/> is true;
+        /// callers pass false when the insert itself already failed so the original
+        /// exception is not masked by re-enable errors. A single failure is rethrown
+        /// as-is (preserving the original exception type, e.g. SqlException);
+        /// multiple failures are wrapped in an <see cref="AggregateException"/>.
         /// </summary>
         internal static async Task ReenableAllCheckConstraintsAsync(
             IEnumerable<string> tableFullNames,
@@ -343,6 +344,9 @@ namespace Tanneryd.BulkOperations.EF6
 
             if (throwOnFailure && failures != null)
             {
+                if (failures.Count == 1)
+                    System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+
                 throw new AggregateException(
                     "Failed to re-enable CHECK/FK constraints on one or more tables.",
                     failures);

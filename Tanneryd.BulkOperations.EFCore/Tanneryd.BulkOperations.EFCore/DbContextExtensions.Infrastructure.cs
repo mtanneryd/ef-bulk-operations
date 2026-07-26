@@ -23,23 +23,15 @@ namespace Tanneryd.BulkOperations.EFCore
     {
         /// <summary>
         /// Returns a MappingsExtractor for the context's <see cref="IModel"/>.
-        /// Cached by model identity (not context CLR type) so the same DbContext
-        /// class with different models does not reuse stale mappings. The lock
-        /// guards concurrent first-use initialization.
+        /// Cached weakly by model identity (not context CLR type) so the same
+        /// DbContext class with different models does not reuse stale mappings,
+        /// and models that are no longer referenced can be collected together
+        /// with their cached extractor. The extractor only retains the model,
+        /// never the context instance.
         /// </summary>
-        private static MappingsExtractor GetMappingExtractor(DbContext ctx)
+        internal static MappingsExtractor GetMappingExtractor(DbContext ctx)
         {
-            var model = ctx.Model;
-            lock (_mutex)
-            {
-                if (!_mappingExtractorsByModel.TryGetValue(model, out var extractor))
-                {
-                    extractor = new MappingsExtractor(ctx);
-                    _mappingExtractorsByModel[model] = extractor;
-                }
-
-                return extractor;
-            }
+            return _mappingExtractorsByModel.GetValue(ctx.Model, static model => new MappingsExtractor(model));
         }
 
         private static void ValidateDbContext(DbContext ctx)
@@ -386,10 +378,11 @@ namespace Tanneryd.BulkOperations.EFCore
 
         /// <summary>
         /// Re-enables constraints on every table, even when earlier tables fail.
-        /// Failures are collected and thrown as an <see cref="AggregateException"/>
-        /// only when <paramref name="throwOnFailure"/> is true; callers pass false
-        /// when the insert itself already failed so the original exception is not
-        /// masked by re-enable errors.
+        /// Failures only surface when <paramref name="throwOnFailure"/> is true;
+        /// callers pass false when the insert itself already failed so the original
+        /// exception is not masked by re-enable errors. A single failure is rethrown
+        /// as-is (preserving the original exception type, e.g. SqlException);
+        /// multiple failures are wrapped in an <see cref="AggregateException"/>.
         /// </summary>
         internal static async Task ReenableAllCheckConstraintsAsync(
             IEnumerable<string> tableFullNames,
@@ -411,6 +404,9 @@ namespace Tanneryd.BulkOperations.EFCore
 
             if (throwOnFailure && failures != null)
             {
+                if (failures.Count == 1)
+                    System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(failures[0]).Throw();
+
                 throw new AggregateException(
                     "Failed to re-enable CHECK/FK constraints on one or more tables.",
                     failures);

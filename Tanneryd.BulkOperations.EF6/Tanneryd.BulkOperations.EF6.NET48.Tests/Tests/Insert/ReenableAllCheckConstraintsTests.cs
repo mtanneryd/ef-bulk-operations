@@ -50,13 +50,37 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
                     },
                     throwOnFailure: true).ConfigureAwait(false);
             }
-            catch (AggregateException)
+            catch (InvalidOperationException)
             {
-                // Expected; verified in dedicated test below.
+                // Expected; single failures are rethrown as-is (see dedicated test below).
             }
 
             CollectionAssert.AreEqual(tables, attempted,
                 "All tables must be attempted even when an earlier re-enable fails.");
+        }
+
+        [TestMethod]
+        public async Task ShouldRethrowOriginalException_WhenSingleReenableFails()
+        {
+            // Single failure must surface with its original type (e.g. SqlException
+            // in production), not wrapped in AggregateException, for back-compat.
+            InvalidOperationException caught = null;
+            try
+            {
+                await DbContextExtensions.ReenableAllCheckConstraintsAsync(
+                    new[] { "[dbo].[A]", "[dbo].[B]" },
+                    name => name == "[dbo].[A]"
+                        ? Task.FromException(new InvalidOperationException("boom"))
+                        : Task.CompletedTask,
+                    throwOnFailure: true).ConfigureAwait(false);
+            }
+            catch (InvalidOperationException ex)
+            {
+                caught = ex;
+            }
+
+            Assert.IsNotNull(caught, "Expected the original exception type, not AggregateException.");
+            Assert.AreEqual("boom", caught.Message);
         }
 
         [TestMethod]

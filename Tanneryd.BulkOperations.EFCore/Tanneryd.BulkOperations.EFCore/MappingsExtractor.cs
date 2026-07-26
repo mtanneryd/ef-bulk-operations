@@ -10,13 +10,24 @@ namespace Tanneryd.BulkOperations.EFCore
 {
     public class MappingsExtractor
     {
-        private readonly DbContext _ctx;
+        private readonly IModel _model;
         private Dictionary<Type, Mappings> _mappingsByType;
 
 
         public MappingsExtractor(DbContext ctx)
+            : this(ctx?.Model ?? throw new ArgumentNullException(nameof(ctx)))
         {
-            _ctx = ctx;
+        }
+
+        /// <summary>
+        /// Preferred constructor: only the model is retained. Extractors are
+        /// cached per <see cref="IModel"/>, so they must never hold on to a
+        /// <see cref="DbContext"/> instance (it may be disposed long before
+        /// the extractor is evicted).
+        /// </summary>
+        public MappingsExtractor(IModel model)
+        {
+            _model = model ?? throw new ArgumentNullException(nameof(model));
             LoadMappings();
         }
 
@@ -33,9 +44,9 @@ namespace Tanneryd.BulkOperations.EFCore
 
         /// <summary>
         /// Unwraps proxy / unmapped subclass CLR types to the most-derived
-        /// type present in the mappings cache. Does not touch <see cref="_ctx"/>
-        /// because extractors are cached by <see cref="IModel"/> and that context
-        /// instance may already be disposed.
+        /// type present in the mappings cache. Only uses the cached mappings;
+        /// extractors are cached by <see cref="IModel"/> and must not depend
+        /// on any live context instance.
         /// </summary>
         public Type ResolveMappedClrType(Type type)
         {
@@ -52,7 +63,7 @@ namespace Tanneryd.BulkOperations.EFCore
         {
             _mappingsByType = new Dictionary<Type, Mappings>();
 
-            var entityTypes = _ctx.Model.GetEntityTypes()
+            var entityTypes = _model.GetEntityTypes()
                 .Where(t => t.GetViewName() == null)
                 .ToArray();
 
