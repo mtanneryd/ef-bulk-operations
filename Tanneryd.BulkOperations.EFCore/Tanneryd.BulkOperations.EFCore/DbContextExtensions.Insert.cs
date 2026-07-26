@@ -485,24 +485,17 @@ namespace Tanneryd.BulkOperations.EFCore
 
             var conn = await GetSqlConnectionAsync(ctx, cancellationToken).ConfigureAwait(false);
 
-            // Complex types are flattened into ExpandoObject so the same
-            // bulk-copy path can be reused for nested CLR shapes.
+            // Complex types are flattened into ExpandoObject for the bulk-copy
+            // reader. Keep the original CLR list for select-not-existing — that
+            // path Casts to T and cannot consume Expando rows.
+            var entitiesForExistence = entities;
+            var entitiesForBulkCopy = entities;
             if (hasComplexProperties)
-            {
-                IList flattenedEntities = new List<object>();
-                foreach (var entity in entities)
-                {
-                    var flatEntity = new ExpandoObject();
-                    Flatten(flatEntity, entity, mappings);
-                    flattenedEntities.Add(flatEntity);
-                }
-
-                entities = flattenedEntities;
-            }
+                entitiesForBulkCopy = FlattenEntities(entities, mappings);
 
             // Ignore all properties that we have no mappings for.
             // Pass mappings so all-null Expando keys still get a CLR type.
-            var properties = GetProperties(entities, columnMappings)
+            var properties = GetProperties(entitiesForBulkCopy, columnMappings)
                 .Where(p => columnMappings.ContainsKey(p.Name))
                 .ToArray();
 
@@ -546,7 +539,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 {
                     tempTableName = await FillTempTableAsync(
                         conn,
-                        entities,
+                        entitiesForBulkCopy,
                         tableName,
                         columnMappings,
                         pkColumnMappings,
@@ -588,7 +581,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 var pkColumn = pkColumnMappings[0].TableColumn;
                 var pkProperty = pkColumnMappings[0].EntityProperty;
 
-                var newEntities = SelectNewEntities(entities, pkProperty, t);
+                var newEntities = SelectNewEntities(entitiesForBulkCopy, pkProperty, t);
 
                 if (enableRecursiveInsert == EnableRecursiveInsert.NoAndIgnoreGeneratedPrimaryKeys)
                 {
@@ -715,14 +708,18 @@ namespace Tanneryd.BulkOperations.EFCore
                     commandTimeout,
                     useTableLock);
 
-                // Make sure that we only insert entities not already in the database.
+                // Existence check needs original CLR instances (Cast<T>).
                 var notExistingEntities = await BulkSelectNotExistingByTypeAsync(
-                    ctx, t, entities, pkColumnMappings, transaction, commandTimeout, useTableLock, cancellationToken).ConfigureAwait(false);
+                    ctx, t, entitiesForExistence, pkColumnMappings, transaction, commandTimeout, useTableLock, cancellationToken).ConfigureAwait(false);
                 rowsAffected += notExistingEntities.Count;
+
+                var entitiesToCopy = hasComplexProperties
+                    ? FlattenEntities(notExistingEntities, mappings)
+                    : notExistingEntities;
 
                 var s = new Stopwatch();
                 s.Start();
-                using (var reader = CreateEntitiesDataReader(table, notExistingEntities, properties, t, mappings.Discriminator, IncludeRowNumber.No))
+                using (var reader = CreateEntitiesDataReader(table, entitiesToCopy, properties, t, mappings.Discriminator, IncludeRowNumber.No))
                     await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
                 s.Stop();
                 var stats = new BulkInsertStatistics
@@ -733,6 +730,19 @@ namespace Tanneryd.BulkOperations.EFCore
             }
 
             response.AffectedRows.Add(new Tuple<Type, long>(t, rowsAffected));
+        }
+
+        private static IList FlattenEntities(IList entities, Mappings mappings)
+        {
+            IList flattenedEntities = new List<object>();
+            foreach (var entity in entities)
+            {
+                var flatEntity = new ExpandoObject();
+                Flatten(flatEntity, entity, mappings);
+                flattenedEntities.Add(flatEntity);
+            }
+
+            return flattenedEntities;
         }
 
         /// <summary>
