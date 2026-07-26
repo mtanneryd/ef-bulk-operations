@@ -390,6 +390,7 @@ namespace Tanneryd.BulkOperations.EFCore
             var s = new Stopwatch();
             s.Start();
 
+            var succeeded = false;
             try
             {
                 var t = request.Entities.First().GetType();
@@ -439,15 +440,18 @@ namespace Tanneryd.BulkOperations.EFCore
                         request.CommandTimeout,
                         cancellationToken).ConfigureAwait(false);
                 }
+
+                succeeded = true;
             }
             finally
             {
                 // Re-enable even if the caller token is cancelled / insert left bad rows.
-                foreach (var tableName in response.TablesWithNoCheckConstraints)
-                {
-                    await ReenableCheckConstraintsAsync(ctx, tableName, request.Transaction)
-                        .ConfigureAwait(false);
-                }
+                // Every table is attempted; re-enable failures only surface when the
+                // insert itself succeeded, so the original exception is never masked.
+                await ReenableAllCheckConstraintsAsync(
+                    response.TablesWithNoCheckConstraints,
+                    tableName => ReenableCheckConstraintsAsync(ctx, tableName, request.Transaction),
+                    throwOnFailure: succeeded).ConfigureAwait(false);
             }
 
             s.Stop();

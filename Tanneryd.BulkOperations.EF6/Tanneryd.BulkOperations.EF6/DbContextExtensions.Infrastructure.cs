@@ -317,6 +317,39 @@ namespace Tanneryd.BulkOperations.EF6
         }
 
         /// <summary>
+        /// Re-enables constraints on every table, even when earlier tables fail.
+        /// Failures are collected and thrown as an <see cref="AggregateException"/>
+        /// only when <paramref name="throwOnFailure"/> is true; callers pass false
+        /// when the insert itself already failed so the original exception is not
+        /// masked by re-enable errors.
+        /// </summary>
+        internal static async Task ReenableAllCheckConstraintsAsync(
+            IEnumerable<string> tableFullNames,
+            Func<string, Task> reenableAsync,
+            bool throwOnFailure)
+        {
+            List<Exception> failures = null;
+            foreach (var tableFullName in tableFullNames)
+            {
+                try
+                {
+                    await reenableAsync(tableFullName).ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    (failures ??= new List<Exception>()).Add(e);
+                }
+            }
+
+            if (throwOnFailure && failures != null)
+            {
+                throw new AggregateException(
+                    "Failed to re-enable CHECK/FK constraints on one or more tables.",
+                    failures);
+            }
+        }
+
+        /// <summary>
         /// Re-enables CHECK/FK constraints after AllowNotNullSelfReferences NOCHECK.
         /// Prefers WITH CHECK (trusted). If existing rows violate constraints, falls
         /// back to WITH NOCHECK so constraints are enabled again, then rethrows the
