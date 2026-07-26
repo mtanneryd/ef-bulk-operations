@@ -34,8 +34,12 @@ namespace Tanneryd.BulkOperations.EF6
         /// Builds the bulk-copy property list for a batch. For <see cref="ExpandoObject"/>
         /// rows, unions keys across all entities and takes each property's CLR type from
         /// the first non-null value so a null on entities[0] does not drop the column.
+        /// When every row is null for a key, falls back to
+        /// <paramref name="columnMappings"/> so all-null columns are not omitted.
         /// </summary>
-        private static BulkPropertyInfo[] GetProperties(IList entities)
+        private static BulkPropertyInfo[] GetProperties(
+            IList entities,
+            IDictionary<string, TableColumnMapping> columnMappings = null)
         {
             if (entities == null || entities.Count == 0)
                 return Array.Empty<BulkPropertyInfo>();
@@ -44,14 +48,32 @@ namespace Tanneryd.BulkOperations.EF6
                 return GetProperties(entities[0]);
 
             var typeByName = new Dictionary<string, Type>(StringComparer.Ordinal);
+            var keysSeen = new HashSet<string>(StringComparer.Ordinal);
             foreach (var entity in entities)
             {
                 var dict = (IDictionary<string, object>)(ExpandoObject)entity;
                 foreach (var kvp in dict)
                 {
+                    keysSeen.Add(kvp.Key);
                     if (kvp.Value == null || typeByName.ContainsKey(kvp.Key))
                         continue;
                     typeByName[kvp.Key] = kvp.Value.GetType();
+                }
+            }
+
+            // Value-only inference drops keys that are null on every row. Prefer
+            // mapping-declared CLR types for those (complex-type flatten / M2M join).
+            if (columnMappings != null)
+            {
+                foreach (var key in keysSeen)
+                {
+                    if (typeByName.ContainsKey(key))
+                        continue;
+                    if (!columnMappings.TryGetValue(key, out var mapping))
+                        continue;
+                    var mappedType = mapping.EntityProperty?.PrimitiveType?.ClrEquivalentType;
+                    if (mappedType != null)
+                        typeByName[key] = mappedType;
                 }
             }
 

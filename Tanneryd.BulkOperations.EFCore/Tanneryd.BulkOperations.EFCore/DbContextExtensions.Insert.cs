@@ -501,7 +501,8 @@ namespace Tanneryd.BulkOperations.EFCore
             }
 
             // Ignore all properties that we have no mappings for.
-            var properties = GetProperties(entities)
+            // Pass mappings so all-null Expando keys still get a CLR type.
+            var properties = GetProperties(entities, columnMappings)
                 .Where(p => columnMappings.ContainsKey(p.Name))
                 .ToArray();
 
@@ -1233,7 +1234,7 @@ namespace Tanneryd.BulkOperations.EFCore
                     identityInsertEnabled = true;
                 }
 
-                var allProperties = GetProperties(entities);
+                var allProperties = GetProperties(entities, columnMappings);
                 //
                 // Select the primary key clr properties.
                 // For normal entities EntityProperty.Name matches the CLR property.

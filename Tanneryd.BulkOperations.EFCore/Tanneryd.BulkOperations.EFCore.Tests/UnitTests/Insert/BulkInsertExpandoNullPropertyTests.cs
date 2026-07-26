@@ -16,14 +16,16 @@
 
 using System;
 using System.Linq;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EFCore.Model;
 
 namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
 {
     /// <summary>
-    /// Complex types are flattened to ExpandoObject; GetProperties(entities[0])
-    /// currently skips null keys on the first row, so later rows lose those columns.
+    /// Complex types are flattened to ExpandoObject; property types must be inferred
+    /// across the batch (and from mappings when every row is null) so null keys are
+    /// not dropped from SqlBulkCopy.
     /// </summary>
     [TestClass]
     public class BulkInsertExpandoNullPropertyTests : BulkOperationTestBase
@@ -87,6 +89,56 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
                 "Skipping null Expando keys on entities[0] drops that column for later rows.");
             Assert.AreEqual("L2-second", fromDb[1].Level2.Level2Name);
             Assert.AreEqual("L3-second", fromDb[1].Level2.Level3.Level3Name);
+        }
+
+        /// <summary>
+        /// When every flattened row has null for a mapped column, value-only type
+        /// inference would omit it from SqlBulkCopy. A column DEFAULT would then
+        /// win instead of the intended NULL — prove we still stage the column.
+        /// </summary>
+        [TestMethod]
+        public void BulkInsert_ComplexType_ShouldPersistNull_WhenAllRowsHaveNullProperty()
+        {
+            const string constraintName = "DF_Level1_Level1Name_AllNullTest";
+            const string sentinel = "default-sentinel-must-not-appear";
+
+            using var db = Factory.CreateDbContext();
+            db.Database.ExecuteSqlRaw($@"
+IF OBJECT_ID(N'dbo.{constraintName}', N'D') IS NULL
+    ALTER TABLE [dbo].[Level1]
+    ADD CONSTRAINT [{constraintName}] DEFAULT (N'{sentinel}') FOR [Level1Name];");
+
+            try
+            {
+                db.BulkInsertAll(new[]
+                {
+                    new Level1
+                    {
+                        Level1Name = null,
+                        Level2 = new Level2
+                        {
+                            Level2Name = "L2-all-null",
+                            Level3 = new Level3
+                            {
+                                Level3Name = "L3-all-null",
+                                Updated = new DateTime(2018, 3, 3),
+                            },
+                        },
+                    },
+                });
+
+                using var verify = Factory.CreateDbContext();
+                var fromDb = verify.Levels.Single(l => l.Level2.Level2Name == "L2-all-null");
+                Assert.IsNull(
+                    fromDb.Level1Name,
+                    "Omitting an all-null Expando column lets the table DEFAULT apply.");
+            }
+            finally
+            {
+                db.Database.ExecuteSqlRaw($@"
+IF OBJECT_ID(N'dbo.{constraintName}', N'D') IS NOT NULL
+    ALTER TABLE [dbo].[Level1] DROP CONSTRAINT [{constraintName}];");
+            }
         }
     }
 }
