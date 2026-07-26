@@ -161,19 +161,49 @@ namespace Tanneryd.BulkOperations.EFCore
         /// <param name="instance"></param>
         /// <param name="def"></param>
         /// <returns></returns>
-        private static dynamic GetProperty(string propertyName, object instance, object def = null)
+        private static dynamic GetProperty(
+            string propertyName,
+            object instance,
+            object def = null,
+            DbContext ctx = null)
         {
             var t = instance.GetType();
-            return GetProperty(t, propertyName, instance, def);
+            return GetProperty(t, propertyName, instance, def, ctx);
         }
 
-        private static dynamic GetProperty(Type t, string propertyName, object instance, object def = null)
+        /// <summary>
+        /// Reads a CLR or shadow property. Shadow FKs have no <see cref="PropertyInfo"/>;
+        /// pass <paramref name="ctx"/> so values come from <c>Entry(...).Property</c>.
+        /// </summary>
+        private static dynamic GetProperty(
+            Type t,
+            string propertyName,
+            object instance,
+            object def = null,
+            DbContext ctx = null)
         {
             if (t.IsPrimitive) return instance;
             if (t == typeof(string)) return instance;
 
+            if (instance is ExpandoObject expando)
+                return GetProperty(propertyName, expando);
+
             var property = t.GetProperty(propertyName);
-            return GetProperty(property, instance, def);
+            if (property != null)
+                return GetProperty(property, instance, def);
+
+            if (ctx != null)
+            {
+                var current = ctx.Entry(instance).Property(propertyName).CurrentValue;
+                return current ?? def;
+            }
+
+            if (def != null)
+                return def;
+
+            throw new ArgumentException(
+                $"Property '{propertyName}' was not found on type '{t.Name}'. " +
+                "Shadow properties require a DbContext for Entry-based access.");
         }
 
         private static dynamic GetProperty(string propertyName, ExpandoObject instance)
@@ -262,13 +292,14 @@ namespace Tanneryd.BulkOperations.EFCore
         }
 
         /// <summary>
-        /// Use reflection to set a property value by its property 
-        /// name to an object instance.
+        /// Sets a CLR or shadow property. Shadow FKs have no <see cref="PropertyInfo"/>;
+        /// pass <paramref name="ctx"/> so values go through <c>Entry(...).Property</c>.
         /// </summary>
-        /// <param name="propertyName"></param>
-        /// <param name="instance"></param>
-        /// <param name="value"></param>
-        private static void SetProperty(string propertyName, object instance, object value)
+        private static void SetProperty(
+            string propertyName,
+            object instance,
+            object value,
+            DbContext ctx = null)
         {
             if (value == DBNull.Value) return;
 
@@ -276,13 +307,79 @@ namespace Tanneryd.BulkOperations.EFCore
             {
                 var dict = (IDictionary<string, object>)instance;
                 dict[propertyName] = value;
+                return;
             }
-            else
+
+            var type = instance.GetType();
+            var property = type.GetProperty(propertyName);
+            if (property != null)
             {
-                var type = instance.GetType();
-                var property = type.GetProperty(propertyName);
                 property.SetValue(instance, value);
+                return;
             }
+
+            if (ctx == null)
+            {
+                throw new ArgumentException(
+                    $"Property '{propertyName}' was not found on type '{type.Name}'. " +
+                    "Shadow properties require a DbContext for Entry-based access.");
+            }
+
+            ctx.Entry(instance).Property(propertyName).CurrentValue = value;
+        }
+
+        private static Type ResolvePropertyClrType(
+            DbContext ctx,
+            Type entityClrType,
+            string propertyName,
+            Mappings mappings)
+        {
+            var property = entityClrType.GetProperty(propertyName);
+            if (property != null)
+                return property.PropertyType;
+
+            if (mappings != null &&
+                mappings.ColumnMappingByPropertyName.TryGetValue(propertyName, out var mapping) &&
+                mapping.EntityProperty != null)
+            {
+                return mapping.EntityProperty.ClrType;
+            }
+
+            var mappedType = GetMappingExtractor(ctx).ResolveMappedClrType(entityClrType);
+            var entityType = ctx.Model.FindEntityType(mappedType) ?? ctx.Model.FindEntityType(entityClrType);
+            var modelProperty = entityType?.FindProperty(propertyName);
+            if (modelProperty != null)
+                return modelProperty.ClrType;
+
+            throw new ArgumentException(
+                $"Could not resolve CLR type for property '{propertyName}' on '{entityClrType.Name}'.");
+        }
+
+        /// <summary>
+        /// CLR <see cref="GetProperties"/> omits shadow columns. Add mapped
+        /// <see cref="IProperty.IsShadowProperty"/> entries so SqlBulkCopy stages them.
+        /// </summary>
+        private static BulkPropertyInfo[] IncludeMappedShadowProperties(
+            IEnumerable<BulkPropertyInfo> properties,
+            IDictionary<string, TableColumnMapping> columnMappings)
+        {
+            var list = properties.ToList();
+            var names = new HashSet<string>(list.Select(p => p.Name), StringComparer.Ordinal);
+            foreach (var kvp in columnMappings)
+            {
+                if (!names.Add(kvp.Key))
+                    continue;
+                var entityProperty = kvp.Value.EntityProperty;
+                if (entityProperty == null || !entityProperty.IsShadowProperty())
+                    continue;
+                list.Add(new ExpandoBulkPropertyInfo
+                {
+                    Name = kvp.Key,
+                    Type = entityProperty.ClrType
+                });
+            }
+
+            return list.ToArray();
         }
 
         private static void SetProperty(BulkPropertyInfo property, object instance, object value)

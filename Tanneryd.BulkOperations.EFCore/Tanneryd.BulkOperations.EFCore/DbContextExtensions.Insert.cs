@@ -106,25 +106,32 @@ namespace Tanneryd.BulkOperations.EFCore
                                 navPropertyType = GetProperty(t, navigationPropertyName, entity).GetType();
                             foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
                             {
-                                PropertyInfo toPropertyInfo = t.GetProperty(foreignKeyRelation.ToProperty);
-                                var navPropertyKeyType = toPropertyInfo.PropertyType;
-                                var navPropertyKey = GetProperty(t, foreignKeyRelation.ToProperty, entity);
+                                var navPropertyKeyType = ResolvePropertyClrType(
+                                    ctx, t, foreignKeyRelation.ToProperty, mappings);
+                                var navPropertyKey = GetProperty(
+                                    t, foreignKeyRelation.ToProperty, entity, def: null, ctx: ctx);
 
                                 // Only act when the FK on this entity is still unset.
                                 if (IsUnsetKeyValue(navPropertyKey, navPropertyKeyType))
                                 {
                                     var fromPropertyInfo = navPropertyType.GetProperty(foreignKeyRelation.FromProperty);
-                                    var currentValue = GetProperty(navPropertyType, foreignKeyRelation.FromProperty,
-                                        navProperty);
+                                    var fromClrType = fromPropertyInfo?.PropertyType
+                                        ?? ResolvePropertyClrType(
+                                            ctx, navPropertyType, foreignKeyRelation.FromProperty, null);
+                                    var currentValue = GetProperty(
+                                        navPropertyType,
+                                        foreignKeyRelation.FromProperty,
+                                        navProperty,
+                                        def: null,
+                                        ctx: ctx);
 
                                     // Only treat the navigation as already persisted when we inserted
                                     // it earlier in this recursive walk. A non-default numeric PK alone
                                     // is not enough — leftover client IDs must not skip insert.
                                     if (savedEntities.ContainsKey(navProperty) &&
-                                        fromPropertyInfo != null &&
-                                        IsKeyValueSet(currentValue, fromPropertyInfo.PropertyType))
+                                        IsKeyValueSet(currentValue, fromClrType))
                                     {
-                                        SetProperty(foreignKeyRelation.ToProperty, entity, currentValue);
+                                        SetProperty(foreignKeyRelation.ToProperty, entity, currentValue, ctx);
                                     }
                                     else
                                     {
@@ -169,8 +176,11 @@ namespace Tanneryd.BulkOperations.EFCore
                         var p = modifiedEntity[1];
                         foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
                         {
-                            SetProperty(foreignKeyRelation.ToProperty, e,
-                                GetProperty(foreignKeyRelation.FromProperty, p));
+                            SetProperty(
+                                foreignKeyRelation.ToProperty,
+                                e,
+                                GetProperty(foreignKeyRelation.FromProperty, p, def: null, ctx: ctx),
+                                ctx);
                         }
                     }
                 }
@@ -246,8 +256,16 @@ namespace Tanneryd.BulkOperations.EFCore
                                 {
                                     foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
                                     {
-                                        SetProperty(foreignKeyRelation.ToProperty, navProperty,
-                                            GetProperty(t, foreignKeyRelation.FromProperty, entity));
+                                        SetProperty(
+                                            foreignKeyRelation.ToProperty,
+                                            navProperty,
+                                            GetProperty(
+                                                t,
+                                                foreignKeyRelation.FromProperty,
+                                                entity,
+                                                def: null,
+                                                ctx: ctx),
+                                            ctx);
                                     }
 
                                     navPropertyEntities.Add(navProperty);
@@ -266,8 +284,16 @@ namespace Tanneryd.BulkOperations.EFCore
                             {
                                 foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
                                 {
-                                    SetProperty(foreignKeyRelation.ToProperty, navProperty,
-                                        GetProperty(t, foreignKeyRelation.FromProperty, entity));
+                                    SetProperty(
+                                        foreignKeyRelation.ToProperty,
+                                        navProperty,
+                                        GetProperty(
+                                            t,
+                                            foreignKeyRelation.FromProperty,
+                                            entity,
+                                            def: null,
+                                            ctx: ctx),
+                                        ctx);
                                 }
 
                                 var same = navProperty.GetType() == entity.GetType() &&
@@ -495,9 +521,11 @@ namespace Tanneryd.BulkOperations.EFCore
 
             // Ignore all properties that we have no mappings for.
             // Pass mappings so all-null Expando keys still get a CLR type.
-            var properties = GetProperties(entitiesForBulkCopy, columnMappings)
-                .Where(p => columnMappings.ContainsKey(p.Name))
-                .ToArray();
+            // Shadow FKs are in columnMappings but not on the CLR type — add them.
+            var properties = IncludeMappedShadowProperties(
+                GetProperties(entitiesForBulkCopy, columnMappings)
+                    .Where(p => columnMappings.ContainsKey(p.Name)),
+                columnMappings);
 
             var table = new DataTable();
 
@@ -547,7 +575,8 @@ namespace Tanneryd.BulkOperations.EFCore
                         transaction,
                         commandTimeout,
                         useTableLock,
-                        cancellationToken).ConfigureAwait(false);
+                        cancellationToken,
+                        ctx: ctx).ConfigureAwait(false);
 
                     var conditionStatements =
                         pkColumnMappings.Select(c => $"[t0].[{c.TableColumn.Column.Name}] = [t1].[{c.TableColumn.Column.Name}]");
@@ -604,7 +633,7 @@ namespace Tanneryd.BulkOperations.EFCore
 
                         var s = new Stopwatch();
                         s.Start();
-                        using (var reader = CreateEntitiesDataReader(table, newEntities, properties, t, mappings.Discriminator, IncludeRowNumber.No))
+                        using (var reader = CreateEntitiesDataReader(table, newEntities, properties, t, mappings.Discriminator, IncludeRowNumber.No, ctx))
                             await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
                         s.Stop();
                         var stats = new BulkInsertStatistics
@@ -651,7 +680,7 @@ namespace Tanneryd.BulkOperations.EFCore
 
                             var s = new Stopwatch();
                             s.Start();
-                            using (var reader = CreateEntitiesDataReader(table, newEntities, properties, t, mappings.Discriminator, IncludeRowNumber.Yes))
+                            using (var reader = CreateEntitiesDataReader(table, newEntities, properties, t, mappings.Discriminator, IncludeRowNumber.Yes, ctx))
                                 await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
                             s.Stop();
                             var stats = new BulkInsertStatistics
@@ -719,7 +748,7 @@ namespace Tanneryd.BulkOperations.EFCore
 
                 var s = new Stopwatch();
                 s.Start();
-                using (var reader = CreateEntitiesDataReader(table, entitiesToCopy, properties, t, mappings.Discriminator, IncludeRowNumber.No))
+                using (var reader = CreateEntitiesDataReader(table, entitiesToCopy, properties, t, mappings.Discriminator, IncludeRowNumber.No, ctx))
                     await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
                 s.Stop();
                 var stats = new BulkInsertStatistics
@@ -903,7 +932,8 @@ namespace Tanneryd.BulkOperations.EFCore
             BulkPropertyInfo[] properties,
             Type t,
             Discriminator discriminator,
-            IncludeRowNumber includeRowNumber)
+            IncludeRowNumber includeRowNumber,
+            DbContext ctx = null)
         {
             return new ObjectListDataReader(schema, entities, (entity, rowIndex) =>
             {
@@ -914,7 +944,8 @@ namespace Tanneryd.BulkOperations.EFCore
                 }
                 else
                 {
-                    columnValues.AddRange(properties.Select(p => (object)GetProperty(t, p.Name, entity, DBNull.Value)));
+                    columnValues.AddRange(properties.Select(p =>
+                        (object)GetProperty(t, p.Name, entity, DBNull.Value, ctx)));
                 }
 
                 // Complex-type flatten uses Expando rows; the discriminator is
@@ -1208,7 +1239,8 @@ namespace Tanneryd.BulkOperations.EFCore
             bool useTableLock = false,
             CancellationToken cancellationToken = default,
             TableColumnMapping[] concurrencyTokenMappings = null,
-            Discriminator discriminator = null)
+            Discriminator discriminator = null,
+            DbContext ctx = null)
         {
             concurrencyTokenMappings = concurrencyTokenMappings ?? Array.Empty<TableColumnMapping>();
             var discriminatorExtraColumns = GetDiscriminatorExtraColumns(discriminator);
@@ -1247,7 +1279,9 @@ namespace Tanneryd.BulkOperations.EFCore
                     identityInsertEnabled = true;
                 }
 
-                var allProperties = GetProperties(entities, columnMappings);
+                var allProperties = IncludeMappedShadowProperties(
+                    GetProperties(entities, columnMappings),
+                    columnMappings);
                 //
                 // Select the primary key clr properties.
                 // For normal entities EntityProperty.Name matches the CLR property.
@@ -1307,7 +1341,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 //
                 // Fill the temp table.
                 //
-                using (var reader = CreateEntitiesDataReader(table, entities, properties, type, discriminator, IncludeRowNumber.Yes))
+                using (var reader = CreateEntitiesDataReader(table, entities, properties, type, discriminator, IncludeRowNumber.Yes, ctx))
                     await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
                 return tempTableName;

@@ -183,7 +183,8 @@ namespace Tanneryd.BulkOperations.EFCore
                         request.UseTableLock,
                         cancellationToken,
                         concurrencyTokenMappings,
-                        request.InsertIfNew ? mappings.Discriminator : null).ConfigureAwait(false);
+                        request.InsertIfNew ? mappings.Discriminator : null,
+                        ctx).ConfigureAwait(false);
 
                     //
                     // Update the target table using the temp table we just created.
