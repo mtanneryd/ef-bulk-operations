@@ -193,6 +193,49 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
             }
         }
 
+        /// <summary>
+        /// A leftover non-zero identity PK on a brand-new navigation must not be
+        /// treated as "already in the database". Recursive insert should insert
+        /// the navigation and stamp the generated key onto the FK.
+        /// </summary>
+        [TestMethod]
+        public void RecursiveInsert_ShouldInsertNavigation_WhenLeftoverNumericPrimaryKeyIsSet()
+        {
+            using (var db = Factory.CreateDbContext())
+            {
+                var now = DateTime.Now;
+                var parity = new Parity
+                {
+                    Id = 999,
+                    Name = "Even",
+                    UpdatedAt = now,
+                    UpdatedBy = "test",
+                };
+                var number = new Number
+                {
+                    Value = 2,
+                    Parity = parity,
+                    UpdatedAt = now,
+                    UpdatedBy = "test",
+                };
+
+                db.BulkInsertAll(new BulkInsertRequest<Number>
+                {
+                    Entities = new[] { number },
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                });
+
+                Assert.AreEqual(1, db.Parities.Count());
+                var savedParity = db.Parities.Single();
+                Assert.AreNotEqual(999, savedParity.Id,
+                    "Leftover identity PK must not skip insert; SQL Server should assign a new Id.");
+                Assert.AreEqual("Even", savedParity.Name);
+
+                var savedNumber = db.Numbers.Single();
+                Assert.AreEqual(savedParity.Id, savedNumber.ParityId);
+            }
+        }
+
         #endregion NumberContext
     }
 }

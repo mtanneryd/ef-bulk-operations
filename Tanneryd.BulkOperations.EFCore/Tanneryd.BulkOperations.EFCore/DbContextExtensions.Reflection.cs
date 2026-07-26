@@ -231,6 +231,14 @@ namespace Tanneryd.BulkOperations.EFCore
         private static bool IsKeyValueSet(object value, Type clrType) =>
             !IsUnsetKeyValue(value, clrType);
 
+        private static object CreateUnsetKeyValue(Type clrType)
+        {
+            clrType = Nullable.GetUnderlyingType(clrType) ?? clrType;
+            if (!clrType.IsValueType)
+                return null;
+            return Activator.CreateInstance(clrType);
+        }
+
         /// <summary>
         /// Use reflection to set a property value by its property 
         /// name to an object instance.

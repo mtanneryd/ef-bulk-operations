@@ -118,18 +118,12 @@ namespace Tanneryd.BulkOperations.EF6
                                     var currentValue = GetProperty(navPropertyType, foreignKeyRelation.FromProperty,
                                         navProperty);
 
-                                    // Numeric FKs can copy a non-zero parent PK (parent already persisted).
-                                    // Guid/DateTime/string keys are often client-assigned on brand-new
-                                    // navigation instances, so always recurse instead of treating a
-                                    // non-default value as "already in the database".
-                                    var canCopyFromExistingNavKey =
-                                        !IsGuid(navPropertyKeyType) &&
-                                        !IsDateTime(navPropertyKeyType) &&
-                                        navPropertyKeyType != typeof(string) &&
+                                    // Only treat the navigation as already persisted when we inserted
+                                    // it earlier in this recursive walk. A non-default numeric PK alone
+                                    // is not enough — leftover client IDs must not skip insert.
+                                    if (savedEntities.ContainsKey(navProperty) &&
                                         fromPropertyInfo != null &&
-                                        IsKeyValueSet(currentValue, fromPropertyInfo.PropertyType);
-
-                                    if (canCopyFromExistingNavKey)
+                                        IsKeyValueSet(currentValue, fromPropertyInfo.PropertyType))
                                     {
                                         SetProperty(foreignKeyRelation.ToProperty, entity, currentValue);
                                     }
@@ -138,8 +132,15 @@ namespace Tanneryd.BulkOperations.EF6
                                         var same = navProperty.GetType() == entity.GetType() &&
                                                    navProperty == entity;
                                         if (!same)
-
                                         {
+                                            ClearLeftoverStoreGeneratedNavKey(
+                                                navProperty,
+                                                navPropertyType,
+                                                foreignKeyRelation.FromProperty,
+                                                fromPropertyInfo,
+                                                currentValue,
+                                                mappingsByType,
+                                                ctx);
                                             navProperties.Add(navProperty);
                                             modifiedEntities.Add(new object[] { entity, navProperty });
                                         }
@@ -942,6 +943,45 @@ namespace Tanneryd.BulkOperations.EF6
         /// <param name="pkProperty"></param>
         /// <param name="t"></param>
         /// <returns></returns>
+        /// <summary>
+        /// Before recursively inserting a navigation, clear leftover
+        /// identity/store-generated PK values so <see cref="SelectNewEntities"/>
+        /// does not treat them as already persisted. Guid/DateTime/string
+        /// client-assigned keys are left alone. Existing DB parents should set
+        /// the FK on the child rather than relying on nav.Id alone.
+        /// </summary>
+        private static void ClearLeftoverStoreGeneratedNavKey(
+            object navProperty,
+            Type navPropertyType,
+            string fromPropertyName,
+            PropertyInfo fromPropertyInfo,
+            object currentValue,
+            Dictionary<Type, Mappings> mappingsByType,
+            DbContext ctx)
+        {
+            if (fromPropertyInfo == null || !IsKeyValueSet(currentValue, fromPropertyInfo.PropertyType))
+                return;
+
+            var keyType = fromPropertyInfo.PropertyType;
+            if (IsGuid(keyType) || IsDateTime(keyType) || keyType == typeof(string))
+                return;
+
+            if (!mappingsByType.TryGetValue(navPropertyType, out var navMappings))
+            {
+                navMappings = MappingExtractor.GetMappings(ctx, navPropertyType);
+                mappingsByType[navPropertyType] = navMappings;
+            }
+
+            if (!navMappings.ColumnMappingByPropertyName.TryGetValue(fromPropertyName, out var fromMapping))
+                return;
+
+            if (!fromMapping.TableColumn.IsStoreGeneratedIdentity &&
+                !fromMapping.TableColumn.IsStoreGeneratedComputed)
+                return;
+
+            SetProperty(fromPropertyName, navProperty, CreateUnsetKeyValue(fromPropertyInfo.PropertyType));
+        }
+
         private static ArrayList SelectNewEntities(IList entities, EdmProperty pkProperty, Type t)
         {
             var newEntities = new ArrayList();
