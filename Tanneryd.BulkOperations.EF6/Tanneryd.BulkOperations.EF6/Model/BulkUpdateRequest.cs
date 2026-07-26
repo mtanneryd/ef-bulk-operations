@@ -44,6 +44,9 @@ namespace Tanneryd.BulkOperations.EF6.Model
 
         /// <summary>
         /// CLR property names used as the join/match key. Empty means the table primary key.
+        /// When the entity has concurrency tokens, this must be empty or exactly the
+        /// primary key — non-unique keys can update multiple rows and false-fire
+        /// <see cref="System.Data.Entity.Infrastructure.DbUpdateConcurrencyException"/>.
         /// </summary>
         public string[] KeyPropertyNames { get; set; }
 

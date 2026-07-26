@@ -92,6 +92,21 @@ namespace Tanneryd.BulkOperations.EFCore
                 .Where(m => selectedKeyMembers.Contains(m.TableColumn.Column.Name))
                 .ToArray();
 
+            // Non-unique join keys can update many target rows per entity and
+            // false-fire DbUpdateConcurrencyException when tokens are present.
+            if (concurrencyTokenMappings.Length > 0 && keyColumnNames.Length > 0)
+            {
+                var primaryKeyColumns = new HashSet<string>(primaryKeyMembers, StringComparer.OrdinalIgnoreCase);
+                var requestedKeyColumns = new HashSet<string>(keyColumnNames, StringComparer.OrdinalIgnoreCase);
+                if (!primaryKeyColumns.SetEquals(requestedKeyColumns))
+                {
+                    throw new ArgumentException(
+                        "BulkUpdate with concurrency tokens requires KeyPropertyNames to be empty " +
+                        "(table primary key) or to name exactly the primary key properties. " +
+                        "Non-unique join keys can update multiple rows and cause false concurrency failures.");
+                }
+            }
+
             if (selectedKeyMappings.Any())
             {
                 //
@@ -187,11 +202,14 @@ namespace Tanneryd.BulkOperations.EFCore
                                      FROM {tableName.Fullname} AS t0
                                      INNER JOIN {tempTableName} AS t1 ON {updateConditionStatementsSql}
                                     ";
+                    int updatedRows;
                     using (var cmd = CreateSqlCommand(cmdBody, conn, transaction, request.CommandTimeout))
                     {
-                        rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                        updatedRows = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                     }
+                    rowsAffected += updatedRows;
 
+                    var insertedRows = 0;
                     if (request.InsertIfNew)
                     {
                         // Include client-assigned PKs; omit store-generated columns
@@ -219,16 +237,32 @@ namespace Tanneryd.BulkOperations.EFCore
                                 ";
                         using (var cmd = CreateSqlCommand(cmdBody, conn, transaction, request.CommandTimeout))
                         {
-                            rowsAffected += await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+                            insertedRows = await cmd.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
                         }
+                        rowsAffected += insertedRows;
                     }
 
-                    if (concurrencyTokenMappings.Length > 0 && rowsAffected != entities.Count)
+                    if (concurrencyTokenMappings.Length > 0)
                     {
-                        ownedTransaction?.Rollback();
-                        throw new DbUpdateConcurrencyException(
-                            $"BulkUpdate expected to affect {entities.Count} row(s) but affected {rowsAffected}. " +
-                            "One or more entities may have been modified or deleted (optimistic concurrency).");
+                        // Each entity must be accounted for by UPDATE and/or InsertIfNew.
+                        // Keep the counts separate so inserts are not mistaken for
+                        // missing optimistic-concurrency matches (and vice versa).
+                        if (updatedRows > entities.Count)
+                        {
+                            ownedTransaction?.Rollback();
+                            throw new ArgumentException(
+                                "BulkUpdate with concurrency tokens updated more rows than entities supplied. " +
+                                "KeyPropertyNames must identify a unique row (the table primary key).");
+                        }
+
+                        if (updatedRows + insertedRows != entities.Count)
+                        {
+                            ownedTransaction?.Rollback();
+                            throw new DbUpdateConcurrencyException(
+                                $"BulkUpdate expected to affect {entities.Count} row(s) but affected {updatedRows + insertedRows} " +
+                                $"({updatedRows} updated, {insertedRows} inserted). " +
+                                "One or more entities may have been modified or deleted (optimistic concurrency).");
+                        }
                     }
 
                     ownedTransaction?.Commit();

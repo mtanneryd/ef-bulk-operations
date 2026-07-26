@@ -14,6 +14,7 @@
 * limitations under the License.
 */
 
+using System;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -122,6 +123,71 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Update
 
             using var verify = Factory.CreateDbContext();
             Assert.AreEqual("Updated via bulk", verify.ConcurrencyItems.Single(x => x.Id == item.Id).Name);
+        }
+
+        /// <summary>
+        /// Non-unique KeyPropertyNames with concurrency tokens can update many
+        /// target rows per entity and false-fire DbUpdateConcurrencyException.
+        /// Require the primary key (or empty KeyPropertyNames) instead.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_WithConcurrencyToken_ShouldRejectNonUniqueKeyPropertyNames()
+        {
+            using var db = Factory.CreateDbContext();
+
+            var item = new ConcurrencyItem { Name = "Original" };
+            db.ConcurrencyItems.Add(item);
+            db.SaveChanges();
+
+            var current = db.ConcurrencyItems.Single(x => x.Id == item.Id);
+            current.Name = "Updated";
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkUpdateAll(new BulkUpdateRequest
+                {
+                    Entities = new[] { current },
+                    KeyPropertyNames = new[] { nameof(ConcurrencyItem.Name) },
+                    UpdatedPropertyNames = new[] { nameof(ConcurrencyItem.Name) },
+                }));
+
+            StringAssert.Contains(ex.Message, "primary key", StringComparison.OrdinalIgnoreCase);
+            StringAssert.Contains(ex.Message, "concurrency", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// InsertIfNew row counts must not be folded into the concurrency check
+        /// incorrectly: one successful update plus one insert is not a conflict.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_InsertIfNew_WithConcurrencyToken_ShouldSucceed_WhenUpdatingOneAndInsertingOne()
+        {
+            using var db = Factory.CreateDbContext();
+
+            var item = new ConcurrencyItem { Name = "Existing" };
+            db.ConcurrencyItems.Add(item);
+            db.SaveChanges();
+
+            var current = db.ConcurrencyItems.Single(x => x.Id == item.Id);
+            current.Name = "Existing-updated";
+
+            db.BulkUpdateAll(new BulkUpdateRequest
+            {
+                Entities = new object[]
+                {
+                    current,
+                    new ConcurrencyItem { Name = "Brand-new" },
+                },
+                KeyPropertyNames = new[] { nameof(ConcurrencyItem.Id) },
+                UpdatedPropertyNames = new[] { nameof(ConcurrencyItem.Name) },
+                InsertIfNew = true,
+            });
+
+            using var verify = Factory.CreateDbContext();
+            Assert.AreEqual(2, verify.ConcurrencyItems.Count());
+            Assert.AreEqual(
+                "Existing-updated",
+                verify.ConcurrencyItems.Single(x => x.Id == item.Id).Name);
+            Assert.IsTrue(verify.ConcurrencyItems.Any(x => x.Name == "Brand-new"));
         }
     }
 }

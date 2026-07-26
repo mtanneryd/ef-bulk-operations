@@ -135,6 +135,75 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Update
         }
 
         /// <summary>
+        /// Non-unique KeyPropertyNames with concurrency tokens can update many
+        /// target rows per entity and false-fire DbUpdateConcurrencyException.
+        /// Require the primary key (or empty KeyPropertyNames) instead.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_WithConcurrencyToken_ShouldRejectNonUniqueKeyPropertyNames()
+        {
+            using (var db = new UnitTestContext())
+            {
+                var item = new ConcurrencyItem { Name = "Original" };
+                db.ConcurrencyItems.Add(item);
+                db.SaveChanges();
+
+                var current = db.ConcurrencyItems.Single(x => x.Id == item.Id);
+                current.Name = "Updated";
+
+                var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                    db.BulkUpdateAll(new BulkUpdateRequest
+                    {
+                        Entities = new[] { current },
+                        KeyPropertyNames = new[] { nameof(ConcurrencyItem.Name) },
+                        UpdatedPropertyNames = new[] { nameof(ConcurrencyItem.Name) },
+                    }));
+
+                StringAssert.Contains(ex.Message, "primary key", StringComparison.OrdinalIgnoreCase);
+                StringAssert.Contains(ex.Message, "concurrency", StringComparison.OrdinalIgnoreCase);
+            }
+        }
+
+        /// <summary>
+        /// InsertIfNew row counts must not be folded into the concurrency check
+        /// incorrectly: one successful update plus one insert is not a conflict.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdate_InsertIfNew_WithConcurrencyToken_ShouldSucceed_WhenUpdatingOneAndInsertingOne()
+        {
+            using (var db = new UnitTestContext())
+            {
+                var item = new ConcurrencyItem { Name = "Existing" };
+                db.ConcurrencyItems.Add(item);
+                db.SaveChanges();
+
+                var current = db.ConcurrencyItems.Single(x => x.Id == item.Id);
+                current.Name = "Existing-updated";
+
+                db.BulkUpdateAll(new BulkUpdateRequest
+                {
+                    Entities = new object[]
+                    {
+                        current,
+                        new ConcurrencyItem { Name = "Brand-new" },
+                    },
+                    KeyPropertyNames = new[] { nameof(ConcurrencyItem.Id) },
+                    UpdatedPropertyNames = new[] { nameof(ConcurrencyItem.Name) },
+                    InsertIfNew = true,
+                });
+            }
+
+            using (var verify = new UnitTestContext())
+            {
+                Assert.AreEqual(2, verify.ConcurrencyItems.Count());
+                Assert.AreEqual(
+                    "Existing-updated",
+                    verify.ConcurrencyItems.Single(x => x.Name == "Existing-updated").Name);
+                Assert.IsTrue(verify.ConcurrencyItems.Any(x => x.Name == "Brand-new"));
+            }
+        }
+
+        /// <summary>
         /// Microsoft.Data.SqlClient path: BulkUpdate auto-begins a transaction when
         /// concurrency tokens are present. A mixed stale/current batch must roll back
         /// entirely — the current row must not stay updated after the concurrency throw.
