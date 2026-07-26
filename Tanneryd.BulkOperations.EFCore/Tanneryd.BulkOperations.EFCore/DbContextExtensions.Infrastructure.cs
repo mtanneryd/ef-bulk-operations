@@ -101,6 +101,29 @@ namespace Tanneryd.BulkOperations.EFCore
             request.KeyPropertyNames ??= Array.Empty<string>();
         }
 
+        /// <summary>
+        /// Same style as Select/Delete key validation — typos must not surface as KeyNotFoundException.
+        /// </summary>
+        private static void ThrowIfUnresolvedMappedPropertyNames(
+            IEnumerable<string> propertyNames,
+            IDictionary<string, TableColumnMapping> columnMappings,
+            string requestPropertyName)
+        {
+            if (propertyNames == null)
+                return;
+
+            var unresolved = propertyNames
+                .Where(name => !string.IsNullOrEmpty(name) && !columnMappings.ContainsKey(name))
+                .Distinct(StringComparer.Ordinal)
+                .ToArray();
+            if (unresolved.Length == 0)
+                return;
+
+            throw new ArgumentException(
+                requestPropertyName + " contain property name(s) that are not mapped on the target entity: " +
+                string.Join(", ", unresolved) + ".");
+        }
+
         private static void ValidateBulkInsertRequest<T>(BulkInsertRequest<T> request)
         {
             if (request == null)

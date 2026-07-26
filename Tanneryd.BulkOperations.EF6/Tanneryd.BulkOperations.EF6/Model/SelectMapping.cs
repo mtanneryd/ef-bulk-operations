@@ -25,7 +25,15 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public string SelectPropertySqlType { get; set; }
         public TableName TableName { get; set; }
         public string ItemPropertyName { get; set; }
-        public string FkFromPropertyName { get; set; }
-        public string FkToPropertyName { get; set; }
+        /// <summary>
+        /// Principal (related) table column names for the FK join, paired by index
+        /// with <see cref="FkToColumnNames"/>.
+        /// </summary>
+        public string[] FkFromColumnNames { get; set; }
+        /// <summary>
+        /// Dependent (entity) table FK column names for the FK join, paired by index
+        /// with <see cref="FkFromColumnNames"/>.
+        /// </summary>
+        public string[] FkToColumnNames { get; set; }
     }
 }

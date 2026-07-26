@@ -184,5 +184,54 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
                 db.BulkSelect<Person, Person>(request));
             StringAssert.Contains(ex.Message, "NotAMappedProperty");
         }
+
+        /// <summary>
+        /// BulkUpdate must reject typos with ArgumentException (same style as
+        /// Select/Delete), not KeyNotFoundException from dictionary indexing.
+        /// </summary>
+        [TestMethod]
+        public void BulkUpdateAllShouldRejectUnresolvedKeyPropertyNames()
+        {
+            using var db = new UnitTestContext();
+            var price = new Price
+            {
+                Date = new DateTime(2023, 5, 29),
+                Name = "A",
+                Value = 1m
+            };
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkUpdateAll(new BulkUpdateRequest
+                {
+                    Entities = new[] { price },
+                    KeyPropertyNames = new[] { "Dat" },
+                    UpdatedPropertyNames = new[] { nameof(Price.Value) },
+                }));
+
+            StringAssert.Contains(ex.Message, "Dat");
+            StringAssert.Contains(ex.Message, nameof(BulkUpdateRequest.KeyPropertyNames));
+        }
+
+        [TestMethod]
+        public void BulkUpdateAllShouldRejectUnresolvedUpdatedPropertyNames()
+        {
+            using var db = new UnitTestContext();
+            var price = new Price
+            {
+                Date = new DateTime(2023, 5, 29),
+                Name = "A",
+                Value = 1m
+            };
+
+            var ex = Assert.ThrowsExactly<ArgumentException>(() =>
+                db.BulkUpdateAll(new BulkUpdateRequest
+                {
+                    Entities = new[] { price },
+                    UpdatedPropertyNames = new[] { "Valu" },
+                }));
+
+            StringAssert.Contains(ex.Message, "Valu");
+            StringAssert.Contains(ex.Message, nameof(BulkUpdateRequest.UpdatedPropertyNames));
+        }
     }
 }

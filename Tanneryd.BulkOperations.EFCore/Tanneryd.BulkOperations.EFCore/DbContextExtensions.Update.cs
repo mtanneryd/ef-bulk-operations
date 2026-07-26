@@ -75,8 +75,10 @@ namespace Tanneryd.BulkOperations.EFCore
             var concurrencyTokenMappings = mappings.ConcurrencyTokenMappings ?? Array.Empty<TableColumnMapping>();
             var keyPropertyNames = request.KeyPropertyNames;
             var updatedPropertyNames = request.UpdatedPropertyNames;
-            var keyColumnNames = keyPropertyNames.Select(n=>columnMappings[n].TableColumn.Column.Name).ToArray();
-            var updatedColumnNames = updatedPropertyNames.Select(n=>columnMappings[n].TableColumn.Column.Name).ToArray();
+            ThrowIfUnresolvedMappedPropertyNames(keyPropertyNames, columnMappings, nameof(request.KeyPropertyNames));
+            ThrowIfUnresolvedMappedPropertyNames(updatedPropertyNames, columnMappings, nameof(request.UpdatedPropertyNames));
+            var keyColumnNames = keyPropertyNames.Select(n => columnMappings[n].TableColumn.Column.Name).ToArray();
+            var updatedColumnNames = updatedPropertyNames.Select(n => columnMappings[n].TableColumn.Column.Name).ToArray();
             
             //
             // Check to see if the table has a primary key. If so,

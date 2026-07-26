@@ -18,40 +18,15 @@ using System;
 
 namespace Tanneryd.BulkOperations.EFCore.Model
 {
+    /// <summary>
+    /// Staging-only column description for temp tables (e.g. nav-dot SelectExisting
+    /// probe values that are not mapped columns on the target entity table).
+    /// </summary>
     public class TableColumn
     {
         public Type Type { get; set; }
         public string SqlType { get; set; }
         public bool UseQuotes { get; set; }
         public string Name { get; set; }
-
-        /// <summary>
-        /// Placeholder literal for typed CAST when a concrete value is required.
-        /// Temp-table schema creation prefers CAST(NULL AS T) instead.
-        /// </summary>
-        public string DefaultValue
-        {
-            get
-            {
-                var clrType = Nullable.GetUnderlyingType(Type) ?? Type;
-                if (clrType == typeof(Guid) ||
-                    (SqlType != null &&
-                     SqlType.IndexOf("uniqueidentifier", StringComparison.OrdinalIgnoreCase) >= 0))
-                {
-                    return UseQuotes
-                        ? "00000000-0000-0000-0000-000000000000"
-                        : "0x0";
-                }
-
-                if (SqlType != null &&
-                    SqlType.IndexOf("varchar", StringComparison.OrdinalIgnoreCase) >= 0)
-                    return "<empty>";
-
-                if (clrType == typeof(string))
-                    return "<empty>";
-
-                return "0";
-            }
-        }
     }
 }

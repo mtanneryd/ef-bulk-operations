@@ -448,20 +448,31 @@ namespace Tanneryd.BulkOperations.EFCore
                 var navigationPropertyTableMappings = GetMappingExtractor(ctx).GetMappings(navigationPropertyType);
                 var selectPropertyTableColumnMapping = navigationPropertyTableMappings.ColumnMappingByPropertyName[selectPropertyName];
                 var navigationPropertyTableName = GetMappingExtractor(ctx).GetTableName(ctx, navigationPropertyType);
-                var fromProperty = fkMapping.ForeignKeyRelations[0].FromProperty;
-                var toProperty = fkMapping.ForeignKeyRelations[0].ToProperty;
 
-                if (!navigationPropertyTableMappings.ColumnMappingByPropertyName.TryGetValue(fromProperty, out var fromMapping))
+                // Join on every FK pair — using only [0] mis-matches rows when the
+                // association is a composite foreign key.
+                var fkFromColumnNames = new string[fkMapping.ForeignKeyRelations.Length];
+                var fkToColumnNames = new string[fkMapping.ForeignKeyRelations.Length];
+                for (var i = 0; i < fkMapping.ForeignKeyRelations.Length; i++)
                 {
-                    throw new ArgumentException(
-                        "Nav-dot SelectExisting could not resolve principal key property '" + fromProperty +
-                        "' on related type '" + navigationPropertyType.Name + "'.");
-                }
-                if (!mappings.ColumnMappingByPropertyName.TryGetValue(toProperty, out var toMapping))
-                {
-                    throw new ArgumentException(
-                        "Nav-dot SelectExisting could not resolve foreign key property '" + toProperty +
-                        "' on type '" + dbTableEntityType.Name + "'.");
+                    var fromProperty = fkMapping.ForeignKeyRelations[i].FromProperty;
+                    var toProperty = fkMapping.ForeignKeyRelations[i].ToProperty;
+
+                    if (!navigationPropertyTableMappings.ColumnMappingByPropertyName.TryGetValue(fromProperty, out var fromMapping))
+                    {
+                        throw new ArgumentException(
+                            "Nav-dot SelectExisting could not resolve principal key property '" + fromProperty +
+                            "' on related type '" + navigationPropertyType.Name + "'.");
+                    }
+                    if (!mappings.ColumnMappingByPropertyName.TryGetValue(toProperty, out var toMapping))
+                    {
+                        throw new ArgumentException(
+                            "Nav-dot SelectExisting could not resolve foreign key property '" + toProperty +
+                            "' on type '" + dbTableEntityType.Name + "'.");
+                    }
+
+                    fkFromColumnNames[i] = fromMapping.TableColumn.Column.Name;
+                    fkToColumnNames[i] = toMapping.TableColumn.Column.Name;
                 }
 
                 return new SelectMapping
@@ -471,8 +482,8 @@ namespace Tanneryd.BulkOperations.EFCore
                     SelectPropertyType = selectPropertyTableColumnMapping.EntityProperty.ClrType,
                     SelectPropertySqlType = selectPropertyTableColumnMapping.TableColumn.Column.StoreType,
                     TableName = navigationPropertyTableName,
-                    FkFromPropertyName = fromMapping.TableColumn.Column.Name,
-                    FkToPropertyName = toMapping.TableColumn.Column.Name
+                    FkFromColumnNames = fkFromColumnNames,
+                    FkToColumnNames = fkToColumnNames
                 };
             }
 
@@ -620,7 +631,14 @@ namespace Tanneryd.BulkOperations.EFCore
                     
                     if (selectMapping != null)
                     {
-                        var fkJoinStatement = $"INNER JOIN {selectMapping.TableName.Fullname} AS [t2] ON [t2].[{selectMapping.FkFromPropertyName}] = [t1].[{selectMapping.FkToPropertyName}]";
+                        var fkJoinConditions = new string[selectMapping.FkFromColumnNames.Length];
+                        for (var i = 0; i < selectMapping.FkFromColumnNames.Length; i++)
+                        {
+                            fkJoinConditions[i] =
+                                $"[t2].[{selectMapping.FkFromColumnNames[i]}] = [t1].[{selectMapping.FkToColumnNames[i]}]";
+                        }
+                        var fkJoinStatement =
+                            $"INNER JOIN {selectMapping.TableName.Fullname} AS [t2] ON {string.Join(" AND ", fkJoinConditions)}";
                         var fkWhereStatement = $"WHERE [t2].[{selectMapping.SelectPropertyName}] = [t0].[{selectMapping.ItemPropertyName}]";
                         query = $@"{query}
                                    {fkJoinStatement}
