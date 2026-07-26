@@ -17,7 +17,9 @@
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.Entity.Infrastructure.Interception;
+using System.Data.SqlClient;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Tanneryd.BulkOperations.EF6;
 using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF;
@@ -25,15 +27,19 @@ using Tanneryd.BulkOperations.EF6.NET48.Tests.Models.EF;
 namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
 {
     /// <summary>
-    /// L3: OptionRecompileInterceptor registers with DbInterception in its
+    /// OptionRecompileInterceptor registers with DbInterception in its
     /// constructor (AppDomain-wide). Dispose must unregister it; otherwise every
-    /// subsequent EF6 command in the process gets OPTION (RECOMPILE).
+    /// subsequent EF6 command in the process gets OPTION (RECOMPILE). Duplicate
+    /// detection must tolerate whitespace and case so a second hint is not appended.
     /// </summary>
     [TestClass]
     [DoNotParallelize]
     public class OptionRecompileInterceptorTests : BulkOperationTestBase
     {
         private const string OptionRecompile = "\r\nOPTION (RECOMPILE)";
+        private static readonly Regex OptionRecompilePattern = new Regex(
+            @"OPTION\s*\(\s*RECOMPILE\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
 
         [TestInitialize]
         public void Initialize()
@@ -117,6 +123,52 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests
             finally
             {
                 DbInterception.Remove(capture);
+            }
+        }
+
+        /// <summary>
+        /// Commands that already contain OPTION (RECOMPILE) with different
+        /// whitespace or casing must not get a second hint appended.
+        /// </summary>
+        [TestMethod]
+        [DataRow("SELECT 1\nOPTION (RECOMPILE)")]
+        [DataRow("SELECT 1\noption (recompile)")]
+        [DataRow("SELECT 1 OPTION(RECOMPILE)")]
+        [DataRow("SELECT 1\r\nOPTION  (  RECOMPILE  )")]
+        public void AddOptionToCommand_ShouldNotDuplicate_WhenOptionAlreadyPresentWithAlternateFormatting(
+            string commandText)
+        {
+            using (var interceptor = new OptionRecompileInterceptor())
+            using (var command = new SqlCommand(commandText))
+            {
+                interceptor.NonQueryExecuting(command, new DbCommandInterceptionContext<int>());
+
+                Assert.AreEqual(
+                    1,
+                    OptionRecompilePattern.Matches(command.CommandText).Count,
+                    "Existing OPTION (RECOMPILE) must not be duplicated.");
+                Assert.AreEqual(
+                    commandText,
+                    command.CommandText,
+                    "CommandText must be left unchanged when the hint is already present.");
+            }
+        }
+
+        /// <summary>
+        /// Commands without the hint get exactly one canonical OPTION (RECOMPILE).
+        /// </summary>
+        [TestMethod]
+        public void AddOptionToCommand_ShouldAppendOnce_WhenOptionMissing()
+        {
+            const string original = "SELECT 1";
+            using (var interceptor = new OptionRecompileInterceptor())
+            using (var command = new SqlCommand(original))
+            {
+                interceptor.NonQueryExecuting(command, new DbCommandInterceptionContext<int>());
+                interceptor.NonQueryExecuting(command, new DbCommandInterceptionContext<int>());
+
+                Assert.AreEqual(original + OptionRecompile, command.CommandText);
+                Assert.AreEqual(1, OptionRecompilePattern.Matches(command.CommandText).Count);
             }
         }
 

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data.Common;
 using System.Data.Entity.Infrastructure.Interception;
+using System.Text.RegularExpressions;
 
 namespace Tanneryd.BulkOperations.EF6
 {
@@ -22,7 +23,8 @@ namespace Tanneryd.BulkOperations.EF6
     /// <item>
     /// <description>
     /// While registered, every EF6 NonQuery / Reader / Scalar command in the process
-    /// gets OPTION (RECOMPILE) appended (once per command text).
+    /// gets OPTION (RECOMPILE) appended at most once per command text. Detection is
+    /// case-insensitive and whitespace-tolerant so an existing hint is not duplicated.
     /// </description>
     /// </item>
     /// <item>
@@ -46,6 +48,12 @@ namespace Tanneryd.BulkOperations.EF6
     /// </remarks>
     public class OptionRecompileInterceptor : DbCommandInterceptor, IDisposable
     {
+        private const string OptionRecompileSuffix = "\r\nOPTION (RECOMPILE)";
+
+        private static readonly Regex OptionRecompilePattern = new Regex(
+            @"OPTION\s*\(\s*RECOMPILE\s*\)",
+            RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled);
+
         /// <summary>
         /// Registers this interceptor with <see cref="DbInterception"/> for the AppDomain.
         /// </summary>
@@ -56,12 +64,10 @@ namespace Tanneryd.BulkOperations.EF6
 
         static void AddOptionToCommand(DbCommand command)
         {
-            string optionRecompileString = "\r\nOPTION (RECOMPILE)";
+            if (OptionRecompilePattern.IsMatch(command.CommandText))
+                return;
 
-            if (!command.CommandText.Contains(optionRecompileString))
-            {
-                command.CommandText += optionRecompileString;
-            }
+            command.CommandText += OptionRecompileSuffix;
         }
 
         public override void NonQueryExecuting(
