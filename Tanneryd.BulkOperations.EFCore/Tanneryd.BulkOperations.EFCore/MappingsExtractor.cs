@@ -86,8 +86,10 @@ namespace Tanneryd.BulkOperations.EFCore
                 ? entityType.FindDiscriminatorProperty()
                 : null;
 
+            // Include client-side OnAdd columns (no store default). Only omit
+            // columns SQL Server fills when the INSERT list leaves them out.
             foreach (var property in entityType.GetProperties()
-                         .Where(p => (p.ValueGenerated == ValueGenerated.Never || p.IsPrimaryKey())
+                         .Where(p => (!IsStoreGeneratedProperty(p) || p.IsPrimaryKey())
                                      && p != discriminatorProperty))
             {
                 tableColumnMappings.Add(CreateTableColumnMapping(property, false));
@@ -302,7 +304,7 @@ namespace Tanneryd.BulkOperations.EFCore
         {
             foreach (var property in complexProperty.ComplexType.GetProperties())
             {
-                if (property.ValueGenerated == ValueGenerated.Never || property.IsPrimaryKey())
+                if (!IsStoreGeneratedProperty(property) || property.IsPrimaryKey())
                     mappings.Add(CreateTableColumnMapping(property, true));
             }
 
