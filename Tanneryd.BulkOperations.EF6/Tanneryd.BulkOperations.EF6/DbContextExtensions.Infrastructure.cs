@@ -368,6 +368,14 @@ namespace Tanneryd.BulkOperations.EF6
             string tableFullName,
             SqlTransaction transaction)
         {
+            // A dead caller transaction (rolled back or server-aborted, e.g. after a
+            // cancelled bulk copy) has already undone the NOCHECK ALTER TABLE, so the
+            // constraints are back in their original state and there is nothing to
+            // re-enable. Creating commands on a zombie transaction would throw
+            // InvalidOperationException and mask the original error.
+            if (SqlTransactionHelper.IsZombied(transaction))
+                return;
+
             var connection = await ResolveSqlConnectionAsync(ctx, CancellationToken.None).ConfigureAwait(false);
             try
             {
