@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -214,8 +215,10 @@ namespace Tanneryd.BulkOperations.EF6
         /// only known dynamically (must await, not block via the sync API).
         /// Forwards the insert request's CommandTimeout and UseTableLock so the
         /// select-not-existing staging copy does not fall back to BulkSelectRequest defaults.
+        /// Reflection (closing the generic core method) runs once per entity type;
+        /// subsequent calls go through a cached delegate.
         /// </summary>
-        private static async Task<IList> BulkSelectNotExistingByTypeAsync(
+        private static Task<IList> BulkSelectNotExistingByTypeAsync(
             DbContext ctx,
             Type t,
             IList entities,
@@ -225,22 +228,45 @@ namespace Tanneryd.BulkOperations.EF6
             bool useTableLock,
             CancellationToken cancellationToken = default)
         {
-            var requestType = typeof(BulkSelectRequest<>).MakeGenericType(t);
+            var invoker = _selectNotExistingInvokersByType.GetOrAdd(t, type =>
+                (SelectNotExistingInvoker)typeof(DbContextExtensions)
+                    .GetMethod(nameof(BulkSelectNotExistingCoreAsync), BindingFlags.NonPublic | BindingFlags.Static)
+                    .MakeGenericMethod(type)
+                    .CreateDelegate(typeof(SelectNotExistingInvoker)));
+
             var keyPropertyNames = pkColumnMappings.Select(m => m.EntityProperty.Name).ToArray();
-            var request = Activator.CreateInstance(requestType, keyPropertyNames, entities.ToArray(t), sqlTransaction);
-            requestType.GetProperty(nameof(BulkSelectRequest<object>.CommandTimeout))
-                .SetValue(request, commandTimeout);
-            requestType.GetProperty(nameof(BulkSelectRequest<object>.UseTableLock))
-                .SetValue(request, useTableLock);
+            return invoker(ctx, entities, keyPropertyNames, sqlTransaction, commandTimeout, useTableLock, cancellationToken);
+        }
 
-            var method = typeof(DbContextExtensions)
-                .GetMethods(BindingFlags.Public | BindingFlags.Static)
-                .Single(m => m.Name == nameof(BulkSelectNotExistingAsync) && m.IsGenericMethodDefinition)
-                .MakeGenericMethod(t, t);
+        private delegate Task<IList> SelectNotExistingInvoker(
+            DbContext ctx,
+            IList entities,
+            string[] keyPropertyNames,
+            SqlTransaction sqlTransaction,
+            TimeSpan commandTimeout,
+            bool useTableLock,
+            CancellationToken cancellationToken);
 
-            var task = (Task)method.Invoke(null, new object[] { ctx, request, cancellationToken });
-            await task.ConfigureAwait(false);
-            return (IList)task.GetType().GetProperty("Result").GetValue(task);
+        private static readonly ConcurrentDictionary<Type, SelectNotExistingInvoker> _selectNotExistingInvokersByType =
+            new ConcurrentDictionary<Type, SelectNotExistingInvoker>();
+
+        private static async Task<IList> BulkSelectNotExistingCoreAsync<T>(
+            DbContext ctx,
+            IList entities,
+            string[] keyPropertyNames,
+            SqlTransaction sqlTransaction,
+            TimeSpan commandTimeout,
+            bool useTableLock,
+            CancellationToken cancellationToken)
+        {
+            var request = new BulkSelectRequest<T>(keyPropertyNames, entities.Cast<T>().ToArray(), sqlTransaction)
+            {
+                CommandTimeout = commandTimeout,
+                UseTableLock = useTableLock,
+            };
+
+            var result = await BulkSelectNotExistingAsync<T, T>(ctx, request, cancellationToken).ConfigureAwait(false);
+            return result as IList ?? result.ToList();
         }
 
         /// <summary>
