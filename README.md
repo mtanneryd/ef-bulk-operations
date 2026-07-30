@@ -131,6 +131,7 @@ Console.WriteLine(numbers[0].Id);
 | `AllowNotNullSelfReferences` | `No` | When `Yes`, temporarily runs `ALTER TABLE … NOCHECK CONSTRAINT ALL` so not-null self-FK graphs can insert (requires `ALTER TABLE` rights). Constraints are re-enabled afterwards. |
 | `SortUsingClusteredIndex` | `true` | Sort rows by the target table clustered index before copy. |
 | `UpdateStatistics` | `false` | Run `UPDATE STATISTICS <table> WITH ALL` after insert. |
+| `UseTableLock` | `false` | Take a table lock (`TABLOCK`) during the bulk operation for higher throughput at the cost of concurrency. |
 | `CommandTimeout` | 30 minutes | Command timeout for SQL after the bulk copy. |
 
 #### `EnableRecursiveInsert`
@@ -190,6 +191,7 @@ ctx.BulkUpdateAll(new BulkUpdateRequest
 | `KeyPropertyNames` | empty | CLR properties used as the match key. Empty = primary key. |
 | `InsertIfNew` | `false` | Insert entities that do not match an existing row. |
 | `Transaction` | `null` | Optional `SqlTransaction`. |
+| `UseTableLock` | `false` | Take a table lock (`TABLOCK`) during the bulk operation. |
 | `CommandTimeout` | 30 minutes | SQL command timeout. |
 
 ```csharp
@@ -203,6 +205,8 @@ await ctx.BulkUpdateAllAsync(request, cancellationToken);
 #### `BulkSelect<T1, T2>`
 
 Match rows in table `T2` from a list of `T1` items and key mappings; return the matched `T2` entities. Useful when the selector is **composite** (for a single column, EF `Contains` is often enough).
+
+**NULL matching:** for nullable key columns, a `NULL` key value matches rows where the column `IS NULL`. Non-nullable key columns use plain equality. This applies to `BulkSelect`, `BulkSelectExisting`, `BulkSelectNotExisting`, and `BulkDeleteNotExisting`.
 
 ```csharp
 // Composite key lookup: match Price rows by Date + Name
@@ -244,6 +248,7 @@ ctx.BulkUpdateAll(new BulkUpdateRequest { Entities = existing.ToList() });
 | `KeyPropertyMappings` | How item properties map to entity properties for the match. Use `KeyPropertyMapping.IdentityMappings(names)` when names are identical. |
 | `ColumnPropertyMappings` | Optional. For `BulkSelectExisting` only: copy matched DB column values onto the local items. |
 | `Transaction` | Optional `SqlTransaction`. |
+| `UseTableLock` | Take a table lock (`TABLOCK`) during staging. Default `false`. |
 | `CommandTimeout` | Default 1 minute. |
 
 ```csharp
@@ -349,6 +354,10 @@ For EF Core, use `(SqlConnection)ctx.Database.GetDbConnection()` the same way.
  * Added async bulk operation APIs for EF6 and EF Core (`BulkInsertAllAsync`, `BulkUpdateAllAsync`, `BulkSelectAsync`, `BulkSelectExistingAsync`, `BulkSelectNotExistingAsync`, `BulkDeleteNotExistingAsync`, `UpdateStatisticsAsync`, and related helpers).
  * Async APIs await SQL Server I/O and accept an optional `CancellationToken`.
  * Existing synchronous methods remain unchanged and delegate to the async implementations.
+ * Nullable key columns now use null-aware matching in `BulkSelect`, `BulkSelectExisting`, `BulkSelectNotExisting`, and `BulkDeleteNotExisting`: a `NULL` key value matches rows where the column `IS NULL` (previously `NULL` never matched).
+ * Safer optimistic-concurrency handling in `BulkUpdateAll`: precise row accounting and hardened transaction rollback/cleanup.
+ * Performance improvements in row materialization for bulk copy staging.
+ * XML documentation is now included in the packages (IntelliSense).
  * Updated NuGet package dependencies.
  * Added VS Code build and test tasks.
  * Minor code cleanup.
