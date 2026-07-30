@@ -28,13 +28,20 @@ namespace Tanneryd.BulkOperations.EF6.Model
     /// </summary>
     public class BulkUpdateRequest
     {
+        /// <summary>
+        /// Creates a request with empty key/updated property name lists
+        /// (meaning: primary key match, update all mapped non-key columns).
+        /// </summary>
         public BulkUpdateRequest()
         {
-            UpdatedPropertyNames = new string[0];
-            KeyPropertyNames = new string[0];
+            UpdatedPropertyNames = Array.Empty<string>();
+            KeyPropertyNames = Array.Empty<string>();
             InsertIfNew = false;
         }
 
+        /// <summary>
+        /// The entities to update.
+        /// </summary>
         public IList Entities { get; set; }
 
         /// <summary>
@@ -50,6 +57,9 @@ namespace Tanneryd.BulkOperations.EF6.Model
         /// </summary>
         public string[] KeyPropertyNames { get; set; }
 
+        /// <summary>
+        /// Optional existing transaction to enlist in.
+        /// </summary>
         public SqlTransaction Transaction { get; set; }
 
         /// <summary>
@@ -64,6 +74,9 @@ namespace Tanneryd.BulkOperations.EF6.Model
         /// </summary>
         public bool UseTableLock { get; set; } = false;
 
+        /// <summary>
+        /// Timeout for SQL commands and SqlBulkCopy. Default is 30 minutes.
+        /// </summary>
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(30);
     }
 }

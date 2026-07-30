@@ -25,7 +25,15 @@ namespace Tanneryd.BulkOperations.EF6.Model
     /// </summary>
     public class BulkInsertRequest<T>
     {
+        /// <summary>
+        /// The entities to insert.
+        /// </summary>
         public IList<T> Entities { get; set; }
+
+        /// <summary>
+        /// Optional existing transaction to enlist in. When null, operations run
+        /// on the connection without an explicit transaction.
+        /// </summary>
         public SqlTransaction Transaction { get; set; }
 
         /// <summary>
@@ -63,9 +71,15 @@ namespace Tanneryd.BulkOperations.EF6.Model
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(30);
     }
 
+    /// <summary>
+    /// Controls whether CHECK/FK constraints are temporarily disabled during insert
+    /// to allow not-null self-referencing entity graphs.
+    /// </summary>
     public enum AllowNotNullSelfReferences
     {
+        /// <summary>Constraints are left enabled (default).</summary>
         No,
+        /// <summary>Constraints are disabled during the insert and re-enabled afterwards.</summary>
         Yes
     }
 

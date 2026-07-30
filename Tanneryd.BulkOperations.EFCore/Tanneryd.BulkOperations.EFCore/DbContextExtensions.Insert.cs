@@ -938,26 +938,31 @@ namespace Tanneryd.BulkOperations.EFCore
         {
             return new ObjectListDataReader(schema, entities, (entity, rowIndex) =>
             {
-                var columnValues = new List<object>();
+                var length = properties.Length
+                             + (discriminator != null ? 1 : 0)
+                             + (includeRowNumber == IncludeRowNumber.Yes ? 1 : 0);
+                var columnValues = new object[length];
+                var n = 0;
                 if (entity is ExpandoObject e)
                 {
-                    columnValues.AddRange(properties.Select(p => (object)GetProperty(p.Name, e)));
+                    for (var i = 0; i < properties.Length; i++)
+                        columnValues[n++] = GetProperty(properties[i].Name, e);
                 }
                 else
                 {
-                    columnValues.AddRange(properties.Select(p =>
-                        (object)GetProperty(t, p.Name, entity, DBNull.Value, ctx)));
+                    for (var i = 0; i < properties.Length; i++)
+                        columnValues[n++] = GetProperty(t, properties[i].Name, entity, DBNull.Value, ctx);
                 }
 
                 // Complex-type flatten uses Expando rows; the discriminator is
                 // still an extra bulk-copy column and must be appended for both.
                 if (discriminator != null)
-                    columnValues.Add(discriminator.Value);
+                    columnValues[n++] = discriminator.Value;
 
                 if (includeRowNumber == IncludeRowNumber.Yes)
-                    columnValues.Add(rowIndex + 1);
+                    columnValues[n] = rowIndex + 1;
 
-                return columnValues.ToArray();
+                return columnValues;
             });
         }
 

@@ -18,6 +18,24 @@ namespace Tanneryd.BulkOperations.EF6
 {
     public static partial class DbContextExtensions
     {
+        /// <summary>
+        /// Builds a key join condition between two table aliases. The
+        /// <c>IS NULL</c> null-match branch is only emitted for nullable
+        /// columns; non-nullable columns use plain equality so SQL Server
+        /// can use index seeks.
+        /// </summary>
+        private static string BuildKeyJoinCondition(TableColumnMapping c, string leftAlias, string rightAlias)
+        {
+            return BuildKeyJoinCondition(c.TableColumn.Name, c.TableColumn.Nullable, leftAlias, rightAlias);
+        }
+
+        internal static string BuildKeyJoinCondition(string columnName, bool isNullable, string leftAlias, string rightAlias)
+        {
+            var equality = $"[{leftAlias}].[{columnName}] = [{rightAlias}].[{columnName}]";
+            return isNullable
+                ? $"({equality} OR ([{leftAlias}].[{columnName}] IS NULL AND [{rightAlias}].[{columnName}] IS NULL))"
+                : $"({equality})";
+        }
 
         private static async Task<IList<T1>> DoBulkSelectNotExistingAsync<T1, T2>(
             DbContext ctx,
@@ -96,20 +114,15 @@ namespace Tanneryd.BulkOperations.EF6
                     var type = items[0].GetType();
                     using (var reader = new ObjectListDataReader(table, (System.Collections.IList)items, (entity, rowIndex) =>
                     {
-                        var columnValues = new List<object>();
-                        columnValues.AddRange(keyProperties.Select(p =>
-                            (object)GetProperty(type, itemPropertByEntityProperty[p.Name], entity, DBNull.Value)));
-                        columnValues.Add(rowIndex);
-                        return columnValues.ToArray();
+                        var columnValues = new object[keyProperties.Length + 1];
+                        for (var i = 0; i < keyProperties.Length; i++)
+                            columnValues[i] = GetProperty(type, itemPropertByEntityProperty[keyProperties[i].Name], entity, DBNull.Value);
+                        columnValues[keyProperties.Length] = rowIndex;
+                        return columnValues;
                     }))
                         await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
-                    var conditionStatements = keyMappings.Values.Select(c =>
-                    {
-                        var keyProperty = keyProperties.Single(p => p.Name == c.EntityProperty.Name);
-                        return
-                            $"([t1].[{c.TableColumn.Name}] = [t2].[{c.TableColumn.Name}] OR ([t1].[{c.TableColumn.Name}] IS NULL AND [t2].[{c.TableColumn.Name}] IS NULL))";
-                    });
+                    var conditionStatements = keyMappings.Values.Select(c => BuildKeyJoinCondition(c, "t1", "t2"));
 
                     var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                     var query = $@"SELECT DISTINCT [t0].[rowno] 
@@ -236,11 +249,11 @@ namespace Tanneryd.BulkOperations.EF6
                     var type = typeof(T1);
                     using (var reader = new ObjectListDataReader(table, (System.Collections.IList)items, (entity, rowIndex) =>
                     {
-                        var columnValues = new List<object>();
-                        columnValues.AddRange(keyProperties.Select(p =>
-                            (object)GetProperty(type, itemPropertyByEntityProperty[p.Name], entity, DBNull.Value)));
-                        columnValues.Add(rowIndex);
-                        return columnValues.ToArray();
+                        var columnValues = new object[keyProperties.Length + 1];
+                        for (var i = 0; i < keyProperties.Length; i++)
+                            columnValues[i] = GetProperty(type, itemPropertyByEntityProperty[keyProperties[i].Name], entity, DBNull.Value);
+                        columnValues[keyProperties.Length] = rowIndex;
+                        return columnValues;
                     }))
                         await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
@@ -251,11 +264,7 @@ namespace Tanneryd.BulkOperations.EF6
                         "t0",
                         parameters,
                         "deleteCond");
-                    var conditionStatements = keyMappings.Values.Select(c =>
-                    {
-                        return
-                            $"([t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}] OR ([t0].[{c.TableColumn.Name}] IS NULL AND [t1].[{c.TableColumn.Name}] IS NULL))";
-                    });
+                    var conditionStatements = keyMappings.Values.Select(c => BuildKeyJoinCondition(c, "t0", "t1"));
 
                     var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                     var query = $@"DELETE {tableName.Fullname}
@@ -366,16 +375,15 @@ namespace Tanneryd.BulkOperations.EF6
                     var type = items[0].GetType();
                     using (var reader = new ObjectListDataReader(table, (System.Collections.IList)items, (entity, rowIndex) =>
                     {
-                        var columnValues = new List<object>();
-                        columnValues.AddRange(keyProperties.Select(p =>
-                            (object)GetProperty(type, itemPropertByEntityProperty[p.Name], entity, DBNull.Value)));
-                        columnValues.Add(rowIndex);
-                        return columnValues.ToArray();
+                        var columnValues = new object[keyProperties.Length + 1];
+                        for (var i = 0; i < keyProperties.Length; i++)
+                            columnValues[i] = GetProperty(type, itemPropertByEntityProperty[keyProperties[i].Name], entity, DBNull.Value);
+                        columnValues[keyProperties.Length] = rowIndex;
+                        return columnValues;
                     }))
                         await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
-                    var conditionStatements = keyMappings.Values.Select(c =>
-                        $"([t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}] OR ([t0].[{c.TableColumn.Name}] IS NULL AND [t1].[{c.TableColumn.Name}] IS NULL))");
+                    var conditionStatements = keyMappings.Values.Select(c => BuildKeyJoinCondition(c, "t0", "t1"));
                     var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                     var query = $@"SELECT [t0].*
                                    FROM {tableName.Fullname} AS [t0]
@@ -594,22 +602,18 @@ namespace Tanneryd.BulkOperations.EF6
                     var type = items[0].GetType();
                     using (var reader = new ObjectListDataReader(table, (System.Collections.IList)items, (entity, rowIndex) =>
                     {
-                        var columnValues = new List<object>();
-                        columnValues.AddRange(keyProperties.Select(p =>
-                            (object)GetProperty(type, itemPropertyByEntityProperty[p.Name], entity, DBNull.Value)));
-                        columnValues.AddRange(extraColumnNames.Select(p =>
-                            (object)GetProperty(type, p.Name, entity, DBNull.Value)));
-                        columnValues.Add(rowIndex);
-                        return columnValues.ToArray();
+                        var columnValues = new object[keyProperties.Length + extraColumnNames.Count + 1];
+                        var n = 0;
+                        for (var i = 0; i < keyProperties.Length; i++)
+                            columnValues[n++] = GetProperty(type, itemPropertyByEntityProperty[keyProperties[i].Name], entity, DBNull.Value);
+                        for (var i = 0; i < extraColumnNames.Count; i++)
+                            columnValues[n++] = GetProperty(type, extraColumnNames[i].Name, entity, DBNull.Value);
+                        columnValues[n] = rowIndex;
+                        return columnValues;
                     }))
                         await bulkCopy.WriteToServerAsync(reader, cancellationToken).ConfigureAwait(false);
 
-                    var conditionStatements = keyMappings.Values.Select(c =>
-                    {
-                        var keyProperty = keyProperties.Single(p => p.Name == c.EntityProperty.Name);
-                        return
-                            $"([t0].[{c.TableColumn.Name}] = [t1].[{c.TableColumn.Name}] OR ([t0].[{c.TableColumn.Name}] IS NULL AND [t1].[{c.TableColumn.Name}] IS NULL))";
-                    });
+                    var conditionStatements = keyMappings.Values.Select(c => BuildKeyJoinCondition(c, "t0", "t1"));
 
                     var conditionStatementsSql = string.Join(" AND ", conditionStatements);
                     string query;

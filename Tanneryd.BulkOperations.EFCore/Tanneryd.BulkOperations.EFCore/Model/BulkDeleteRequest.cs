@@ -11,11 +11,29 @@ namespace Tanneryd.BulkOperations.EFCore.Model
     /// </summary>
     public class BulkDeleteRequest<T>
     {
+        /// <summary>
+        /// Conditions selecting the delete window (rows eligible for deletion).
+        /// </summary>
         public SqlCondition[] SqlConditions { get; set; }
 
+        /// <summary>
+        /// Mappings used to match local items against database rows.
+        /// </summary>
         public KeyPropertyMapping[] KeyPropertyMappings { get; set; }
+
+        /// <summary>
+        /// The local items whose matching rows should be kept.
+        /// </summary>
         public IList<T> Items { get; set; }
+
+        /// <summary>
+        /// Optional existing transaction to enlist in.
+        /// </summary>
         public SqlTransaction Transaction { get; set; }
+
+        /// <summary>
+        /// Timeout for SQL commands and SqlBulkCopy. Default is 1 minute.
+        /// </summary>
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
@@ -29,6 +47,9 @@ namespace Tanneryd.BulkOperations.EFCore.Model
         /// </summary>
         public bool AllowDeleteAllMatchingConditions { get; set; }
 
+        /// <summary>
+        /// Creates a request with the given conditions and key property names.
+        /// </summary>
         public BulkDeleteRequest(
             SqlCondition[] sqlConditions,
             string[] keyPropertyNames,
@@ -41,10 +62,14 @@ namespace Tanneryd.BulkOperations.EFCore.Model
             Transaction = transaction;
         }
 
+        /// <summary>
+        /// Creates an empty request; set <see cref="SqlConditions"/>, <see cref="KeyPropertyMappings"/>
+        /// and <see cref="Items"/> before use.
+        /// </summary>
         public BulkDeleteRequest()
         {
-            KeyPropertyMappings = new KeyPropertyMapping[0];
-            Items = new T[0];
+            KeyPropertyMappings = Array.Empty<KeyPropertyMapping>();
+            Items = Array.Empty<T>();
         }
     }
 }

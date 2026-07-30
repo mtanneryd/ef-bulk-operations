@@ -133,9 +133,9 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Select
         }
 
         /// <summary>
-        /// BulkSelect joins with plain equality. Nullable key columns that are
-        /// null in both the probe and the table never match (NULL = NULL is
-        /// unknown). Sibling select paths use OR (IS NULL AND IS NULL).
+        /// All select paths use nullable-aware join predicates: nullable key
+        /// columns get an OR (IS NULL AND IS NULL) null-match branch, while
+        /// non-nullable columns join with plain equality.
         /// </summary>
         [TestMethod]
         public void BulkSelectShouldMatchWhenNullableKeyColumnIsNull()

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -60,7 +60,7 @@ namespace Tanneryd.BulkOperations.EF6
             var typeMappings = entitySetMap.EntityTypeMappings;
 
             var propertyMappings = new List<PropertyMapping>();
-            NavigationProperty[] navigationProperties = new NavigationProperty[0];
+            NavigationProperty[] navigationProperties = Array.Empty<NavigationProperty>();
 
             // As long as we do not deal with table inheritance
             // we assume there is only one type mapping available.

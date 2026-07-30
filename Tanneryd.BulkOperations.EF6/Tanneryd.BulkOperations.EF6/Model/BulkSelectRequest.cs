@@ -25,14 +25,20 @@ namespace Tanneryd.BulkOperations.EF6.Model
     /// </summary>
     public class BulkSelectRequest<T>
     {
+        /// <summary>
+        /// Creates a request matching on the given key property names.
+        /// </summary>
         public BulkSelectRequest(string[] keyPropertyNames, IList<T> items = null, SqlTransaction transaction = null)
         {
             KeyPropertyMappings = KeyPropertyMapping.IdentityMappings(keyPropertyNames);
-            ColumnPropertyMappings = new KeyPropertyMapping[0];
+            ColumnPropertyMappings = Array.Empty<KeyPropertyMapping>();
             Items = items;
             Transaction = transaction;
         }
 
+        /// <summary>
+        /// The local items to match against database rows.
+        /// </summary>
         public IList<T> Items { get; set; }
 
         /// <summary>
@@ -46,7 +52,14 @@ namespace Tanneryd.BulkOperations.EF6.Model
         /// </summary>
         public KeyPropertyMapping[] ColumnPropertyMappings { get; set; }
 
+        /// <summary>
+        /// Optional existing transaction to enlist in.
+        /// </summary>
         public SqlTransaction Transaction { get; set; }
+
+        /// <summary>
+        /// Timeout for SQL commands and SqlBulkCopy. Default is 1 minute.
+        /// </summary>
         public TimeSpan CommandTimeout { get; set; } = TimeSpan.FromMinutes(1);
 
         /// <summary>
@@ -54,11 +67,14 @@ namespace Tanneryd.BulkOperations.EF6.Model
         /// </summary>
         public bool UseTableLock { get; set; } = false;
 
+        /// <summary>
+        /// Creates an empty request; set <see cref="KeyPropertyMappings"/> and <see cref="Items"/> before use.
+        /// </summary>
         public BulkSelectRequest()
         {
-            KeyPropertyMappings = new KeyPropertyMapping[0];
-            ColumnPropertyMappings = new KeyPropertyMapping[0];
-            Items = new T[0];
+            KeyPropertyMappings = Array.Empty<KeyPropertyMapping>();
+            ColumnPropertyMappings = Array.Empty<KeyPropertyMapping>();
+            Items = Array.Empty<T>();
         }
     }
 }

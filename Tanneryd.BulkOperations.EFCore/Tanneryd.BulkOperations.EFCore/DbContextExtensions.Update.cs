@@ -273,7 +273,12 @@ namespace Tanneryd.BulkOperations.EFCore
                 }
                 catch
                 {
-                    try { ownedTransaction?.Rollback(); } catch { /* ignore */ }
+                    if (ownedTransaction != null && !SqlTransactionHelper.IsZombied(ownedTransaction))
+                    {
+                        // A rollback attempt on a live transaction can still race the
+                        // server aborting it; only swallow that specific failure.
+                        try { ownedTransaction.Rollback(); } catch (InvalidOperationException) { /* already rolled back/aborted */ }
+                    }
                     throw;
                 }
                 finally

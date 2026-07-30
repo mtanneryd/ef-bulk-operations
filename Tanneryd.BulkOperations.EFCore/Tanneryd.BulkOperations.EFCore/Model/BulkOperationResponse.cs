@@ -19,22 +19,52 @@ using System.Collections.Generic;
 
 namespace Tanneryd.BulkOperations.EFCore.Model
 {
+    /// <summary>
+    /// Base response for bulk operations with timing and affected-row counts.
+    /// </summary>
     public class BulkOperationResponse
     {
+        /// <summary>
+        /// Total wall-clock time for the operation.
+        /// </summary>
         public TimeSpan Elapsed { get; set; } = TimeSpan.Zero;
 
+        /// <summary>
+        /// Affected row count per concrete entity type.
+        /// </summary>
         public List<Tuple<Type, long>> AffectedRows { get; set; } = new List<Tuple<Type, long>>();
     }
 
+    /// <summary>
+    /// Response for bulk insert with per-type statistics and constraint diagnostics.
+    /// </summary>
     public class BulkInsertResponse : BulkOperationResponse
     {
+        /// <summary>
+        /// Per-type timing statistics for the bulk copy and insert-into phases.
+        /// </summary>
         public List<Tuple<Type, BulkInsertStatistics>> BulkInsertStatistics { get; set; } =
             new List<Tuple<Type, BulkInsertStatistics>>();
 
+        /// <summary>
+        /// Tables whose CHECK/FK constraints could not be re-enabled WITH CHECK
+        /// and remain marked as not trusted.
+        /// </summary>
         public List<string> TablesWithNoCheckConstraints { get; set; } = new List<string>();
+
+        /// <summary>
+        /// Time spent running UPDATE STATISTICS, when requested.
+        /// </summary>
         public TimeSpan? TimeElapsedDuringUpdateStatistics { get; set; }
+
+        /// <summary>
+        /// Time spent sorting entities by clustered index, when enabled.
+        /// </summary>
         public TimeSpan? TimeElapsedDuringSorting { get; set; }
 
+        /// <summary>
+        /// Produces human-readable summary lines for logging.
+        /// </summary>
         public string[] Report()
         {
             var report = new List<string>();
@@ -59,9 +89,14 @@ namespace Tanneryd.BulkOperations.EFCore.Model
         }
     }
 
+    /// <summary>
+    /// Timing statistics for a single entity type during bulk insert.
+    /// </summary>
     public struct BulkInsertStatistics
     {
+        /// <summary>Time spent in SqlBulkCopy.</summary>
         public TimeSpan TimeElapsedDuringBulkCopy { get; set; }
+        /// <summary>Time spent in the INSERT INTO / MERGE phase.</summary>
         public TimeSpan TimeElapsedDuringInsertInto { get; set; }
     }
 }
