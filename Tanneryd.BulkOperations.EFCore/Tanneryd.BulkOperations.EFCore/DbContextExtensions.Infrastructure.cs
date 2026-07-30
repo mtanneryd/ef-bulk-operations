@@ -315,7 +315,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 EnableStreaming = true,
                 // BatchSize 0 = ADO.NET default (single batch). Avoid the previous hard-coded
                 // 1_000_000 which forced oversized internal batches under load.
-                BulkCopyTimeout = (int)(bulkCopyTimeout ?? TimeSpan.FromMinutes(10)).TotalSeconds
+                BulkCopyTimeout = SqlCommandFactory.ToCommandTimeoutSeconds(bulkCopyTimeout ?? TimeSpan.FromMinutes(10))
             };
 
             foreach (var property in properties)

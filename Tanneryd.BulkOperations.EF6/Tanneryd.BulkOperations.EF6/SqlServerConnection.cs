@@ -256,7 +256,7 @@ namespace Tanneryd.BulkOperations.EF6
         {
             var command = new SqlCommand(query, connection, transaction);
             if (timeout.HasValue)
-                command.CommandTimeout = (int)timeout.Value.TotalSeconds;
+                command.CommandTimeout = SqlCommandFactory.ToCommandTimeoutSeconds(timeout.Value);
 
             return new SqlServerCommand(command);
         }
@@ -269,7 +269,7 @@ namespace Tanneryd.BulkOperations.EF6
         {
             var command = new System.Data.SqlClient.SqlCommand(query, connection, transaction);
             if (timeout.HasValue)
-                command.CommandTimeout = (int)timeout.Value.TotalSeconds;
+                command.CommandTimeout = SqlCommandFactory.ToCommandTimeoutSeconds(timeout.Value);
 
             return new SqlServerCommand(command);
         }

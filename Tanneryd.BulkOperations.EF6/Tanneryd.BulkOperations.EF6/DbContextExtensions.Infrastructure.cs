@@ -250,7 +250,7 @@ namespace Tanneryd.BulkOperations.EF6
             var bulkCopy = connection.CreateBulkCopy(options, transaction, tableName);
             bulkCopy.EnableStreaming = true;
             // BatchSize left at ADO.NET default (0). Avoid the previous hard-coded 1_000_000.
-            bulkCopy.BulkCopyTimeout = (int)(bulkCopyTimeout ?? TimeSpan.FromMinutes(10)).TotalSeconds;
+            bulkCopy.BulkCopyTimeout = SqlCommandFactory.ToCommandTimeoutSeconds(bulkCopyTimeout ?? TimeSpan.FromMinutes(10));
 
             foreach (var property in properties)
             {

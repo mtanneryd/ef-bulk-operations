@@ -17,10 +17,30 @@ namespace Tanneryd.BulkOperations.Common.Sql
         {
             var cmd = new SqlCommand(query ?? string.Empty, connection, transaction)
             {
-                CommandTimeout = (int)timeout.TotalSeconds
+                CommandTimeout = ToCommandTimeoutSeconds(timeout)
             };
             Track(cmd);
             return cmd;
+        }
+
+        /// <summary>
+        /// Converts a <see cref="TimeSpan"/> to an ADO.NET command timeout in whole
+        /// seconds. Negative values are rejected up front (SqlCommand would otherwise
+        /// throw a less helpful error later), values too large for an int (for example
+        /// <see cref="TimeSpan.MaxValue"/>, which would overflow to a negative int)
+        /// are clamped to <see cref="int.MaxValue"/>, and <see cref="TimeSpan.Zero"/>
+        /// keeps its ADO.NET meaning of no timeout.
+        /// </summary>
+        public static int ToCommandTimeoutSeconds(TimeSpan timeout)
+        {
+            if (timeout < TimeSpan.Zero)
+                throw new ArgumentOutOfRangeException(
+                    nameof(timeout),
+                    timeout,
+                    "Command timeout must not be negative. Use TimeSpan.Zero for no timeout.");
+
+            var totalSeconds = timeout.TotalSeconds;
+            return totalSeconds >= int.MaxValue ? int.MaxValue : (int)totalSeconds;
         }
 
         public static SqlCommand Create(
