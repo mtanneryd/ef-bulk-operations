@@ -406,27 +406,41 @@ namespace Tanneryd.BulkOperations.EF6
             var succeeded = false;
             try
             {
-                var t = request.Entities.First().GetType();
-                var tableName = MappingExtractor.GetTableName(ctx, t);
+                // Mixed batches are split per concrete type further down the pipeline,
+                // so sorting and statistics must also be applied per type group rather
+                // than assuming the first entity's table represents the whole batch.
+                var typeGroups = request.Entities.GroupBy(e => e.GetType()).ToList();
                 var mappingsByType = new Dictionary<Type, Mappings>();
                 if (request.SortUsingClusteredIndex)
                 {
-                    var mappings = MappingExtractor.GetMappings(ctx, t);
-                    mappingsByType.Add(t, mappings);
-
                     var s0 = new Stopwatch();
                     s0.Start();
-                    var clusteredIndexColumns = await GetClusteredIndexColumnsAsync(
-                        ctx,
-                        tableName.Schema,
-                        tableName.Name,
-                        request.Transaction,
-                        mappings,
-                        cancellationToken).ConfigureAwait(false);
+                    var sortedEntities = new List<T>(request.Entities.Count);
+                    foreach (var typeGroup in typeGroups)
+                    {
+                        var groupType = typeGroup.Key;
+                        var groupEntities = typeGroup.ToList();
+                        if (!mappingsByType.TryGetValue(groupType, out var mappings))
+                        {
+                            mappings = MappingExtractor.GetMappings(ctx, groupType);
+                            mappingsByType.Add(groupType, mappings);
+                        }
 
-                    request.Entities = clusteredIndexColumns.Any()
-                        ? Sort(request.Entities, clusteredIndexColumns)
-                        : request.Entities;
+                        var groupTableName = MappingExtractor.GetTableName(ctx, groupType);
+                        var clusteredIndexColumns = await GetClusteredIndexColumnsAsync(
+                            ctx,
+                            groupTableName.Schema,
+                            groupTableName.Name,
+                            request.Transaction,
+                            mappings,
+                            cancellationToken).ConfigureAwait(false);
+
+                        sortedEntities.AddRange(clusteredIndexColumns.Any()
+                            ? Sort(groupEntities, clusteredIndexColumns)
+                            : groupEntities);
+                    }
+
+                    request.Entities = sortedEntities;
                     s0.Stop();
                     response.TimeElapsedDuringSorting = s0.Elapsed;
                 }
@@ -446,12 +460,24 @@ namespace Tanneryd.BulkOperations.EF6
 
                 if (request.UpdateStatistics)
                 {
-                    response.TimeElapsedDuringUpdateStatistics = await UpdateStatisticsCoreAsync(
-                        ctx,
-                        tableName,
-                        request.Transaction,
-                        request.CommandTimeout,
-                        cancellationToken).ConfigureAwait(false);
+                    // TPH subtypes share a table; only update each distinct table once.
+                    var elapsed = TimeSpan.Zero;
+                    var updatedTables = new HashSet<string>();
+                    foreach (var typeGroup in typeGroups)
+                    {
+                        var groupTableName = MappingExtractor.GetTableName(ctx, typeGroup.Key);
+                        if (!updatedTables.Add($"{groupTableName.Schema}.{groupTableName.Name}"))
+                            continue;
+
+                        elapsed += await UpdateStatisticsCoreAsync(
+                            ctx,
+                            groupTableName,
+                            request.Transaction,
+                            request.CommandTimeout,
+                            cancellationToken).ConfigureAwait(false);
+                    }
+
+                    response.TimeElapsedDuringUpdateStatistics = elapsed;
                 }
 
                 succeeded = true;

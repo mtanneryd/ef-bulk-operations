@@ -62,6 +62,25 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Insert
             AssertMixedBatchPersistsCorrectly(new BlueTag(), new RedTag());
         }
 
+        [TestMethod]
+        public void BulkInsert_MixedTphBatch_WithSortAndStatistics_ShouldApplyPerTypeGroup()
+        {
+            using (var db = new DiscriminatorOnlyContext())
+            {
+                db.BulkInsertAll(new BulkInsertRequest<TagBase>
+                {
+                    Entities = new TagBase[] { new RedTag(), new BlueTag(), new RedTag() },
+                    EnableRecursiveInsert = EnableRecursiveInsert.NoAndIgnoreGeneratedPrimaryKeys,
+                    SortUsingClusteredIndex = true,
+                    UpdateStatistics = true,
+                });
+
+                Assert.AreEqual(2, db.RedTags.Count());
+                Assert.AreEqual(1, db.BlueTags.Count());
+                Assert.AreEqual(3, db.Tags.Count());
+            }
+        }
+
         private static void AssertMixedBatchPersistsCorrectly(TagBase first, TagBase second)
         {
             using (var db = new DiscriminatorOnlyContext())
