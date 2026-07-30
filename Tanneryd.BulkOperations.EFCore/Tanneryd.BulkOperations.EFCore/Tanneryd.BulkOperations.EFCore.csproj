@@ -13,12 +13,14 @@
 		<PackageLicenseFile>LICENSE-2.0.txt</PackageLicenseFile>
 		<PackageId>Tanneryd.BulkOperations.EFCore</PackageId>
 		<PackageProjectUrl>https://www.nuget.org/packages/Tanneryd.BulkOperations.EFCore</PackageProjectUrl>
-		<PackageReleaseNotes>Added async bulk operation APIs with CancellationToken support. Synchronous methods remain and delegate to the async implementations. Updated NuGet package dependencies. Added VS Code build and test tasks. Minor code cleanup.</PackageReleaseNotes>
+		<PackageReleaseNotes>Nullable-aware key join predicates in BulkSelect/BulkSelectExisting/BulkSelectNotExisting/BulkDeleteNotExisting (NULL keys now match NULL). Safer optimistic-concurrency rollback handling. Performance improvements in row materialization. XML documentation added to public API. Async bulk operation APIs with CancellationToken support remain available; synchronous methods delegate to the async implementations.</PackageReleaseNotes>
 		<IncludeSymbols>true</IncludeSymbols>
 		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
 		<EmbedAllSources>True</EmbedAllSources>
 		<LangVersion>Latest</LangVersion>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);1591</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
