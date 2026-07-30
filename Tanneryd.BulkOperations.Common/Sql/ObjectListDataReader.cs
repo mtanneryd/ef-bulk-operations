@@ -131,8 +131,16 @@ namespace Tanneryd.BulkOperations.Common.Sql
 
         public override long GetChars(int ordinal, long dataOffset, char[] buffer, int bufferOffset, int length)
         {
-            var data = ((string)GetValue(ordinal)).ToCharArray();
-            return CopyArray(data, dataOffset, buffer, bufferOffset, length);
+            // Copy straight from the string into the caller's buffer; ToCharArray
+            // would allocate the whole string on every chunked read.
+            var data = (string)GetValue(ordinal);
+            if (buffer == null)
+                return data.Length;
+
+            var available = data.Length - (int)dataOffset;
+            var toCopy = Math.Min(length, available);
+            data.CopyTo((int)dataOffset, buffer, bufferOffset, toCopy);
+            return toCopy;
         }
 
         public override DataTable GetSchemaTable()

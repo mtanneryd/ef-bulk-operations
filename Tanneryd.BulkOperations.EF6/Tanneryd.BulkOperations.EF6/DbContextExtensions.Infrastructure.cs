@@ -201,10 +201,8 @@ namespace Tanneryd.BulkOperations.EF6
 
             var guid = Guid.NewGuid().ToString("N");
             var tempTableName = $"tempdb..#{guid}";
-            var query = $@"   
-                        IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
-
-                        SELECT {selectClause}
+            // The name is a fresh GUID, so no pre-drop guard is needed.
+            var query = $@"SELECT {selectClause}
                         INTO {tempTableName}
                         FROM {tableName.Fullname}
                         WHERE 1=0";

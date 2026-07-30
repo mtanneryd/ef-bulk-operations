@@ -182,7 +182,7 @@ namespace Tanneryd.BulkOperations.EF6
             // is no point in saving them more than once. We use a
             // custom comparer checking for reference identity.
             //
-            var validEntities = new ArrayList();
+            var validEntities = new List<object>();
             foreach (dynamic entity in entities)
             {
                 if (savedEntities.ContainsKey(entity)) continue;
@@ -797,7 +797,7 @@ namespace Tanneryd.BulkOperations.EF6
             string tempTableName,
             Stopwatch s,
             BulkInsertStatistics stats,
-            ArrayList newEntities,
+            List<object> newEntities,
             EdmProperty pkProperty,
             bool hasComplexProperties,
             Discriminator discriminator,
@@ -996,9 +996,9 @@ namespace Tanneryd.BulkOperations.EF6
             SetProperty(fromPropertyName, navProperty, CreateUnsetKeyValue(fromPropertyInfo.PropertyType));
         }
 
-        private static ArrayList SelectNewEntities(IList entities, EdmProperty pkProperty, Type t)
+        private static List<object> SelectNewEntities(IList entities, EdmProperty pkProperty, Type t)
         {
-            var newEntities = new ArrayList();
+            var newEntities = new List<object>();
             var pkClrType = pkProperty.PrimitiveType?.ClrEquivalentType ?? typeof(object);
 
             if (entities[0] is ExpandoObject)

@@ -241,10 +241,8 @@ namespace Tanneryd.BulkOperations.EFCore
 
             var guid = Guid.NewGuid().ToString("N");
             var tempTableName = $"tempdb..#{guid}";
-            var query = $@"   
-                        IF OBJECT_ID('{tempTableName}') IS NOT NULL DROP TABLE {tempTableName}
-
-                        SELECT {selectClause}
+            // The name is a fresh GUID, so no pre-drop guard is needed.
+            var query = $@"SELECT {selectClause}
                         INTO {tempTableName}
                         FROM {tableName.Fullname}
                         WHERE 1=0";
@@ -270,10 +268,16 @@ namespace Tanneryd.BulkOperations.EFCore
                 return Array.Empty<TableColumn>();
 
             var clrType = Nullable.GetUnderlyingType(discriminator.Column.ClrType) ?? discriminator.Column.ClrType;
-            var sqlType = clrType == typeof(string) ? "nvarchar(128)"
-                : clrType == typeof(int) ? "int"
-                : clrType == typeof(long) ? "bigint"
-                : "sql_variant";
+            // Prefer the mapped store type so long string discriminator values are
+            // not silently truncated in the temp table (missed MERGE matches).
+            var sqlType = discriminator.Column.GetColumnType();
+            if (string.IsNullOrEmpty(sqlType))
+            {
+                sqlType = clrType == typeof(string) ? "nvarchar(max)"
+                    : clrType == typeof(int) ? "int"
+                    : clrType == typeof(long) ? "bigint"
+                    : "sql_variant";
+            }
 
             return
             [

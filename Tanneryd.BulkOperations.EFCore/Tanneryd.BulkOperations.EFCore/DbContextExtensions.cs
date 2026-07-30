@@ -89,7 +89,7 @@ namespace Tanneryd.BulkOperations.EFCore
             CancellationToken cancellationToken = default)
         {
             ValidateDbContext(ctx);
-            var query = $@"DBCC FREEPROCCACHE WITH NO_INFOMSGS";
+            var query = "DBCC FREEPROCCACHE WITH NO_INFOMSGS";
             return DeleteAllExecutionPlansFromCacheCoreAsync(ctx, query, sqlTransaction, cancellationToken);
         }
 

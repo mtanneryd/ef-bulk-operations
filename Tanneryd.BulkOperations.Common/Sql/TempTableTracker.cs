@@ -21,30 +21,33 @@ namespace Tanneryd.BulkOperations.Common.Sql
 
         public static void NotifyCreated()
         {
-            var scope = Current.Value;
-            if (scope != null)
-                scope.Created++;
+            Current.Value?.NotifyCreated();
         }
 
         public static void NotifyDropped()
         {
-            var scope = Current.Value;
-            if (scope != null)
-                scope.Dropped++;
+            Current.Value?.NotifyDropped();
         }
 
         internal sealed class Scope : IDisposable
         {
             private readonly Scope _previous;
             private bool _disposed;
+            private int _created;
+            private int _dropped;
 
             public Scope(Scope previous)
             {
                 _previous = previous;
             }
 
-            public int Created { get; set; }
-            public int Dropped { get; set; }
+            // Interlocked: AsyncLocal flows into child tasks, so parallel
+            // branches may increment concurrently.
+            public int Created => Volatile.Read(ref _created);
+            public int Dropped => Volatile.Read(ref _dropped);
+
+            internal void NotifyCreated() => Interlocked.Increment(ref _created);
+            internal void NotifyDropped() => Interlocked.Increment(ref _dropped);
 
             public void Dispose()
             {
