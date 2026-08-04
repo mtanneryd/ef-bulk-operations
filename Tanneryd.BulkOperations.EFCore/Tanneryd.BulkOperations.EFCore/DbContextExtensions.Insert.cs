@@ -1148,27 +1148,12 @@ namespace Tanneryd.BulkOperations.EFCore
 
             // Table/schema names come from EF mappings; pass as parameters so a
             // quote in an identifier cannot break (or alter) the catalog query.
-            var query = @"
-                    SELECT  col.name
-                    FROM sys.indexes ind
-                    INNER JOIN sys.index_columns ic ON ind.object_id = ic.object_id and ind.index_id = ic.index_id
-                    INNER JOIN sys.columns col ON ic.object_id = col.object_id and ic.column_id = col.column_id
-                    INNER JOIN sys.tables t ON ind.object_id = t.object_id
-                    WHERE t.name = @tableName AND ind.type_desc = 'CLUSTERED'";
-
-            if (!string.IsNullOrEmpty(schema))
-            {
-                query += " AND SCHEMA_NAME(t.schema_id) = @schema";
-            }
-
-            query += " ORDER BY ic.index_column_id;";
+            var parameters = new List<SqlParameter>();
+            var query = ClusteredIndexCatalogSql.BuildQuery(schema, tableName, parameters);
 
             using var cmd = CreateSqlCommand(query, connection, sqlTransaction, TimeSpan.FromSeconds(30));
-            cmd.Parameters.Add(new SqlParameter("@tableName", SqlDbType.NVarChar, 128) { Value = tableName });
-            if (!string.IsNullOrEmpty(schema))
-            {
-                cmd.Parameters.Add(new SqlParameter("@schema", SqlDbType.NVarChar, 128) { Value = schema });
-            }
+            foreach (var parameter in parameters)
+                cmd.Parameters.Add(parameter);
 
             string[] clusteredColumns = null;
             using (var reader = await cmd.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false))
