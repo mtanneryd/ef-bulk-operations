@@ -62,7 +62,22 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Select
         public void GetSelectStagingBulkCopySettings_ShouldThrow_ForNullRequest()
         {
             Assert.ThrowsExactly<ArgumentNullException>(
-                () => DbContextExtensions.GetSelectStagingBulkCopySettings<StagingProbe>(null));
+                () => DbContextExtensions.GetSelectStagingBulkCopySettings<StagingProbe>((BulkSelectRequest<StagingProbe>)null));
+        }
+
+        [TestMethod]
+        public void GetSelectStagingBulkCopySettings_ShouldForwardDeleteRequestTimeoutAndTableLock()
+        {
+            var request = new BulkDeleteRequest<StagingProbe>
+            {
+                CommandTimeout = TimeSpan.FromMinutes(4),
+                UseTableLock = true,
+            };
+
+            var settings = DbContextExtensions.GetSelectStagingBulkCopySettings(request);
+
+            Assert.AreEqual(TimeSpan.FromMinutes(4), settings.Timeout);
+            Assert.IsTrue(settings.UseTableLock);
         }
 
         private sealed class StagingProbe

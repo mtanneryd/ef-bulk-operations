@@ -51,6 +51,16 @@ namespace Tanneryd.BulkOperations.EFCore
             return (request.CommandTimeout, request.UseTableLock);
         }
 
+        /// <inheritdoc cref="GetSelectStagingBulkCopySettings{T}(BulkSelectRequest{T})"/>
+        internal static (TimeSpan Timeout, bool UseTableLock) GetSelectStagingBulkCopySettings<T>(
+            BulkDeleteRequest<T> request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            return (request.CommandTimeout, request.UseTableLock);
+        }
+
         private static async Task<IList<T1>> DoBulkSelectNotExistingAsync<T1, T2>(
             DbContext ctx,
             BulkSelectRequest<T1> request,
