@@ -428,6 +428,10 @@ We use [SemVer](http://semver.org/) for versioning. For available versions, see 
 
 * **Måns Tånneryd**
 
+## Support
+
+If these packages help you ship bulk SQL Server work with EF6 or EF Core, consider [sponsoring the project on GitHub](https://github.com/sponsors/mtanneryd). Sponsorships fund ongoing maintenance, compatibility updates, tests, and docs.
+
 ## License
 
 This project is licensed under the Apache License — see the [LICENSE.md](LICENSE.md) file for details.
