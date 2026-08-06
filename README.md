@@ -6,7 +6,7 @@ NuGet packages that extend `DbContext` with high-throughput SQL Server bulk oper
 
 ### Background
 
-See the CodeProject article [Bulk operations using Entity Framework](https://www.codeproject.com/Articles/1226978/Bulk-operations-using-Entity-Framework) for design background.
+See the CodeProject article [Bulk operations using Entity Framework](https://web.archive.org/web/20250820221347/https://www.codeproject.com/Articles/1226978/Bulk-Operations-using-Entity-Framework) (Internet Archive; CodeProject is offline) for design background.
 
 ### Install
 
