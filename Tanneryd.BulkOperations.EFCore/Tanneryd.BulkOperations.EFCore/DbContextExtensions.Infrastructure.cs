@@ -310,8 +310,7 @@ namespace Tanneryd.BulkOperations.EFCore
             TimeSpan? bulkCopyTimeout = null,
             bool useTableLock = false)
         {
-            if (useTableLock)
-                options |= SqlBulkCopyOptions.TableLock;
+            options = BulkCopySettings.ApplyTableLock(options, useTableLock);
 
             var bulkCopy = new SqlBulkCopy(connection, options, transaction)
             {
@@ -319,7 +318,7 @@ namespace Tanneryd.BulkOperations.EFCore
                 EnableStreaming = true,
                 // BatchSize 0 = ADO.NET default (single batch). Avoid the previous hard-coded
                 // 1_000_000 which forced oversized internal batches under load.
-                BulkCopyTimeout = SqlCommandFactory.ToCommandTimeoutSeconds(bulkCopyTimeout ?? TimeSpan.FromMinutes(10))
+                BulkCopyTimeout = BulkCopySettings.ResolveTimeoutSeconds(bulkCopyTimeout)
             };
 
             foreach (var property in properties)

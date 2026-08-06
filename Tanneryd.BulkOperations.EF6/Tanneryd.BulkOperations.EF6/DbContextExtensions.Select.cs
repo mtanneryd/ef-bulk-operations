@@ -37,6 +37,20 @@ namespace Tanneryd.BulkOperations.EF6
                 : $"({equality})";
         }
 
+        /// <summary>
+        /// Staging SqlBulkCopy for select APIs must honor the request timeout and
+        /// TABLOCK setting. Omitting them falls back to <see cref="BulkCopySettings"/>
+        /// defaults (10 minutes / no TableLock), silently ignoring the caller.
+        /// </summary>
+        internal static (TimeSpan Timeout, bool UseTableLock) GetSelectStagingBulkCopySettings<T>(
+            BulkSelectRequest<T> request)
+        {
+            if (request == null)
+                throw new ArgumentNullException(nameof(request));
+
+            return (request.CommandTimeout, request.UseTableLock);
+        }
+
         private static async Task<IList<T1>> DoBulkSelectNotExistingAsync<T1, T2>(
             DbContext ctx,
             BulkSelectRequest<T1> request,
@@ -92,6 +106,7 @@ namespace Tanneryd.BulkOperations.EF6
                     var keyProperties = GetProperties(t)
                         .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
+                    var staging = GetSelectStagingBulkCopySettings(request);
                     var table = new DataTable();
                     using var bulkCopy = CreateBulkCopy(
                         table,
@@ -103,8 +118,8 @@ namespace Tanneryd.BulkOperations.EF6
                         null,
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes,
-                        request.CommandTimeout,
-                        request.UseTableLock);
+                        staging.Timeout,
+                        staging.UseTableLock);
                     if (containsIdentityKey)
                     {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
@@ -227,6 +242,7 @@ namespace Tanneryd.BulkOperations.EF6
                     var keyProperties = properties
                         .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
+                    var staging = GetSelectStagingBulkCopySettings(request);
                     var table = new DataTable();
                     using var bulkCopy = CreateBulkCopy(
                         table,
@@ -238,8 +254,8 @@ namespace Tanneryd.BulkOperations.EF6
                         null,
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes,
-                        request.CommandTimeout,
-                        request.UseTableLock);
+                        staging.Timeout,
+                        staging.UseTableLock);
                     if (containsIdentityKey)
                     {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
@@ -353,6 +369,7 @@ namespace Tanneryd.BulkOperations.EF6
                     var keyProperties = properties
                         .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
+                    var staging = GetSelectStagingBulkCopySettings(request);
                     var table = new DataTable();
                     using var bulkCopy = CreateBulkCopy(
                         table,
@@ -364,8 +381,8 @@ namespace Tanneryd.BulkOperations.EF6
                         null,
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes,
-                        request.CommandTimeout,
-                        request.UseTableLock);
+                        staging.Timeout,
+                        staging.UseTableLock);
                     if (containsIdentityKey)
                     {
                         await EnableIdentityInsertAsync(tempTableName, conn, request.Transaction, cancellationToken).ConfigureAwait(false);
@@ -579,6 +596,7 @@ namespace Tanneryd.BulkOperations.EF6
                     var keyProperties = GetProperties(t)
                         .Where(p => keyMappings.ContainsKey(p.Name)).ToArray();
 
+                    var staging = GetSelectStagingBulkCopySettings(request);
                     var table = new DataTable();
                     using var bulkCopy = CreateBulkCopy(
                         table,
@@ -590,8 +608,8 @@ namespace Tanneryd.BulkOperations.EF6
                         null,
                         containsIdentityKey ? SqlBulkCopyOptions.KeepIdentity : SqlBulkCopyOptions.Default,
                         IncludeRowNumber.Yes,
-                        request.CommandTimeout,
-                        request.UseTableLock,
+                        staging.Timeout,
+                        staging.UseTableLock,
                         extraColumnNames.ToArray());
                     if (containsIdentityKey)
                     {
