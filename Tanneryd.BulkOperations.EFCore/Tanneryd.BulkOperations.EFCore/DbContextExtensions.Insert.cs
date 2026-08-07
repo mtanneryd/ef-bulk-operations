@@ -105,6 +105,8 @@ namespace Tanneryd.BulkOperations.EFCore
                         {
                             if (navPropertyType == null)
                                 navPropertyType = GetProperty(t, navigationPropertyName, entity).GetType();
+
+                            var needsExistenceCheckOrInsert = false;
                             foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
                             {
                                 var navPropertyKeyType = ResolvePropertyClrType(
@@ -126,9 +128,8 @@ namespace Tanneryd.BulkOperations.EFCore
                                         def: null,
                                         ctx: ctx);
 
-                                    // Only treat the navigation as already persisted when we inserted
-                                    // it earlier in this recursive walk. A non-default numeric PK alone
-                                    // is not enough — leftover client IDs must not skip insert.
+                                    // Navigation already inserted earlier in this recursive walk —
+                                    // stamp its PK onto the FK.
                                     if (savedEntities.ContainsKey(navProperty) &&
                                         IsKeyValueSet(currentValue, fromClrType))
                                     {
@@ -139,29 +140,115 @@ namespace Tanneryd.BulkOperations.EFCore
                                         var same = navProperty.GetType() == entity.GetType() &&
                                                    navProperty == entity;
                                         if (!same)
-                                        {
-                                            ClearLeftoverStoreGeneratedNavKey(
-                                                navProperty,
-                                                navPropertyType,
-                                                foreignKeyRelation.FromProperty,
-                                                fromPropertyInfo,
-                                                currentValue,
-                                                mappingsByType,
-                                                ctx);
-                                            navProperties.Add(navProperty);
-                                            modifiedEntities.Add(new object[] { entity, navProperty });
-                                        }
+                                            needsExistenceCheckOrInsert = true;
                                     }
                                 }
+                            }
+
+                            if (needsExistenceCheckOrInsert)
+                            {
+                                navProperties.Add(navProperty);
+                                modifiedEntities.Add(new object[] { entity, navProperty });
                             }
                         }
                     }
 
                     if (!navProperties.Any()) continue;
 
+                    // Leftover client IDs must still be inserted, but parents that
+                    // already exist in the DB must only have their PK stamped onto
+                    // the FK — clearing a real identity PK would create a duplicate.
+                    var pkColumnMappings = GetPrimaryKeyColumnMappings(ctx, navPropertyType, mappingsByType);
+                    var navsWithSetKey = new HashSet<object>();
+                    foreach (var navProperty in navProperties)
+                    {
+                        foreach (var pkMapping in pkColumnMappings)
+                        {
+                            var fromPropertyInfo = navPropertyType.GetProperty(pkMapping.EntityProperty.Name);
+                            var fromClrType = fromPropertyInfo?.PropertyType
+                                ?? ResolvePropertyClrType(
+                                    ctx, navPropertyType, pkMapping.EntityProperty.Name, null);
+                            var currentValue = GetProperty(
+                                navPropertyType,
+                                pkMapping.EntityProperty.Name,
+                                navProperty,
+                                def: null,
+                                ctx: ctx);
+                            if (IsKeyValueSet(currentValue, fromClrType))
+                            {
+                                navsWithSetKey.Add(navProperty);
+                                break;
+                            }
+                        }
+                    }
+
+                    HashSet<object> notExistingSet;
+                    if (navsWithSetKey.Count > 0)
+                    {
+                        var notExistingWithSetKey = await BulkSelectNotExistingByTypeAsync(
+                            ctx,
+                            navPropertyType,
+                            navsWithSetKey.ToList(),
+                            pkColumnMappings,
+                            sqlTransaction,
+                            commandTimeout,
+                            useTableLock,
+                            cancellationToken).ConfigureAwait(false);
+                        notExistingSet = new HashSet<object>(notExistingWithSetKey.Cast<object>());
+                        foreach (var navProperty in navProperties)
+                        {
+                            if (!navsWithSetKey.Contains(navProperty))
+                                notExistingSet.Add(navProperty);
+                        }
+                    }
+                    else
+                    {
+                        notExistingSet = new HashSet<object>(navProperties);
+                    }
+
+                    foreach (var modifiedEntity in modifiedEntities)
+                    {
+                        var e = modifiedEntity[0];
+                        var p = modifiedEntity[1];
+                        if (notExistingSet.Contains(p)) continue;
+
+                        foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
+                        {
+                            SetProperty(
+                                foreignKeyRelation.ToProperty,
+                                e,
+                                GetProperty(foreignKeyRelation.FromProperty, p, def: null, ctx: ctx),
+                                ctx);
+                        }
+                    }
+
+                    if (notExistingSet.Count == 0) continue;
+
+                    foreach (var navProperty in notExistingSet)
+                    {
+                        foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
+                        {
+                            var fromPropertyInfo = navPropertyType.GetProperty(foreignKeyRelation.FromProperty);
+                            var currentValue = GetProperty(
+                                navPropertyType,
+                                foreignKeyRelation.FromProperty,
+                                navProperty,
+                                def: null,
+                                ctx: ctx);
+                            ClearLeftoverStoreGeneratedNavKey(
+                                navProperty,
+                                navPropertyType,
+                                foreignKeyRelation.FromProperty,
+                                fromPropertyInfo,
+                                currentValue,
+                                mappingsByType,
+                                ctx);
+                        }
+                    }
+
                     await DoBulkInsertAllAsync(
                         ctx,
-                        navProperties.ToList(),
+                        notExistingSet.ToList(),
                         sqlTransaction,
                         enableRecursiveInsert,
                         allowNotNullSelfReferences,
@@ -175,6 +262,8 @@ namespace Tanneryd.BulkOperations.EFCore
                     {
                         var e = modifiedEntity[0];
                         var p = modifiedEntity[1];
+                        if (!notExistingSet.Contains(p)) continue;
+
                         foreach (var foreignKeyRelation in fkMapping.ForeignKeyRelations)
                         {
                             SetProperty(
@@ -982,11 +1071,11 @@ namespace Tanneryd.BulkOperations.EFCore
         /// <param name="t"></param>
         /// <returns></returns>
         /// <summary>
-        /// Before recursively inserting a navigation, clear leftover
-        /// identity/store-generated PK values so <see cref="SelectNewEntities"/>
-        /// does not treat them as already persisted. Guid/DateTime/string
-        /// client-assigned keys are left alone. Existing DB parents should set
-        /// the FK on the child rather than relying on nav.Id alone.
+        /// Before recursively inserting a navigation that does not exist in the
+        /// database, clear leftover identity/store-generated PK values so
+        /// <see cref="SelectNewEntities"/> does not treat them as already
+        /// persisted. Guid/DateTime/string client-assigned keys are left alone.
+        /// Callers must existence-check first so real DB parents are not cleared.
         /// </summary>
         private static void ClearLeftoverStoreGeneratedNavKey(
             object navProperty,

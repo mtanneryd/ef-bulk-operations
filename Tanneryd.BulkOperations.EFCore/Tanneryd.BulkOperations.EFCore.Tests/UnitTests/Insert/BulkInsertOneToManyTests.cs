@@ -236,6 +236,52 @@ namespace Tanneryd.BulkOperations.EFCore.Tests.UnitTests.Insert
             }
         }
 
+        /// <summary>
+        /// Setting the navigation to an existing parent while leaving the FK unset
+        /// is inconsistent, but must not clear the parent's identity PK and insert
+        /// a duplicate. The existing parent's Id should be stamped onto the FK.
+        /// </summary>
+        [TestMethod]
+        public void RecursiveInsert_ShouldReuseExistingNavigation_WhenForeignKeyIsUnset()
+        {
+            using (var db = Factory.CreateDbContext())
+            {
+                var now = DateTime.Now;
+                var parity = new Parity
+                {
+                    Name = "Even",
+                    UpdatedAt = now,
+                    UpdatedBy = "test",
+                };
+                db.BulkInsertAll(new[] { parity });
+                var existingParityId = parity.Id;
+                Assert.AreNotEqual(0, existingParityId);
+
+                var number = new Number
+                {
+                    Value = 2,
+                    Parity = parity,
+                    // ParityId intentionally left unset (0)
+                    UpdatedAt = now,
+                    UpdatedBy = "test",
+                };
+
+                db.BulkInsertAll(new BulkInsertRequest<Number>
+                {
+                    Entities = new[] { number },
+                    EnableRecursiveInsert = EnableRecursiveInsert.Yes,
+                });
+
+                Assert.AreEqual(1, db.Parities.Count(),
+                    "Existing parent must not be re-inserted when only the navigation is set.");
+                Assert.AreEqual(existingParityId, parity.Id,
+                    "Existing parent's identity PK must not be cleared.");
+
+                var savedNumber = db.Numbers.Single();
+                Assert.AreEqual(existingParityId, savedNumber.ParityId);
+            }
+        }
+
         #endregion NumberContext
     }
 }
