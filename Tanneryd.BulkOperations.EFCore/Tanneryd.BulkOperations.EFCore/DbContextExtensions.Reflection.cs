@@ -243,7 +243,8 @@ namespace Tanneryd.BulkOperations.EFCore
         /// default DateTime, empty string, or numeric zero). Avoids dynamic
         /// comparisons like <c>value == 0</c> that throw for Guid/string.
         /// </summary>
-        private static bool IsUnsetKeyValue(object value, Type clrType)
+        // internal for regression tests (SelectNewEntities / recursive nav reuse)
+        internal static bool IsUnsetKeyValue(object value, Type clrType)
         {
             if (value == null || value == DBNull.Value)
                 return true;
@@ -280,10 +281,10 @@ namespace Tanneryd.BulkOperations.EFCore
             return false;
         }
 
-        private static bool IsKeyValueSet(object value, Type clrType) =>
+        internal static bool IsKeyValueSet(object value, Type clrType) =>
             !IsUnsetKeyValue(value, clrType);
 
-        private static object CreateUnsetKeyValue(Type clrType)
+        internal static object CreateUnsetKeyValue(Type clrType)
         {
             clrType = Nullable.GetUnderlyingType(clrType) ?? clrType;
             if (!clrType.IsValueType)
