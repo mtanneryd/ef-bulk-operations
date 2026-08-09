@@ -37,7 +37,11 @@ namespace Tanneryd.BulkOperations.EF6
         /// When every row is null for a key, falls back to
         /// <paramref name="columnMappings"/> so all-null columns are not omitted.
         /// </summary>
-        private static BulkPropertyInfo[] GetProperties(
+        /// <remarks>
+        /// Internal for regression unit tests (expando null-on-first-row type inference
+        /// and mapping-declared CLR fallback for all-null keys).
+        /// </remarks>
+        internal static BulkPropertyInfo[] GetProperties(
             IList entities,
             IDictionary<string, TableColumnMapping> columnMappings = null)
         {
