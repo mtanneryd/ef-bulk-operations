@@ -241,14 +241,13 @@ namespace Tanneryd.BulkOperations.EF6
             bool useTableLock = false,
             TableColumn[] extraColumnNames = null)
         {
-            if (useTableLock)
-                options |= SqlBulkCopyOptions.TableLock;
+            options = BulkCopySettings.ApplyTableLock(options, useTableLock);
 
             extraColumnNames = extraColumnNames ?? Array.Empty<TableColumn>();
             var bulkCopy = connection.CreateBulkCopy(options, transaction, tableName);
             bulkCopy.EnableStreaming = true;
             // BatchSize left at ADO.NET default (0). Avoid the previous hard-coded 1_000_000.
-            bulkCopy.BulkCopyTimeout = SqlCommandFactory.ToCommandTimeoutSeconds(bulkCopyTimeout ?? TimeSpan.FromMinutes(10));
+            bulkCopy.BulkCopyTimeout = BulkCopySettings.ResolveTimeoutSeconds(bulkCopyTimeout);
 
             foreach (var property in properties)
             {

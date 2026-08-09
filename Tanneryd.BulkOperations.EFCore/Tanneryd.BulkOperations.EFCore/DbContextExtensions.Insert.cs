@@ -884,6 +884,20 @@ namespace Tanneryd.BulkOperations.EFCore
         }
 
         /// <summary>
+        /// Builds the SqlCommand used by the MERGE … OUTPUT / legacy identity-range
+        /// insert path. Timeout must come from
+        /// <see cref="BulkInsertRequest{T}.CommandTimeout"/> (historically hard-coded
+        /// to 30 minutes, ignoring the request).
+        /// </summary>
+        internal static SqlCommand CreateIdentityPathCommand(
+            SqlConnection connection,
+            SqlTransaction transaction,
+            TimeSpan commandTimeout)
+        {
+            return SqlCommandFactory.Create(connection, transaction, commandTimeout);
+        }
+
+        /// <summary>
         /// Inserts from the temp table using MERGE ON 1=0 … OUTPUT so SQL Server
         /// returns inserted identity values ordered by our temp-table rowno.
         /// Required because SqlBulkCopy into a real table cannot reliably return
@@ -912,7 +926,7 @@ namespace Tanneryd.BulkOperations.EFCore
             TimeSpan commandTimeout,
             CancellationToken cancellationToken = default)
         {
-            using var cmd = CreateSqlCommand(string.Empty, conn, transaction, commandTimeout);
+            using var cmd = CreateIdentityPathCommand(conn, transaction, commandTimeout);
 
             string query;
             if (allowNotNullSelfReferences == AllowNotNullSelfReferences.Yes)
