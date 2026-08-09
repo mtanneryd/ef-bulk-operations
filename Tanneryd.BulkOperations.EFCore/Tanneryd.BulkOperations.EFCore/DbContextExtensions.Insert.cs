@@ -182,10 +182,10 @@ namespace Tanneryd.BulkOperations.EFCore
                         }
                     }
 
-                    HashSet<object> notExistingSet;
+                    IEnumerable<object> notExistingWithSetKey = null;
                     if (navsWithSetKey.Count > 0)
                     {
-                        var notExistingWithSetKey = await BulkSelectNotExistingByTypeAsync(
+                        notExistingWithSetKey = (await BulkSelectNotExistingByTypeAsync(
                             ctx,
                             navPropertyType,
                             navsWithSetKey.ToList(),
@@ -193,18 +193,13 @@ namespace Tanneryd.BulkOperations.EFCore
                             sqlTransaction,
                             commandTimeout,
                             useTableLock,
-                            cancellationToken).ConfigureAwait(false);
-                        notExistingSet = new HashSet<object>(notExistingWithSetKey.Cast<object>());
-                        foreach (var navProperty in navProperties)
-                        {
-                            if (!navsWithSetKey.Contains(navProperty))
-                                notExistingSet.Add(navProperty);
-                        }
+                            cancellationToken).ConfigureAwait(false)).Cast<object>();
                     }
-                    else
-                    {
-                        notExistingSet = new HashSet<object>(navProperties);
-                    }
+
+                    var notExistingSet = BuildNotExistingNavigationSet(
+                        navProperties,
+                        navsWithSetKey,
+                        notExistingWithSetKey);
 
                     foreach (var modifiedEntity in modifiedEntities)
                     {
@@ -541,6 +536,35 @@ namespace Tanneryd.BulkOperations.EFCore
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Builds the set of navigation instances that still need insert after an
+        /// optional select-not-existing check on those with a set PK.
+        /// Navigations without a set key always need insert; navigations with a
+        /// set key need insert only when they appear in
+        /// <paramref name="notExistingWithSetKey"/>. When
+        /// <paramref name="navsWithSetKey"/> is empty, every navigation needs
+        /// insert (no DB round-trip was performed). Existing parents must stay
+        /// out of this set so their identity PKs are not cleared (issue #47).
+        /// </summary>
+        internal static HashSet<object> BuildNotExistingNavigationSet(
+            IEnumerable<object> navProperties,
+            ISet<object> navsWithSetKey,
+            IEnumerable<object> notExistingWithSetKey)
+        {
+            if (navsWithSetKey == null || navsWithSetKey.Count == 0)
+                return new HashSet<object>(navProperties);
+
+            var notExistingSet = new HashSet<object>(
+                notExistingWithSetKey ?? Enumerable.Empty<object>());
+            foreach (var navProperty in navProperties)
+            {
+                if (!navsWithSetKey.Contains(navProperty))
+                    notExistingSet.Add(navProperty);
+            }
+
+            return notExistingSet;
         }
 
         private static string[] GetPrimaryKeyMembers(Dictionary<string, TableColumnMapping> columnMappings)
