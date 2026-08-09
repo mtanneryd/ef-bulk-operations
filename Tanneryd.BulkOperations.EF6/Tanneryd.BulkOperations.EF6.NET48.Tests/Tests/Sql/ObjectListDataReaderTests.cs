@@ -25,8 +25,9 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Sql
     /// <summary>
     /// ObjectListDataReader streams entity rows into SqlBulkCopy. GetChars must
     /// copy via string.CopyTo (not ToCharArray) so large string columns do not
-    /// allocate a full char[] on every chunked read, and null cells must surface
-    /// as DBNull for SqlBulkCopy.
+    /// allocate a full char[] on every chunked read; GetBytes must chunk via
+    /// Array.Copy the same way for binary columns; null cells must surface as
+    /// DBNull for SqlBulkCopy.
     /// </summary>
     [TestClass]
     public class ObjectListDataReaderTests
@@ -65,6 +66,42 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Sql
             Assert.AreEqual(2, copied);
             Assert.AreEqual('y', buffer[0]);
             Assert.AreEqual('z', buffer[1]);
+        }
+
+        [TestMethod]
+        public void GetBytes_ShouldReturnFullLength_WhenBufferIsNull()
+        {
+            using var reader = CreateByteReader(new byte[] { 1, 2, 3, 4, 5, 6 });
+            Assert.IsTrue(reader.Read());
+
+            Assert.AreEqual(6, reader.GetBytes(0, 0, null, 0, 0));
+        }
+
+        [TestMethod]
+        public void GetBytes_ShouldCopyChunk_WithDataOffset()
+        {
+            using var reader = CreateByteReader(new byte[] { 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 });
+            Assert.IsTrue(reader.Read());
+
+            var buffer = new byte[4];
+            var copied = reader.GetBytes(0, 3, buffer, 0, 4);
+
+            Assert.AreEqual(4, copied);
+            CollectionAssert.AreEqual(new byte[] { 40, 50, 60, 70 }, buffer);
+        }
+
+        [TestMethod]
+        public void GetBytes_ShouldClamp_WhenRequestRunsPastEndOfArray()
+        {
+            using var reader = CreateByteReader(new byte[] { 1, 2, 3 });
+            Assert.IsTrue(reader.Read());
+
+            var buffer = new byte[8];
+            var copied = reader.GetBytes(0, 1, buffer, 0, 8);
+
+            Assert.AreEqual(2, copied);
+            Assert.AreEqual((byte)2, buffer[0]);
+            Assert.AreEqual((byte)3, buffer[1]);
         }
 
         [TestMethod]
@@ -108,6 +145,16 @@ namespace Tanneryd.BulkOperations.EF6.NET48.Tests.Tests.Sql
                 schema,
                 new List<object> { new object() },
                 (_, __) => row);
+        }
+
+        private static ObjectListDataReader CreateByteReader(byte[] row)
+        {
+            var schema = new DataTable();
+            schema.Columns.Add("Col0", typeof(byte[]));
+            return new ObjectListDataReader(
+                schema,
+                new List<object> { new object() },
+                (_, __) => new object[] { row });
         }
     }
 }
