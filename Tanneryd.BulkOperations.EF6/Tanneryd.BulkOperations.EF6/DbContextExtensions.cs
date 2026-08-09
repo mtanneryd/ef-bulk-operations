@@ -228,17 +228,25 @@ namespace Tanneryd.BulkOperations.EF6
             bool useTableLock,
             CancellationToken cancellationToken = default)
         {
-            var invoker = _selectNotExistingInvokersByType.GetOrAdd(t, type =>
-                (SelectNotExistingInvoker)typeof(DbContextExtensions)
-                    .GetMethod(nameof(BulkSelectNotExistingCoreAsync), BindingFlags.NonPublic | BindingFlags.Static)
-                    .MakeGenericMethod(type)
-                    .CreateDelegate(typeof(SelectNotExistingInvoker)));
-
+            var invoker = GetSelectNotExistingInvoker(t);
             var keyPropertyNames = pkColumnMappings.Select(m => m.EntityProperty.Name).ToArray();
             return invoker(ctx, entities, keyPropertyNames, sqlTransaction, commandTimeout, useTableLock, cancellationToken);
         }
 
-        private delegate Task<IList> SelectNotExistingInvoker(
+        /// <summary>
+        /// Cached per-entity-type delegate used by <see cref="BulkSelectNotExistingByTypeAsync"/>.
+        /// Exposed for unit tests so the CreateDelegate cache can be verified without SQL Server.
+        /// </summary>
+        internal static SelectNotExistingInvoker GetSelectNotExistingInvoker(Type entityType)
+        {
+            return _selectNotExistingInvokersByType.GetOrAdd(entityType, type =>
+                (SelectNotExistingInvoker)typeof(DbContextExtensions)
+                    .GetMethod(nameof(BulkSelectNotExistingCoreAsync), BindingFlags.NonPublic | BindingFlags.Static)
+                    .MakeGenericMethod(type)
+                    .CreateDelegate(typeof(SelectNotExistingInvoker)));
+        }
+
+        internal delegate Task<IList> SelectNotExistingInvoker(
             DbContext ctx,
             IList entities,
             string[] keyPropertyNames,
@@ -250,6 +258,24 @@ namespace Tanneryd.BulkOperations.EF6
         private static readonly ConcurrentDictionary<Type, SelectNotExistingInvoker> _selectNotExistingInvokersByType =
             new ConcurrentDictionary<Type, SelectNotExistingInvoker>();
 
+        /// <summary>
+        /// Builds the strongly-typed request used by the runtime-typed select-not-existing
+        /// path, forwarding insert CommandTimeout / UseTableLock (not BulkSelectRequest defaults).
+        /// </summary>
+        internal static BulkSelectRequest<T> CreateSelectNotExistingRequest<T>(
+            IList entities,
+            string[] keyPropertyNames,
+            SqlTransaction sqlTransaction,
+            TimeSpan commandTimeout,
+            bool useTableLock)
+        {
+            return new BulkSelectRequest<T>(keyPropertyNames, entities.Cast<T>().ToArray(), sqlTransaction)
+            {
+                CommandTimeout = commandTimeout,
+                UseTableLock = useTableLock,
+            };
+        }
+
         private static async Task<IList> BulkSelectNotExistingCoreAsync<T>(
             DbContext ctx,
             IList entities,
@@ -259,11 +285,8 @@ namespace Tanneryd.BulkOperations.EF6
             bool useTableLock,
             CancellationToken cancellationToken)
         {
-            var request = new BulkSelectRequest<T>(keyPropertyNames, entities.Cast<T>().ToArray(), sqlTransaction)
-            {
-                CommandTimeout = commandTimeout,
-                UseTableLock = useTableLock,
-            };
+            var request = CreateSelectNotExistingRequest<T>(
+                entities, keyPropertyNames, sqlTransaction, commandTimeout, useTableLock);
 
             var result = await BulkSelectNotExistingAsync<T, T>(ctx, request, cancellationToken).ConfigureAwait(false);
             return result as IList ?? result.ToList();
